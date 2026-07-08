@@ -1,0 +1,126 @@
+# =============================================================================
+# KCC-1.0 commit-message lint — CI check
+# =============================================================================
+# Runs on every push and pull request. Validates every NEW commit in the range
+# against the same POSIX ERE grammar the local .githooks/commit-msg enforces.
+#
+# Rejects the CI job if any commit is malformed. Local hook + this CI check
+# together mean malformed commits can't reach shared branches.
+#
+# Spec: kiroku-workspace/docs/COMMIT-CONVENTIONS.md
+# ADR:  kiroku-workspace/docs/DECISIONS.md — ADR-14
+# =============================================================================
+name: KCC commit-lint
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+      - 'chore/**'
+      - 'fix/**'
+      - 'hotfix/**'
+      - 'release/**'
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          # Fetch enough history that push-events on force-updated branches
+          # can still resolve the "new commits" range from before/after.
+          fetch-depth: 0
+
+      - name: Resolve commit range
+        id: range
+        run: |
+          set -eu
+          # For a pull_request: lint every commit on the PR head vs. base.
+          # For a push:         lint every commit between the pushed BEFORE
+          #                     and AFTER SHAs. On new branches (before is
+          #                     all-zeros) fall back to lint only the tip.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.event.after }}"
+            if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              # New branch push — lint just the tip.
+              BASE=$(git rev-parse "$HEAD^" 2>/dev/null || echo "")
+            fi
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+      - name: Lint each commit in the range
+        env:
+          BASE: ${{ steps.range.outputs.base }}
+          HEAD: ${{ steps.range.outputs.head }}
+        run: |
+          set -eu
+          if [ -z "$BASE" ]; then
+            COMMITS=$(git rev-list "$HEAD" -1)
+          else
+            COMMITS=$(git rev-list "$BASE..$HEAD")
+          fi
+          if [ -z "$COMMITS" ]; then
+            echo "No new commits to lint."
+            exit 0
+          fi
+
+          FAIL=0
+          for SHA in $COMMITS; do
+            SUBJECT=$(git log --format=%s -n1 "$SHA")
+
+            # Skip auto-generated commit forms (parallel the local hook).
+            case "$SUBJECT" in
+              "Merge "*|"Merge branch"*|"Merge remote"*|"Merge pull"*)
+                echo "SKIP merge:   $SHA  $SUBJECT" ; continue ;;
+              "Revert \""*)
+                echo "SKIP revert:  $SHA  $SUBJECT" ; continue ;;
+              "fixup!"*|"squash!"*|"amend!"*)
+                echo "SKIP rebase:  $SHA  $SUBJECT" ; continue ;;
+            esac
+
+            # Length
+            LEN=$(printf '%s' "$SUBJECT" | wc -c)
+            if [ "$LEN" -gt 72 ]; then
+              echo "FAIL length($LEN): $SHA  $SUBJECT"
+              FAIL=$((FAIL + 1))
+              continue
+            fi
+
+            # Grammar
+            KCC_RE='^(feat|fix|refactor|perf|docs|style|test|build|ci|chore|revert)(!)?(\([a-z0-9,_-]+\))?: [^ ].*$'
+            if ! printf '%s' "$SUBJECT" | grep -qE "$KCC_RE"; then
+              echo "FAIL grammar: $SHA  $SUBJECT"
+              FAIL=$((FAIL + 1))
+              continue
+            fi
+
+            # feat/fix require trailing (task-id)
+            TYPE=$(printf '%s' "$SUBJECT" | sed -E 's/^([a-z]+).*/\1/')
+            if [ "$TYPE" = "feat" ] || [ "$TYPE" = "fix" ]; then
+              TASK_TAIL=' \([A-Z][A-Z0-9]*(\.[0-9]+)?-T[0-9]+[a-z]?\)$'
+              if ! printf '%s' "$SUBJECT" | grep -qE "$TASK_TAIL"; then
+                echo "FAIL task-id: $SHA  $SUBJECT"
+                FAIL=$((FAIL + 1))
+                continue
+              fi
+            fi
+
+            echo "PASS:         $SHA  $SUBJECT"
+          done
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo ""
+            echo "❌ $FAIL commit(s) violated KCC-1.0."
+            echo "See kiroku-workspace/docs/COMMIT-CONVENTIONS.md for the grammar."
+            exit 1
+          fi
+          echo ""
+          echo "✅ All commits comply with KCC-1.0."

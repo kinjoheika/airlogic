@@ -1,0 +1,93 @@
+#!/bin/sh
+# =============================================================================
+# Kiroku Conventional Commits — KCC-1.0 — commit-msg hook
+# =============================================================================
+# Enforces the KCC-1.0 commit-message standard on every `git commit`.
+# Rejects malformed subjects with a clear explanation.
+#
+# Enable once per clone:
+#     git config core.hooksPath .githooks
+#
+# Spec: kiroku-workspace/docs/COMMIT-CONVENTIONS.md
+# ADR:  kiroku-workspace/docs/DECISIONS.md — ADR-14
+#
+# Grammar:
+#   <type>[!](<scope>): <subject>[ (<task-id>)]
+#
+#   type    = feat|fix|refactor|perf|docs|style|test|build|ci|chore|revert
+#   !       = optional; indicates BREAKING CHANGE (schema / API / URL)
+#   scope   = optional; lowercase kebab-case; comma-separated (max 3)
+#   subject = imperative, ≤72 chars total on the line
+#   task-id = REQUIRED for feat + fix; OPTIONAL for the other 9 types.
+#             Format: PROJ[.SUB]-Tnn (e.g. PK3.2-T5, KP0-T1, PK1-T31)
+#
+# Bypass (rare — e.g. `git rebase --continue` post-conflict):
+#   git commit --no-verify
+# =============================================================================
+
+set -eu
+
+COMMIT_MSG_FILE=$1
+FIRST_LINE=$(head -n1 "$COMMIT_MSG_FILE")
+
+# Skip auto-generated commit messages that shouldn't be linted:
+#   - Merge commits
+#   - Revert commits (git revert auto-formats them; they still validate but
+#     the "Revert" prefix is uppercase)
+#   - Fixup / squash commits during interactive rebase
+#   - Empty messages (git will reject them anyway)
+case "$FIRST_LINE" in
+    "Merge "*|"Merge branch"*|"Merge remote"*|"Merge pull"*)
+        exit 0 ;;
+    "Revert \""*)
+        exit 0 ;;
+    "fixup!"*|"squash!"*|"amend!"*)
+        exit 0 ;;
+    "")
+        exit 0 ;;
+esac
+
+# --- Length check ----------------------------------------------------------
+LEN=$(printf '%s' "$FIRST_LINE" | wc -c)
+if [ "$LEN" -gt 72 ]; then
+    printf >&2 '\n\033[1;31m✖ KCC-1.0: subject line is %s chars (max 72).\033[0m\n' "$LEN"
+    printf >&2 '  %s\n' "$FIRST_LINE"
+    printf >&2 '\n  Shorten the subject or move detail to the body.\n\n'
+    exit 1
+fi
+
+# --- Regex check -----------------------------------------------------------
+# POSIX ERE (grep -E):
+#   Type group + optional ! + optional scope + ': ' + subject + optional trailing task-id
+#
+# Task-id regex allows:
+#   PK1-T0a, PK3.2-T5, KP0-T1, PK1-T31   (major-digit + optional .subminor + -T + digits + optional letter suffix)
+
+KCC_RE='^(feat|fix|refactor|perf|docs|style|test|build|ci|chore|revert)(!)?(\([a-z0-9,_-]+\))?: [^ ].*$'
+TASK_ID_TAIL_RE=' \([A-Z][A-Z0-9]*(\.[0-9]+)?-T[0-9]+[a-z]?\)$'
+
+if ! printf '%s' "$FIRST_LINE" | grep -qE "$KCC_RE"; then
+    printf >&2 '\n\033[1;31m✖ KCC-1.0: subject does not match the KCC-1.0 grammar.\033[0m\n'
+    printf >&2 '  Got:      %s\n' "$FIRST_LINE"
+    printf >&2 '\n  Expected: <type>[!](<scope>): <subject>[ (<task-id>)]\n'
+    printf >&2 '  type in:  feat|fix|refactor|perf|docs|style|test|build|ci|chore|revert\n'
+    printf >&2 '  Example:  feat(launcher): restyle the /odoo apps grid (PK3.2-T9)\n\n'
+    exit 1
+fi
+
+# Extract the type token (before optional !, scope, colon)
+TYPE=$(printf '%s' "$FIRST_LINE" | sed -E 's/^([a-z]+).*/\1/')
+
+# --- feat / fix require a trailing (task-id) --------------------------------
+if [ "$TYPE" = "feat" ] || [ "$TYPE" = "fix" ]; then
+    if ! printf '%s' "$FIRST_LINE" | grep -qE "$TASK_ID_TAIL_RE"; then
+        printf >&2 '\n\033[1;31m✖ KCC-1.0: %s commits require a trailing (task-id).\033[0m\n' "$TYPE"
+        printf >&2 '  Got:      %s\n' "$FIRST_LINE"
+        printf >&2 '\n  Add the task ID in parens at the very end of the subject.\n'
+        printf >&2 '  Example:  %s(launcher): restyle the /odoo apps grid (PK3.2-T9)\n' "$TYPE"
+        printf >&2 '  Task IDs live in kiroku-workspace/docs/PARKED-TASKS.md.\n\n'
+        exit 1
+    fi
+fi
+
+exit 0
