@@ -1,0 +1,16 @@
+# Python bytecode.
+#
+# philjapagency shipped without a .gitignore, so `git add <dir>` has repeatedly
+# committed .pyc files - twice in the 2026-07-21/22 sessions alone, and 12 were
+# found tracked in kiroku_core dating back to migration 19.0.31.0.0.
+#
+# Odoo regenerates bytecode on load, so none of it belongs in the repo. Staging
+# explicit source paths is still the rule; this is the backstop.
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment / secrets. Never commit credentials (CLAUDE.md §Security).
+.env
+.env.*
+*.log
