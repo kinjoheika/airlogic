@@ -3,6 +3,8 @@ from markupsafe import Markup, escape
 
 from odoo import api, fields, models
 
+from .airlogic_checklist_line import CHECKLIST_ITEMS
+
 
 class AirlogicEquipment(models.Model):
     _name = 'airlogic.equipment'
@@ -40,6 +42,8 @@ class AirlogicEquipment(models.Model):
     job_count = fields.Integer(compute='_compute_job_count')
     reading_comparison_html = fields.Html(
         string='Reading Comparison', compute='_compute_reading_comparison_html', sanitize=False)
+    visual_comparison_html = fields.Html(
+        string='Visual Comparison', compute='_compute_visual_comparison_html', sanitize=False)
 
     @api.depends('job_ids')
     def _compute_job_count(self):
@@ -57,6 +61,26 @@ class AirlogicEquipment(models.Model):
             'context': {'default_equipment_id': self.id},
         }
 
+    def _last_3_jobs(self):
+        self.ensure_one()
+        return self.env['airlogic.service.job'].search(
+            [('equipment_id', '=', self.id)], order='date desc', limit=3)
+
+    def _format_job_header(self, job):
+        """Date + time (in the viewing user's timezone) on one line,
+        technician on a second, smaller line.
+        """
+        if job.date:
+            local_dt = fields.Datetime.context_timestamp(self, job.date)
+            when = local_dt.strftime('%b %d, %Y, %I:%M %p')
+        else:
+            when = job.name
+        tech = job.technician_id.name
+        header = Markup('<div>%s</div>') % escape(when)
+        if tech:
+            header += Markup('<div class="text-muted" style="font-weight:400;">%s</div>') % escape(tech)
+        return header
+
     @api.depends('job_ids.reading_line_ids.value')
     def _compute_reading_comparison_html(self):
         for equip in self:
@@ -64,14 +88,13 @@ class AirlogicEquipment(models.Model):
 
     def _build_reading_comparison_html(self):
         self.ensure_one()
-        jobs = self.env['airlogic.service.job'].search(
-            [('equipment_id', '=', self.id)], order='date desc', limit=3)
+        jobs = self._last_3_jobs()
         if not jobs:
             return Markup('<p class="text-muted">No readings yet for this unit.</p>')
 
-        headers = [job.date.strftime('%b %d, %Y') if job.date else job.name for job in jobs]
+        headers = [self._format_job_header(job) for job in jobs]
         while len(headers) < 3:
-            headers.append('—')
+            headers.append(Markup('—'))
 
         rows = []
         last_section = None
@@ -93,18 +116,65 @@ class AirlogicEquipment(models.Model):
             while len(cells) < 3:
                 cells.append(Markup('<td>—</td>'))
             std = escape(f.standard) if f.standard else '—'
-            rows.append(Markup('<tr><td>%s</td>%s<td class="text-muted">%s</td></tr>') % (
-                escape(f.name), Markup('').join(cells), std))
+            rows.append(Markup('<tr><td>%s</td><td class="text-muted">%s</td>%s</tr>') % (
+                escape(f.name), std, Markup('').join(cells)))
 
         header_cells = Markup('').join(
-            Markup('<th>%s</th>') % escape(h) for h in headers)
+            Markup('<th>%s</th>') % h for h in headers)
         return Markup("""
             <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
                         <th>Field</th>
-                        %s
                         <th>Mfr. Standard</th>
+                        %s
+                    </tr>
+                </thead>
+                <tbody>%s</tbody>
+            </table>
+        """) % (header_cells, Markup('').join(rows))
+
+    @api.depends('job_ids.checklist_line_ids.value')
+    def _compute_visual_comparison_html(self):
+        for equip in self:
+            equip.visual_comparison_html = equip._build_visual_comparison_html()
+
+    def _build_visual_comparison_html(self):
+        self.ensure_one()
+        jobs = self._last_3_jobs()
+        if not jobs:
+            return Markup('<p class="text-muted">No visual checklist entries yet for this unit.</p>')
+
+        headers = [self._format_job_header(job) for job in jobs]
+        while len(headers) < 3:
+            headers.append(Markup('—'))
+
+        rows = []
+        last_phase = None
+        for phase, key, label in CHECKLIST_ITEMS:
+            if phase != last_phase:
+                rows.append(Markup(
+                    '<tr class="table-light"><td colspan="4"><strong>Phase %s</strong></td></tr>'
+                ) % phase)
+                last_phase = phase
+            cells = []
+            for job in jobs:
+                line = job.checklist_line_ids.filtered(lambda l, key=key: l.key == key)
+                value = line.value if line else False
+                cells.append(Markup('<td>%s</td>') % (escape(value) if value else '—'))
+            while len(cells) < 3:
+                cells.append(Markup('<td>—</td>'))
+            rows.append(Markup('<tr><td>%s</td>%s</tr>') % (
+                escape(label), Markup('').join(cells)))
+
+        header_cells = Markup('').join(
+            Markup('<th>%s</th>') % h for h in headers)
+        return Markup("""
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        %s
                     </tr>
                 </thead>
                 <tbody>%s</tbody>

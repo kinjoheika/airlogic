@@ -23,7 +23,7 @@ class AirlogicServiceJob(models.Model):
         related='equipment_id.partner_id', string='Client', store=True, readonly=True)
     technician_id = fields.Many2one(
         'res.users', string='Technician', default=lambda self: self.env.user, tracking=True)
-    date = fields.Date(string='Visit Date', default=fields.Date.context_today, tracking=True)
+    date = fields.Datetime(string='Visit Date', default=fields.Datetime.now, tracking=True)
     state = fields.Selection([
         ('draft', 'Draft'),
         ('submitted', 'Submitted'),
