@@ -28,4 +28,16 @@
               parent="menu_airlogic_configuration" action="action_airlogic_equipment_category"
               sequence="20"/>
 
+    <menuitem id="menu_airlogic_sublocation" name="Sublocations"
+              parent="menu_airlogic_configuration" action="action_airlogic_sublocation"
+              sequence="30"/>
+
+    <menuitem id="menu_airlogic_equipment_brand" name="Equipment Brands"
+              parent="menu_airlogic_configuration" action="action_airlogic_equipment_brand"
+              sequence="40"/>
+
+    <menuitem id="menu_airlogic_equipment_hp" name="Equipment HP"
+              parent="menu_airlogic_configuration" action="action_airlogic_equipment_hp"
+              sequence="50"/>
+
 </odoo>

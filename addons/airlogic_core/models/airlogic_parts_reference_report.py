@@ -18,14 +18,14 @@ class AirlogicPartsReferenceReport(models.AbstractModel):
     def _get_report_values(self, docids, data=None):
         equipment = self.env['airlogic.equipment'].browse(docids)
         equipment = equipment.sorted(
-            key=lambda e: (e.partner_id.name or '', e.sublocation or '', e.name or ''))
+            key=lambda e: (e.partner_id.name or '', e.sublocation_id.name or '', e.name or ''))
 
         groups = []
         for partner, by_partner in groupby(equipment, key=attrgetter('partner_id')):
             sublocations = []
-            for subloc, by_sub in groupby(by_partner, key=attrgetter('sublocation')):
+            for subloc, by_sub in groupby(by_partner, key=attrgetter('sublocation_id')):
                 sublocations.append({
-                    'sublocation': subloc or '—',
+                    'sublocation': subloc.name if subloc else '—',
                     'equipment': list(by_sub),
                 })
             groups.append({'partner': partner, 'sublocations': sublocations})

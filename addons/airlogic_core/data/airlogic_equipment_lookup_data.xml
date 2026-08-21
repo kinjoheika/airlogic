@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Starting values for the Sublocation/Brand/HP config lists.
+  noupdate="1" so admin edits survive module upgrades. Sublocations are
+  left empty (too site-specific to guess); Brand seeded with a few
+  common ones seen in real sample data; HP seeded with the exact values
+  requested. All editable/extendable under Configuration.
+-->
+<odoo noupdate="1">
+
+    <record id="brand_carrier" model="airlogic.equipment.brand">
+        <field name="name">Carrier</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="brand_panasonic" model="airlogic.equipment.brand">
+        <field name="name">Panasonic</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="brand_koppel" model="airlogic.equipment.brand">
+        <field name="name">Koppel</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="brand_daikin" model="airlogic.equipment.brand">
+        <field name="name">Daikin</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="hp_1" model="airlogic.equipment.hp">
+        <field name="name">1</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="hp_1_5" model="airlogic.equipment.hp">
+        <field name="name">1.5</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="hp_2" model="airlogic.equipment.hp">
+        <field name="name">2</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="hp_2_5" model="airlogic.equipment.hp">
+        <field name="name">2.5</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="hp_3" model="airlogic.equipment.hp">
+        <field name="name">3</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="hp_4" model="airlogic.equipment.hp">
+        <field name="name">4</field>
+        <field name="sequence">60</field>
+    </record>
+
+</odoo>

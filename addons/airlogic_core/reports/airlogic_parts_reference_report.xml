@@ -34,9 +34,9 @@
                                 </thead>
                                 <tbody>
                                     <tr t-foreach="subgroup['equipment']" t-as="e">
-                                        <td t-esc="e.brand"/>
+                                        <td t-esc="e.brand_id.name"/>
                                         <td t-esc="e.model"/>
-                                        <td t-esc="e.hp"/>
+                                        <td t-esc="e.hp_id.name"/>
                                         <td t-esc="e.qty"/>
                                         <td t-esc="e.ipm_model"/>
                                         <td t-esc="e.pcb_model"/>

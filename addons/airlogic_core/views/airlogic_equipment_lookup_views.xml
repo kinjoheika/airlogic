@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuration lists for Sublocation, Brand, and HP: editable inline
+  so a manager can add/reorder/retire values without touching code.
+-->
+<odoo>
+
+    <record id="view_airlogic_sublocation_list" model="ir.ui.view">
+        <field name="name">airlogic.sublocation.list</field>
+        <field name="model">airlogic.sublocation</field>
+        <field name="arch" type="xml">
+            <list string="Sublocations" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_sublocation" model="ir.actions.act_window">
+        <field name="name">Sublocations</field>
+        <field name="res_model">airlogic.sublocation</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Define a sublocation</p>
+        </field>
+    </record>
+
+    <record id="view_airlogic_equipment_brand_list" model="ir.ui.view">
+        <field name="name">airlogic.equipment.brand.list</field>
+        <field name="model">airlogic.equipment.brand</field>
+        <field name="arch" type="xml">
+            <list string="Equipment Brands" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_equipment_brand" model="ir.actions.act_window">
+        <field name="name">Equipment Brands</field>
+        <field name="res_model">airlogic.equipment.brand</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Define an equipment brand</p>
+        </field>
+    </record>
+
+    <record id="view_airlogic_equipment_hp_list" model="ir.ui.view">
+        <field name="name">airlogic.equipment.hp.list</field>
+        <field name="model">airlogic.equipment.hp</field>
+        <field name="arch" type="xml">
+            <list string="Equipment HP" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_equipment_hp" model="ir.actions.act_window">
+        <field name="name">Equipment HP</field>
+        <field name="res_model">airlogic.equipment.hp</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Define an HP value</p>
+        </field>
+    </record>
+
+</odoo>

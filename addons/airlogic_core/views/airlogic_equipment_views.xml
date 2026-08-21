@@ -7,11 +7,11 @@
         <field name="arch" type="xml">
             <list string="Equipment">
                 <field name="partner_id"/>
-                <field name="sublocation"/>
+                <field name="sublocation_id"/>
                 <field name="name"/>
-                <field name="brand"/>
+                <field name="brand_id"/>
                 <field name="model"/>
-                <field name="hp"/>
+                <field name="hp_id"/>
                 <field name="serial_number"/>
                 <field name="category_id"/>
                 <field name="install_year"/>
@@ -38,14 +38,14 @@
                     <group>
                         <group>
                             <field name="partner_id"/>
-                            <field name="sublocation"/>
+                            <field name="sublocation_id"/>
                             <field name="serial_number"/>
                             <field name="category_id"/>
                         </group>
                         <group>
-                            <field name="brand"/>
+                            <field name="brand_id"/>
                             <field name="model"/>
-                            <field name="hp"/>
+                            <field name="hp_id"/>
                             <field name="install_year"/>
                             <field name="active"/>
                         </group>
@@ -86,9 +86,9 @@
                 <field name="name"/>
                 <field name="serial_number"/>
                 <field name="partner_id"/>
-                <field name="sublocation"/>
+                <field name="sublocation_id"/>
                 <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
-                <filter name="group_sublocation" string="Sublocation" context="{'group_by': 'sublocation'}"/>
+                <filter name="group_sublocation" string="Sublocation" context="{'group_by': 'sublocation_id'}"/>
             </search>
         </field>
     </record>

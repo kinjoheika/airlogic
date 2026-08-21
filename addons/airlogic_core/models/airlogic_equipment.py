@@ -7,17 +7,18 @@ from odoo import api, fields, models
 class AirlogicEquipment(models.Model):
     _name = 'airlogic.equipment'
     _description = 'Airlogic Equipment (Aircon Unit)'
-    _order = 'partner_id, sublocation, name'
+    _order = 'partner_id, sublocation_id, name'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Unit Label', required=True, tracking=True)
     partner_id = fields.Many2one(
         'res.partner', string='Client', required=True, tracking=True)
-    sublocation = fields.Char(string='Sublocation', help='e.g. Rooftop Parking, 3rd Floor Server Room')
+    sublocation_id = fields.Many2one(
+        'airlogic.sublocation', string='Sublocation', tracking=True)
     serial_number = fields.Char(string='Serial Number')
-    brand = fields.Char(string='Brand', tracking=True, help='e.g. Carrier, Panasonic, Koppel')
+    brand_id = fields.Many2one('airlogic.equipment.brand', string='Brand', tracking=True)
     model = fields.Char(string='Model', tracking=True, help='e.g. 40MBFQ12')
-    hp = fields.Float(string='HP', tracking=True, help='Capacity rating in horsepower')
+    hp_id = fields.Many2one('airlogic.equipment.hp', string='HP', tracking=True)
     category_id = fields.Many2one(
         'airlogic.equipment.category', string='Category', required=True,
         help='Drives per-unit service pricing on invoices.')
