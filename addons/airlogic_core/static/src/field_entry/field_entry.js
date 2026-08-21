@@ -5,9 +5,9 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
 // Ph1-4 visual checklist, ported from the aircon-service-ui mockup's
-// buildEquipDataTable() rows. Frontend-only for this pass -- values live
-// in local component state, nothing is written to Odoo yet. Backend
-// wiring (a real model + save) is a deliberate follow-up.
+// buildEquipDataTable() rows. Keys here must match
+// models/airlogic_checklist_line.py's CHECKLIST_ITEMS -- keep both in
+// sync by hand.
 const PHASES = [
     {
         id: 1,
@@ -62,10 +62,13 @@ export class AirlogicVisualChecklist extends Component {
 
     setup() {
         this.notification = useService("notification");
+        this.orm = useService("orm");
+        this.actionService = useService("action");
         this.phases = PHASES;
         this.state = useState({
             phase: 1,
-            values: {},
+            values: { ...(this.params.values || {}) },
+            saving: false,
         });
     }
 
@@ -113,12 +116,29 @@ export class AirlogicVisualChecklist extends Component {
         this.setValue(key, ev.target.value);
     }
 
-    onDone() {
-        this.notification.add(
-            "Checklist captured locally. Saving it to the service job isn't " +
-            "wired up yet -- this pass is frontend-only.",
-            { type: "warning", sticky: false }
-        );
+    async onDone() {
+        if (!this.params.job_id) {
+            this.notification.add("No job to save against.", { type: "danger" });
+            return;
+        }
+        this.state.saving = true;
+        try {
+            await this.orm.call(
+                "airlogic.service.job",
+                "action_save_visual_checklist",
+                [[this.params.job_id], this.state.values]
+            );
+            this.notification.add("Visual checklist saved.", { type: "success" });
+            await this.actionService.doAction({
+                type: "ir.actions.act_window",
+                res_model: "airlogic.service.job",
+                res_id: this.params.job_id,
+                views: [[false, "form"]],
+                target: "current",
+            });
+        } finally {
+            this.state.saving = false;
+        }
     }
 }
 

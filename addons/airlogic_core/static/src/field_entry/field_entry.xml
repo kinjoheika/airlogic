@@ -73,8 +73,9 @@
                 <button t-if="state.phase &lt; phases.length" type="button" class="btn airlogic-btn-primary" t-on-click="nextPhase">
                     Next Phase
                 </button>
-                <button t-else="" type="button" class="btn airlogic-btn-invoice" t-on-click="onDone">
-                    Done
+                <button t-else="" type="button" class="btn airlogic-btn-invoice" t-on-click="onDone" t-att-disabled="state.saving">
+                    <t t-if="state.saving">Saving…</t>
+                    <t t-else="">Done</t>
                 </button>
             </div>
         </div>

@@ -5,6 +5,8 @@ import io
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+from .airlogic_checklist_line import CHECKLIST_ITEMS
+
 
 class AirlogicServiceJob(models.Model):
     _name = 'airlogic.service.job'
@@ -29,6 +31,8 @@ class AirlogicServiceJob(models.Model):
     notes = fields.Text(string='Tech Notes')
     reading_line_ids = fields.One2many(
         'airlogic.reading.line', 'job_id', string='Measurements')
+    checklist_line_ids = fields.One2many(
+        'airlogic.checklist.line', 'job_id', string='Visual Checklist')
     fp_pdf = fields.Binary(string='Fieldpiece PDF', attachment=True)
     fp_pdf_filename = fields.Char(string='Fieldpiece PDF Filename')
     media_ids = fields.Many2many(
@@ -45,6 +49,8 @@ class AirlogicServiceJob(models.Model):
                 job.name = self.env['ir.sequence'].next_by_code('airlogic.service.job') or '/'
             if not job.reading_line_ids:
                 job._populate_reading_lines()
+            if not job.checklist_line_ids:
+                job._populate_checklist_lines()
         return jobs
 
     def _populate_reading_lines(self):
@@ -55,13 +61,19 @@ class AirlogicServiceJob(models.Model):
             for f in fields_active
         ])
 
+    def _populate_checklist_lines(self):
+        self.ensure_one()
+        self.env['airlogic.checklist.line'].create([
+            {'job_id': self.id, 'phase': phase, 'key': key, 'label': label}
+            for phase, key, label in CHECKLIST_ITEMS
+        ])
+
     def action_submit(self):
         self.write({'state': 'submitted'})
 
     def action_open_visual_checklist(self):
-        """Launch the Ph1-4 visual-checklist OWL client action. Frontend
-        only for this pass -- the component holds its own local state and
-        doesn't write back to this job yet; that's a deliberate follow-up.
+        """Launch the Ph1-4 visual-checklist OWL client action, pre-filled
+        with any previously-saved values.
         """
         self.ensure_one()
         return {
@@ -73,8 +85,21 @@ class AirlogicServiceJob(models.Model):
                 'job_id': self.id,
                 'job_name': self.name,
                 'equipment_name': self.equipment_id.display_name,
+                'values': {l.key: l.value for l in self.checklist_line_ids if l.value},
             },
         }
+
+    def action_save_visual_checklist(self, values):
+        """Called by the OWL client action's Done button via the ORM
+        service. values: dict of item key -> entered value.
+        """
+        self.ensure_one()
+        lines_by_key = {line.key: line for line in self.checklist_line_ids}
+        for key, val in (values or {}).items():
+            line = lines_by_key.get(key)
+            if line is not None:
+                line.value = val
+        return True
 
     @api.model
     def _extract_pdf_lines(self, pdf_bytes):
