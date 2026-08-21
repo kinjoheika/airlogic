@@ -123,8 +123,12 @@ export class AirlogicMobileFieldEntry extends Component {
     async loadClients() {
         this.state.loading = true;
         try {
-            const groups = await this.orm.readGroup(
-                "airlogic.equipment", [], ["partner_id"], ["partner_id"]
+            // orm.readGroup was removed in Odoo 19 -- call the model's
+            // read_group method directly (verified on this instance,
+            // per kiroku_app/static/src/kpi_dashboard/kpi_dashboard.js
+            // in this repo's history).
+            const groups = await this.orm.call(
+                "airlogic.equipment", "read_group", [[], ["partner_id"], ["partner_id"]], {}
             );
             this.state.clients = groups
                 .filter((g) => g.partner_id)
