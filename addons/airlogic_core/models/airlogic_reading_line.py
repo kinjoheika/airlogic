@@ -1,0 +1,23 @@
+# -*- coding: utf-8 -*-
+from odoo import fields, models
+
+
+class AirlogicReadingLine(models.Model):
+    """One measured value for one job. Kept as Char rather than Float so a
+    single column can hold numbers, blanks, and Fieldpiece's non-numeric
+    'OL' (over-limit) reading without special-casing storage per field.
+    """
+    _name = 'airlogic.reading.line'
+    _description = 'Airlogic Reading Line'
+    _order = 'sequence, id'
+
+    job_id = fields.Many2one(
+        'airlogic.service.job', string='Job', required=True, ondelete='cascade')
+    field_id = fields.Many2one(
+        'airlogic.measurement.field', string='Measurement Field', required=True,
+        ondelete='restrict')
+    value = fields.Char(string='Value')
+    section = fields.Char(related='field_id.section', string='Section', store=True, readonly=True)
+    unit = fields.Char(related='field_id.unit', string='Unit', readonly=True)
+    standard = fields.Char(related='field_id.standard', string='Mfr. Standard', readonly=True)
+    sequence = fields.Integer(related='field_id.sequence', store=True, readonly=True)

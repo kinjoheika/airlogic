@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_airlogic_measurement_field_technician,airlogic.measurement.field.technician,model_airlogic_measurement_field,group_airlogic_technician,1,0,0,0
+access_airlogic_measurement_field_manager,airlogic.measurement.field.manager,model_airlogic_measurement_field,group_airlogic_manager,1,1,1,1
+access_airlogic_equipment_technician,airlogic.equipment.technician,model_airlogic_equipment,group_airlogic_technician,1,1,1,0
+access_airlogic_equipment_manager,airlogic.equipment.manager,model_airlogic_equipment,group_airlogic_manager,1,1,1,1
+access_airlogic_service_job_technician,airlogic.service.job.technician,model_airlogic_service_job,group_airlogic_technician,1,1,1,0
+access_airlogic_service_job_manager,airlogic.service.job.manager,model_airlogic_service_job,group_airlogic_manager,1,1,1,1
+access_airlogic_reading_line_technician,airlogic.reading.line.technician,model_airlogic_reading_line,group_airlogic_technician,1,1,1,0
+access_airlogic_reading_line_manager,airlogic.reading.line.manager,model_airlogic_reading_line,group_airlogic_manager,1,1,1,1
