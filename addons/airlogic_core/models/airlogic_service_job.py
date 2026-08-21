@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+import base64
+import io
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class AirlogicServiceJob(models.Model):
@@ -23,6 +27,8 @@ class AirlogicServiceJob(models.Model):
     notes = fields.Text(string='Tech Notes')
     reading_line_ids = fields.One2many(
         'airlogic.reading.line', 'job_id', string='Measurements')
+    fp_pdf = fields.Binary(string='Fieldpiece PDF', attachment=True)
+    fp_pdf_filename = fields.Char(string='Fieldpiece PDF Filename')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -44,3 +50,54 @@ class AirlogicServiceJob(models.Model):
 
     def action_submit(self):
         self.write({'state': 'submitted'})
+
+    @api.model
+    def _extract_pdf_lines(self, pdf_bytes):
+        """Return the PDF's text as a list of stripped, non-empty lines.
+        Imported lazily (not at module load) so a missing pypdf on this
+        Odoo instance can't crash the whole registry -- only this button.
+        """
+        try:
+            import pypdf
+        except ImportError:
+            try:
+                import PyPDF2 as pypdf
+            except ImportError:
+                raise UserError(_(
+                    "No PDF library is available on this Odoo instance "
+                    "(tried pypdf and PyPDF2). Ask your odoo.sh admin to "
+                    "add 'pypdf' to the Python requirements."))
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        text = "\n".join(page.extract_text() or '' for page in reader.pages)
+        return [line.strip() for line in text.splitlines() if line.strip()]
+
+    def action_import_fieldpiece_pdf(self):
+        self.ensure_one()
+        if not self.fp_pdf:
+            raise UserError(_("Attach a Fieldpiece PDF report first."))
+        lines = self._extract_pdf_lines(base64.b64decode(self.fp_pdf))
+        filled = 0
+        for line_rec in self.reading_line_ids:
+            label = line_rec.field_id.pdf_label or line_rec.field_id.name
+            for line in lines:
+                if not line.startswith(label):
+                    continue
+                raw = line[len(label):].strip()
+                if not raw or raw == '-':
+                    break
+                unit = line_rec.field_id.unit
+                if unit and raw.endswith(unit):
+                    raw = raw[:-len(unit)].strip()
+                line_rec.value = raw
+                filled += 1
+                break
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Fieldpiece PDF imported'),
+                'message': _('%(filled)d of %(total)d fields filled from the PDF.') % {
+                    'filled': filled, 'total': len(self.reading_line_ids)},
+                'type': 'success' if filled else 'warning',
+            },
+        }

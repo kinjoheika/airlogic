@@ -25,6 +25,7 @@
     <record id="mf_target_evap_exit" model="airlogic.measurement.field">
         <field name="code">target_evap_exit</field>
         <field name="name">Target Evaporator Exit</field>
+        <field name="pdf_label">Target Evaporator Exit Temp</field>
         <field name="section">Air Side</field>
         <field name="unit">°C</field>
         <field name="sequence">30</field>
@@ -116,6 +117,7 @@
     <record id="mf_delta_t" model="airlogic.measurement.field">
         <field name="code">delta_t</field>
         <field name="name">Delta T (T1-T2)</field>
+        <field name="pdf_label">T1-T2</field>
         <field name="section">Air Side</field>
         <field name="unit">°C</field>
         <field name="standard">≥ 8 °C</field>
@@ -132,6 +134,7 @@
     <record id="mf_outdoor_db" model="airlogic.measurement.field">
         <field name="code">outdoor_db</field>
         <field name="name">Outdoor Dry Bulb Temp</field>
+        <field name="pdf_label">Outdoor Dry Bulb Temperature</field>
         <field name="section">Refrigerant Side</field>
         <field name="unit">°C</field>
         <field name="sequence">180</field>
@@ -211,6 +214,7 @@
     <record id="mf_mano_p1" model="airlogic.measurement.field">
         <field name="code">mano_p1</field>
         <field name="name">Manometer P1</field>
+        <field name="pdf_label">P1</field>
         <field name="section">Manometer Pressure</field>
         <field name="unit">psi</field>
         <field name="sequence">290</field>
@@ -218,6 +222,7 @@
     <record id="mf_mano_p2" model="airlogic.measurement.field">
         <field name="code">mano_p2</field>
         <field name="name">Manometer P2</field>
+        <field name="pdf_label">P2</field>
         <field name="section">Manometer Pressure</field>
         <field name="unit">psi</field>
         <field name="sequence">300</field>
@@ -225,6 +230,7 @@
     <record id="mf_mano_diff" model="airlogic.measurement.field">
         <field name="code">mano_diff</field>
         <field name="name">P1 - P2</field>
+        <field name="pdf_label">P1-P2</field>
         <field name="section">Manometer Pressure</field>
         <field name="unit">psi</field>
         <field name="sequence">310</field>

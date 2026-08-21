@@ -14,6 +14,7 @@
                 <field name="sequence" widget="handle"/>
                 <field name="section"/>
                 <field name="name"/>
+                <field name="pdf_label" optional="hide"/>
                 <field name="code"/>
                 <field name="unit"/>
                 <field name="standard"/>
@@ -34,6 +35,7 @@
                     <group>
                         <group>
                             <field name="code"/>
+                            <field name="pdf_label"/>
                             <field name="section"/>
                             <field name="sequence"/>
                         </group>

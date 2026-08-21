@@ -22,6 +22,12 @@ class AirlogicMeasurementField(models.Model):
         help='Grouping header shown on the reading grid, '
              'e.g. Air Side, Refrigerant Side, Manometer Pressure.')
     unit = fields.Char(string='Unit', help="e.g. °C, psi, CFM. Leave blank for none.")
+    pdf_label = fields.Char(
+        string='PDF Label',
+        help='Exact label text as it appears in a Fieldpiece JobLink PDF '
+             'report, only if it differs from Label above (e.g. Label '
+             '"Delta T (T1-T2)" but the PDF prints "T1-T2"). Leave blank '
+             'to match on Label.')
     standard = fields.Char(
         string='Mfr. Standard',
         help='Expected/manufacturer standard shown as a hint next to the '
