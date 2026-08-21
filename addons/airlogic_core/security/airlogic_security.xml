@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ODOO 19 API NOTE (verified against this build's traceback, see
+  kiroku_microapp/security/kiroku_microapp_groups.xml for the original
+  discovery): res.groups.category_id no longer exists. The module
+  category is reached through an intermediate model:
+      res.groups.privilege_id           points to res.groups.privilege
+      res.groups.privilege.category_id  points to ir.module.category
+-->
 <odoo>
 
     <record id="module_category_airlogic" model="ir.module.category">
@@ -6,15 +14,21 @@
         <field name="sequence">20</field>
     </record>
 
+    <record id="privilege_airlogic" model="res.groups.privilege">
+        <field name="name">Standard Airlogic</field>
+        <field name="category_id" ref="module_category_airlogic"/>
+        <field name="sequence">10</field>
+    </record>
+
     <record id="group_airlogic_technician" model="res.groups">
         <field name="name">Technician</field>
-        <field name="category_id" ref="module_category_airlogic"/>
+        <field name="privilege_id" ref="privilege_airlogic"/>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
     <record id="group_airlogic_manager" model="res.groups">
         <field name="name">Manager</field>
-        <field name="category_id" ref="module_category_airlogic"/>
+        <field name="privilege_id" ref="privilege_airlogic"/>
         <field name="implied_ids" eval="[(4, ref('group_airlogic_technician'))]"/>
         <field name="users" eval="[(4, ref('base.user_admin'))]"/>
     </record>
