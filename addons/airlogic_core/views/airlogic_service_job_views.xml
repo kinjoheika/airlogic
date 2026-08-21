@@ -61,6 +61,16 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Visual Checklist" name="visual_checklist">
+                            <p class="text-muted">
+                                Phase 1-4 visual/electrical checklist. This
+                                opens a standalone app screen -- values
+                                aren't saved to this job yet (frontend-only
+                                pass; backend wiring is a follow-up).
+                            </p>
+                            <button name="action_open_visual_checklist" string="Open Visual Checklist"
+                                    type="object" class="btn-secondary" icon="fa-check-square-o"/>
+                        </page>
                         <page string="Photos &amp; Videos" name="media">
                             <field name="media_ids" widget="many2many_binary"/>
                         </page>

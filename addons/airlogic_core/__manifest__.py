@@ -47,6 +47,9 @@ working create/read/write, not visual parity with the mockup yet.
     'assets': {
         'web.assets_backend': [
             'airlogic_core/static/src/scss/airlogic.scss',
+            'airlogic_core/static/src/field_entry/field_entry.js',
+            'airlogic_core/static/src/field_entry/field_entry.xml',
+            'airlogic_core/static/src/field_entry/field_entry.scss',
         ],
     },
     'installable': True,

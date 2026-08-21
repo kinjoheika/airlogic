@@ -58,6 +58,24 @@ class AirlogicServiceJob(models.Model):
     def action_submit(self):
         self.write({'state': 'submitted'})
 
+    def action_open_visual_checklist(self):
+        """Launch the Ph1-4 visual-checklist OWL client action. Frontend
+        only for this pass -- the component holds its own local state and
+        doesn't write back to this job yet; that's a deliberate follow-up.
+        """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'airlogic_visual_checklist',
+            'name': _('Visual Checklist'),
+            'target': 'current',
+            'params': {
+                'job_id': self.id,
+                'job_name': self.name,
+                'equipment_name': self.equipment_id.display_name,
+            },
+        }
+
     @api.model
     def _extract_pdf_lines(self, pdf_bytes):
         """Return the PDF's text as a list of stripped, non-empty lines.
