@@ -7,3 +7,4 @@ from . import airlogic_service_job
 from . import airlogic_reading_line
 from . import airlogic_checklist_line
 from . import airlogic_parts_reference_report
+from . import airlogic_owner_report

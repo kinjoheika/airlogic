@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Owner Full Report, Option A: ported from the aircon-service-ui
+  mockup's finalized/chosen PDF template (tab-pdfview, id="pdf-oa").
+
+  Deliberately omitted vs. the mockup, since this addon doesn't track
+  the underlying data for them:
+    - Section 2's SVG system-diagram + parts A-G legend (static
+      illustrative content, not per-record data)
+    - Repair cost estimates (no cost/pricing-per-issue field exists)
+    - "Contract type" / "Next Service" in the header bar (no contract
+      or scheduling model exists yet)
+  Per-unit status (Good/Watch/Urgent) and Issues Found are derived from
+  real checklist data (airlogic.service.visit._job_status/_job_issues),
+  not fabricated, and site photos are the job's real media_ids.
+-->
+<odoo>
+
+    <template id="report_airlogic_owner_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="visit">
+                <t t-set="vd" t-value="visit_data[visit.id]"/>
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h3 style="font-weight:800;">Standard Airlogic <small class="text-muted">Service Co.</small></h3>
+                                <div class="text-muted" style="font-size:11px;">Air Handling Unit — Owner Service Report</div>
+                            </div>
+                            <div class="text-end" style="font-size:11px;">
+                                Report No. <span t-esc="visit.name"/><br/>
+                                Date: <span t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/><br/>
+                                Technician: <span t-esc="visit.technician_id.name"/>
+                            </div>
+                        </div>
+                        <hr/>
+
+                        <div class="row mb-3" style="font-size:11px;">
+                            <div class="col-3">
+                                <div class="text-muted text-uppercase" style="font-size:9px;">Client</div>
+                                <div class="fw-bold" t-esc="visit.partner_id.display_name"/>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-muted text-uppercase" style="font-size:9px;">Units Inspected</div>
+                                <div class="fw-bold"><t t-esc="vd['total']"/> unit(s)</div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-muted text-uppercase" style="font-size:9px;">Status</div>
+                                <div class="fw-bold" t-esc="dict(visit._fields['state'].selection).get(visit.state)"/>
+                            </div>
+                        </div>
+
+                        <h5 style="font-weight:800;"><span class="badge bg-dark">1</span> Assets Status — This Visit</h5>
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="text-success" style="font-size:20px;font-weight:800;">
+                                    <t t-esc="vd['counts']['good']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                </div>
+                                <div class="text-muted" style="font-size:10px;">Good Condition</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-warning" style="font-size:20px;font-weight:800;">
+                                    <t t-esc="vd['counts']['watch']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                </div>
+                                <div class="text-muted" style="font-size:10px;">Requires Watch</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-danger" style="font-size:20px;font-weight:800;">
+                                    <t t-esc="vd['counts']['urgent']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                </div>
+                                <div class="text-muted" style="font-size:10px;">Urgent Action</div>
+                            </div>
+                        </div>
+
+                        <h5 style="font-weight:800;"><span class="badge bg-dark">2</span> Unit-by-Unit Detail</h5>
+                        <t t-foreach="vd['jobs_info']" t-as="ji">
+                            <t t-set="border_class" t-value="{'good': 'border-success', 'watch': 'border-warning', 'urgent': 'border-danger'}[ji['status']]"/>
+                            <t t-set="text_class" t-value="{'good': 'text-success', 'watch': 'text-warning', 'urgent': 'text-danger'}[ji['status']]"/>
+                            <t t-set="status_label" t-value="{'good': 'GOOD', 'watch': 'WATCH', 'urgent': 'URGENT'}[ji['status']]"/>
+                            <div t-attf-class="card mb-2 {{border_class}}" style="border-width:1.5px;">
+                                <div class="card-header d-flex justify-content-between align-items-center py-1">
+                                    <div>
+                                        <strong t-esc="ji['job'].equipment_id.name"/>
+                                        <span class="text-muted"> — <t t-esc="ji['job'].equipment_id.sublocation_id.name or 'No sublocation'"/></span>
+                                    </div>
+                                    <span t-attf-class="fw-bold {{text_class}}" t-esc="status_label"/>
+                                </div>
+                                <div class="card-body py-2">
+                                    <div t-if="ji['photos']" class="d-flex gap-2 mb-2">
+                                        <img t-foreach="ji['photos']" t-as="photo"
+                                             t-attf-src="data:{{photo.mimetype}};base64,{{photo.datas.decode()}}"
+                                             style="max-height:70px;max-width:100px;object-fit:cover;border:1px solid #ddd;"/>
+                                    </div>
+                                    <div t-if="ji['issues']">
+                                        <div class="text-muted text-uppercase" style="font-size:9px;">Issues Found</div>
+                                        <ul style="font-size:11px;margin-bottom:0;">
+                                            <li t-foreach="ji['issues']" t-as="issue" t-esc="issue"/>
+                                        </ul>
+                                    </div>
+                                    <div t-else="" class="text-success" style="font-size:11px;">
+                                        ✓ All checklist items clear — no repairs needed this visit.
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <div class="d-flex mt-4 pt-2" style="border-top:1px solid #E7E9EB;font-size:10px;">
+                            <div>
+                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Technician</div>
+                                <div class="fw-bold" t-esc="visit.technician_id.name"/>
+                            </div>
+                            <div class="ms-4">
+                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Reviewed By</div>
+                                <div style="min-width:130px;border-bottom:1px solid #C8CDD3;">&#160;</div>
+                            </div>
+                            <div class="ms-4">
+                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Owner / Manager</div>
+                                <div style="min-width:130px;border-bottom:1px solid #C8CDD3;">&#160;</div>
+                            </div>
+                            <div class="ms-auto text-end">
+                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Date</div>
+                                <div class="fw-bold" t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_airlogic_owner_report" model="ir.actions.report">
+        <field name="name">Owner Full Report — Option A</field>
+        <field name="model">airlogic.service.visit</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">airlogic_core.report_airlogic_owner_report</field>
+        <field name="report_file">airlogic_core.report_airlogic_owner_report</field>
+        <field name="print_report_name">'StandardAir_Field Service Report_%s_%s' % (object.partner_id.name, object.date and object.date.strftime('%Y-%m-%d') or '')</field>
+        <field name="binding_model_id" ref="model_airlogic_service_visit"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

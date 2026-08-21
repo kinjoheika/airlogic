@@ -46,6 +46,7 @@ working create/read/write, not visual parity with the mockup yet.
         'views/airlogic_equipment_views.xml',
         'views/airlogic_menus.xml',
         'reports/airlogic_parts_reference_report.xml',
+        'reports/airlogic_owner_report.xml',
     ],
     'assets': {
         'web.assets_backend': [
