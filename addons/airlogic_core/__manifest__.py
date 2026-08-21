@@ -34,8 +34,11 @@ working create/read/write, not visual parity with the mockup yet.
         'data/airlogic_sequence_data.xml',
         'data/airlogic_measurement_field_data.xml',
         'views/airlogic_measurement_field_views.xml',
-        'views/airlogic_equipment_views.xml',
+        # service_job must load before equipment: the equipment form's
+        # smart button references action_airlogic_service_job via
+        # %(...)d, which is resolved at XML-load time, not at runtime.
         'views/airlogic_service_job_views.xml',
+        'views/airlogic_equipment_views.xml',
         'views/airlogic_menus.xml',
     ],
     'installable': True,
