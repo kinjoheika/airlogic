@@ -42,8 +42,8 @@
                     </group>
                     <notebook>
                         <page string="Measurements" name="measurements">
-                            <field name="reading_line_ids" create="0" delete="0">
-                                <list string="Measurements" editable="bottom">
+                            <field name="reading_line_ids">
+                                <list string="Measurements" editable="bottom" create="0" delete="0">
                                     <field name="section" readonly="1"/>
                                     <field name="field_id" readonly="1"/>
                                     <field name="value"/>

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class AirlogicEquipment(models.Model):
@@ -24,6 +24,7 @@ class AirlogicEquipment(models.Model):
     job_ids = fields.One2many('airlogic.service.job', 'equipment_id', string='Service Jobs')
     job_count = fields.Integer(compute='_compute_job_count')
 
+    @api.depends('job_ids')
     def _compute_job_count(self):
         for rec in self:
             rec.job_count = len(rec.job_ids)
