@@ -29,6 +29,9 @@ class AirlogicMeasurementField(models.Model):
     sequence = fields.Integer(string='Sequence', default=10)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ('code_unique', 'unique(code)', 'Measurement field code must be unique.'),
-    ]
+    # Odoo 19 dropped _sql_constraints (fatal "Failed to load registry" on
+    # this instance's SH strict mode). Use models.Constraint instead.
+    _code_unique = models.Constraint(
+        'UNIQUE(code)',
+        'Measurement field code must be unique.',
+    )
