@@ -27,7 +27,7 @@ working create/read/write, not visual parity with the mockup yet.
 """,
     'author': 'Standard Airlogic',
     'license': 'OPL-1',
-    'depends': ['base', 'web', 'mail'],
+    'depends': ['base', 'web', 'mail', 'account'],
     'data': [
         'security/airlogic_security.xml',
         'security/ir.model.access.csv',
@@ -41,6 +41,11 @@ working create/read/write, not visual parity with the mockup yet.
         'views/airlogic_equipment_views.xml',
         'views/airlogic_menus.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'airlogic_core/static/src/scss/airlogic.scss',
+        ],
+    },
     'installable': True,
     'application': True,
     'auto_install': False,

@@ -1,0 +1,27 @@
+// Light brand pass for Standard Airlogic's own buttons/badges only --
+// scoped to these specific classes so nothing else in the backend is
+// affected. Colors match the aircon-service-ui mockup's palette.
+.airlogic-btn-primary.btn {
+    background-color: #0ABFB8 !important;
+    border-color: #0ABFB8 !important;
+    color: #fff !important;
+}
+.airlogic-btn-primary.btn:hover {
+    background-color: #079D97 !important;
+    border-color: #079D97 !important;
+}
+
+.airlogic-btn-invoice.btn {
+    background-color: #C9A227 !important;
+    border-color: #C9A227 !important;
+    color: #1A1D21 !important;
+}
+.airlogic-btn-invoice.btn:hover {
+    background-color: #8A6A0F !important;
+    border-color: #8A6A0F !important;
+    color: #fff !important;
+}
+
+.airlogic-badge.badge {
+    letter-spacing: .02em;
+}

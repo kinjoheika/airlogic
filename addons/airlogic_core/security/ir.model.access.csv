@@ -7,3 +7,5 @@ access_airlogic_service_job_technician,airlogic.service.job.technician,model_air
 access_airlogic_service_job_manager,airlogic.service.job.manager,model_airlogic_service_job,group_airlogic_manager,1,1,1,1
 access_airlogic_reading_line_technician,airlogic.reading.line.technician,model_airlogic_reading_line,group_airlogic_technician,1,1,1,0
 access_airlogic_reading_line_manager,airlogic.reading.line.manager,model_airlogic_reading_line,group_airlogic_manager,1,1,1,1
+access_airlogic_account_move_manager,account.move.airlogic.manager,account.model_account_move,group_airlogic_manager,1,1,1,0
+access_airlogic_account_move_line_manager,account.move.line.airlogic.manager,account.model_account_move_line,group_airlogic_manager,1,1,1,0
