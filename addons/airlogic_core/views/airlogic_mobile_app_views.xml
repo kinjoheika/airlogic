@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_airlogic_mobile_field_entry" model="ir.actions.client">
+        <field name="name">Field Entry (Mobile)</field>
+        <field name="tag">airlogic_mobile_field_entry</field>
+    </record>
+
+</odoo>

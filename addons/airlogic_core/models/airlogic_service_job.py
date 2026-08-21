@@ -101,6 +101,47 @@ class AirlogicServiceJob(models.Model):
                 line.value = val
         return True
 
+    def action_save_reading_lines(self, values):
+        """Called from the mobile field-entry app. values: dict of
+        measurement field code -> entered value.
+        """
+        self.ensure_one()
+        lines_by_code = {line.field_id.code: line for line in self.reading_line_ids}
+        for code, val in (values or {}).items():
+            line = lines_by_code.get(code)
+            if line is not None:
+                line.value = val
+        return True
+
+    def get_field_entry_data(self):
+        """Single-call data fetch for the mobile field-entry app, so it
+        doesn't need several separate search_read round-trips per job.
+        """
+        self.ensure_one()
+        return {
+            'id': self.id,
+            'name': self.name,
+            'state': self.state,
+            'equipment_name': self.equipment_id.display_name,
+            'has_pdf': bool(self.fp_pdf),
+            'media_count': len(self.media_ids),
+            'reading_lines': [{
+                'code': line.field_id.code,
+                'label': line.field_id.name,
+                'section': line.section,
+                'unit': line.unit,
+                'standard': line.standard,
+                'sequence': line.sequence,
+                'value': line.value,
+            } for line in self.reading_line_ids],
+            'checklist_lines': [{
+                'key': line.key,
+                'label': line.label,
+                'phase': line.phase,
+                'value': line.value,
+            } for line in self.checklist_line_ids],
+        }
+
     @api.model
     def _extract_pdf_lines(self, pdf_bytes):
         """Return the PDF's text as a list of stripped, non-empty lines.

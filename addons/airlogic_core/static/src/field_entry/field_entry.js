@@ -7,8 +7,9 @@ import { useService } from "@web/core/utils/hooks";
 // Ph1-4 visual checklist, ported from the aircon-service-ui mockup's
 // buildEquipDataTable() rows. Keys here must match
 // models/airlogic_checklist_line.py's CHECKLIST_ITEMS -- keep both in
-// sync by hand.
-const PHASES = [
+// sync by hand. Exported so mobile_app.js can reuse it instead of a
+// second copy.
+export const PHASES = [
     {
         id: 1,
         title: "Outdoor Unit — OFF",

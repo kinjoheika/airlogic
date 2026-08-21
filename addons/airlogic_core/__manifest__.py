@@ -44,6 +44,7 @@ working create/read/write, not visual parity with the mockup yet.
         # %(...)d, which is resolved at XML-load time, not at runtime.
         'views/airlogic_service_job_views.xml',
         'views/airlogic_equipment_views.xml',
+        'views/airlogic_mobile_app_views.xml',
         'views/airlogic_menus.xml',
         'reports/airlogic_parts_reference_report.xml',
         'reports/airlogic_owner_report.xml',
@@ -54,6 +55,9 @@ working create/read/write, not visual parity with the mockup yet.
             'airlogic_core/static/src/field_entry/field_entry.js',
             'airlogic_core/static/src/field_entry/field_entry.xml',
             'airlogic_core/static/src/field_entry/field_entry.scss',
+            'airlogic_core/static/src/mobile_app/mobile_app.js',
+            'airlogic_core/static/src/mobile_app/mobile_app.xml',
+            'airlogic_core/static/src/mobile_app/mobile_app.scss',
         ],
     },
     'installable': True,

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="airlogic_core.MobileFieldEntry">
+        <div class="o_airlogic_mobile">
+            <div class="o_airlogic_mobile_nav">
+                <div class="o_airlogic_mobile_brand">Standard <span>Airlogic</span></div>
+                <div t-attf-class="o_airlogic_conn_badge {{state.online ? 'online' : 'offline'}}">
+                    <t t-if="state.online">Online</t>
+                    <t t-else="">Offline</t>
+                    <t t-if="state.pendingCount"> · <t t-esc="state.pendingCount"/> pending</t>
+                </div>
+            </div>
+
+            <div t-if="state.loading" class="o_airlogic_mobile_loading">Loading…</div>
+
+            <!-- SCREEN: CLIENTS -->
+            <div t-if="state.screen === 'clients' and !state.loading" class="o_airlogic_mobile_body">
+                <h4>Select Client</h4>
+                <div t-foreach="state.clients" t-as="client" t-key="client.id"
+                     class="o_airlogic_card" t-on-click="() => this.selectClient(client)">
+                    <div class="o_airlogic_card_title" t-esc="client.name"/>
+                    <div class="o_airlogic_card_sub"><t t-esc="client.count"/> unit(s)</div>
+                </div>
+                <p t-if="!state.clients.length" class="text-muted">No equipment on file yet.</p>
+            </div>
+
+            <!-- SCREEN: DEVICES -->
+            <div t-if="state.screen === 'devices' and !state.loading" class="o_airlogic_mobile_body">
+                <div class="o_airlogic_back" t-on-click="backToClients">‹ Clients</div>
+                <h4><t t-esc="state.selectedPartner.name"/></h4>
+                <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
+                    <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
+                    <div t-foreach="grp.items" t-as="device" t-key="device.id"
+                         class="o_airlogic_card" t-on-click="() => this.selectDevice(device)">
+                        <div class="o_airlogic_card_title" t-esc="device.name"/>
+                        <div class="o_airlogic_card_sub">
+                            <t t-if="device.brand_id" t-esc="device.brand_id[1]"/>
+                            <t t-if="device.model"> · <t t-esc="device.model"/></t>
+                            <t t-if="device.hp_id"> · <t t-esc="device.hp_id[1]"/> HP</t>
+                        </div>
+                    </div>
+                </t>
+            </div>
+
+            <!-- SCREEN: JOB -->
+            <div t-if="state.screen === 'job' and state.job and !state.loading" class="o_airlogic_mobile_body">
+                <div class="o_airlogic_back" t-on-click="backToDevices">‹ Devices</div>
+                <h4><t t-esc="state.job.equipment_name"/></h4>
+                <div class="text-muted mb-2"><t t-esc="state.job.name"/></div>
+
+                <div class="o_airlogic_phase_bar">
+                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'measurements' ? 'active' : ''}}"
+                         t-on-click="() => this.state.phase = 'measurements'">Measurements</div>
+                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'checklist' ? 'active' : ''}}"
+                         t-on-click="() => this.state.phase = 'checklist'">Visual Checklist</div>
+                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'pdf' ? 'active' : ''}}"
+                         t-on-click="() => this.state.phase = 'pdf'">PDF Import</div>
+                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'photos' ? 'active' : ''}}"
+                         t-on-click="() => this.state.phase = 'photos'">Photos</div>
+                </div>
+
+                <!-- Measurements -->
+                <div t-if="state.phase === 'measurements'">
+                    <t t-foreach="groupedReadingLines" t-as="grp" t-key="grp.section">
+                        <div class="o_airlogic_group_hd" t-esc="grp.section"/>
+                        <div t-foreach="grp.items" t-as="line" t-key="line.code" class="o_airlogic_item">
+                            <div class="o_airlogic_item_label">
+                                <span t-esc="line.label"/>
+                                <span t-if="line.standard" class="o_airlogic_item_std" t-esc="line.standard"/>
+                            </div>
+                            <div class="o_airlogic_item_control">
+                                <input type="text" class="form-control form-control-sm o_airlogic_number"
+                                       t-att-value="line.value"
+                                       t-on-change="(ev) => this.onReadingChange(line.code, ev)"/>
+                                <span t-if="line.unit" class="o_airlogic_unit" t-esc="line.unit"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Visual Checklist -->
+                <div t-if="state.phase === 'checklist'">
+                    <div class="o_airlogic_phase_bar">
+                        <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
+                            <div t-attf-class="o_airlogic_phase_tab {{state.checklistPhase === p.id ? 'active' : ''}}"
+                                 t-on-click="() => this.setChecklistPhase(p.id)">
+                                Ph<t t-esc="p.id"/>
+                            </div>
+                        </t>
+                    </div>
+                    <t t-foreach="currentChecklistPhase.items" t-as="item" t-key="item.key">
+                        <div class="o_airlogic_item">
+                            <div class="o_airlogic_item_label">
+                                <span t-esc="item.label"/>
+                                <span t-if="item.standard" class="o_airlogic_item_std" t-esc="item.standard"/>
+                            </div>
+                            <div class="o_airlogic_item_control">
+                                <t t-if="item.type === 'check'">
+                                    <button type="button" class="btn btn-sm"
+                                            t-att-class="checklistLineValue(item.key) === 'ok' ? 'btn-success' : 'btn-outline-secondary'"
+                                            t-on-click="() => this.setChecklistValue(item.key, 'ok')">✓</button>
+                                    <button type="button" class="btn btn-sm"
+                                            t-att-class="checklistLineValue(item.key) === 'flagged' ? 'btn-danger' : 'btn-outline-secondary'"
+                                            t-on-click="() => this.setChecklistValue(item.key, 'flagged')">⚠</button>
+                                </t>
+                                <t t-if="item.type === 'number'">
+                                    <input type="number" step="0.1" class="form-control form-control-sm o_airlogic_number"
+                                           t-att-value="checklistLineValue(item.key)"
+                                           t-on-change="(ev) => this.onChecklistTextChange(item.key, ev)"/>
+                                    <span t-if="item.unit" class="o_airlogic_unit" t-esc="item.unit"/>
+                                </t>
+                                <t t-if="item.type === 'leak'">
+                                    <button type="button" class="btn btn-sm"
+                                            t-att-class="checklistLineValue(item.key) === 'pass' ? 'btn-success' : 'btn-outline-secondary'"
+                                            t-on-click="() => this.setChecklistValue(item.key, 'pass')">No Leak</button>
+                                    <button type="button" class="btn btn-sm"
+                                            t-att-class="checklistLineValue(item.key) === 'leak' ? 'btn-danger' : 'btn-outline-secondary'"
+                                            t-on-click="() => this.setChecklistValue(item.key, 'leak')">Leak</button>
+                                </t>
+                                <t t-if="item.type === 'text'">
+                                    <textarea class="form-control form-control-sm"
+                                              t-att-value="checklistLineValue(item.key)"
+                                              t-on-change="(ev) => this.onChecklistTextChange(item.key, ev)"/>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- PDF Import -->
+                <div t-if="state.phase === 'pdf'" class="o_airlogic_upload_zone">
+                    <p>Import the Fieldpiece JobLink PDF report to auto-fill the Measurements tab.</p>
+                    <input type="file" accept="application/pdf" t-on-change="onPdfSelected"/>
+                </div>
+
+                <!-- Photos -->
+                <div t-if="state.phase === 'photos'" class="o_airlogic_upload_zone">
+                    <p>Attach photos/videos for this visit. On a phone, this opens the camera too.</p>
+                    <input type="file" accept="image/*,video/*" multiple="multiple" t-on-change="onPhotoSelected"/>
+                </div>
+
+                <div class="o_airlogic_phase_nav">
+                    <button type="button" class="btn airlogic-btn-primary" t-on-click="onSubmitJob">
+                        Submit Job
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

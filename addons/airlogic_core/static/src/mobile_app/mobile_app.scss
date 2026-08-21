@@ -1,0 +1,172 @@
+.o_airlogic_mobile {
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.o_airlogic_mobile_nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0D1B2A;
+    color: #fff;
+    padding: 14px 16px;
+    border-bottom: 3px solid #C9A227;
+}
+
+.o_airlogic_mobile_brand {
+    font-weight: 800;
+    font-size: 14.5px;
+
+    span {
+        color: #C9A227;
+    }
+}
+
+.o_airlogic_conn_badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 3px;
+
+    &.online {
+        background: rgba(30, 123, 52, 0.25);
+        color: #6FE39A;
+    }
+
+    &.offline {
+        background: rgba(122, 31, 43, 0.35);
+        color: #F0A0A8;
+    }
+}
+
+.o_airlogic_mobile_loading {
+    padding: 40px;
+    text-align: center;
+    color: #5B6470;
+}
+
+.o_airlogic_mobile_body {
+    padding: 16px;
+}
+
+.o_airlogic_back {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0ABFB8;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.o_airlogic_card {
+    background: #fff;
+    border: 1px solid #D8DBDE;
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+
+    &:active {
+        background: #F5F6F7;
+    }
+}
+
+.o_airlogic_card_title {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.o_airlogic_card_sub {
+    font-size: 12px;
+    color: #5B6470;
+    margin-top: 2px;
+}
+
+.o_airlogic_group_hd {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: #8B92A0;
+    margin: 14px 0 6px;
+}
+
+.o_airlogic_phase_bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-bottom: 1.5px solid #D8DBDE;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+}
+
+.o_airlogic_phase_tab {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 3px;
+    background: #F3F4F6;
+    color: #5B6470;
+    cursor: pointer;
+
+    &.active {
+        background: #0ABFB8;
+        color: #fff;
+    }
+}
+
+.o_airlogic_item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #F1F3F4;
+}
+
+.o_airlogic_item_label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.o_airlogic_item_std {
+    font-size: 10.5px;
+    color: #8B92A0;
+    font-weight: 500;
+}
+
+.o_airlogic_item_control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.o_airlogic_number {
+    width: 80px;
+}
+
+.o_airlogic_unit {
+    font-size: 11px;
+    color: #8B92A0;
+}
+
+.o_airlogic_upload_zone {
+    border: 2px dashed #D8DBDE;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+
+    p {
+        font-size: 12.5px;
+        color: #5B6470;
+    }
+}
+
+.o_airlogic_phase_nav {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
