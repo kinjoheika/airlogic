@@ -6,6 +6,9 @@
   category is reached through an intermediate model:
       res.groups.privilege_id           points to res.groups.privilege
       res.groups.privilege.category_id  points to ir.module.category
+  Also: res.groups.users was renamed to res.groups.user_ids (mirrors the
+  res.users.groups_id -> group_ids rename documented in
+  kiroku_microapp/migrations/19.0.1.13.0/post-migration.py).
 -->
 <odoo>
 
@@ -30,7 +33,7 @@
         <field name="name">Manager</field>
         <field name="privilege_id" ref="privilege_airlogic"/>
         <field name="implied_ids" eval="[(4, ref('group_airlogic_technician'))]"/>
-        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
     </record>
 
 </odoo>
