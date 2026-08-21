@@ -51,6 +51,23 @@
                         </group>
                     </group>
                     <notebook>
+                        <page string="Parts Reference" name="parts_reference">
+                            <group>
+                                <group>
+                                    <field name="qty"/>
+                                    <field name="ipm_model"/>
+                                    <field name="pcb_model"/>
+                                    <field name="refrigerant"/>
+                                </group>
+                                <group>
+                                    <field name="capacitor_brand"/>
+                                    <field name="capacitor_uf"/>
+                                    <field name="capacitor_volt"/>
+                                    <field name="compressor_brand"/>
+                                    <field name="compressor_details"/>
+                                </group>
+                            </group>
+                        </page>
                         <page string="Reading Comparison" name="reading_comparison">
                             <field name="reading_comparison_html" readonly="1"/>
                         </page>
@@ -71,6 +88,7 @@
                 <field name="partner_id"/>
                 <field name="sublocation"/>
                 <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_sublocation" string="Sublocation" context="{'group_by': 'sublocation'}"/>
             </search>
         </field>
     </record>

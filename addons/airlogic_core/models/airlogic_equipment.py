@@ -21,6 +21,18 @@ class AirlogicEquipment(models.Model):
     category_id = fields.Many2one(
         'airlogic.equipment.category', string='Category', required=True,
         help='Drives per-unit service pricing on invoices.')
+    qty = fields.Integer(
+        string='Qty', default=1,
+        help='Number of identical units this record represents on the '
+             'Parts Reference sheet.')
+    ipm_model = fields.Char(string='IPM Model No.')
+    pcb_model = fields.Char(string='PCB Model No.')
+    capacitor_brand = fields.Char(string='Capacitor Brand')
+    capacitor_uf = fields.Float(string='Capacitor µF')
+    capacitor_volt = fields.Float(string='Capacitor V')
+    refrigerant = fields.Char(string='Refrigerant', help='Specified refrigerant type, e.g. R-410A')
+    compressor_brand = fields.Char(string='Compressor Brand')
+    compressor_details = fields.Char(string='Compressor Details')
     install_year = fields.Integer(string='Install Year')
     active = fields.Boolean(default=True)
     job_ids = fields.One2many('airlogic.service.job', 'equipment_id', string='Service Jobs')

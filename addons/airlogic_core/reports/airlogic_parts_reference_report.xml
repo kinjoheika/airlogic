@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Parts Reference: a per-client, per-sublocation sheet of each device's
+  spare-parts specs (IPM/PCB model no., capacitor, refrigerant,
+  compressor). Grouping happens in Python (_get_report_values) based on
+  whichever equipment records the user selected before printing: print
+  one client's equipment to get one client's sheet, sectioned by
+  sublocation. No images, per spec.
+-->
+<odoo>
+
+    <template id="report_airlogic_parts_reference">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <div class="page">
+                    <h2>Parts Reference</h2>
+                    <t t-foreach="groups" t-as="group">
+                        <h3 t-esc="group['partner'].display_name or 'No Client'"/>
+                        <t t-foreach="group['sublocations']" t-as="subgroup">
+                            <h4 t-esc="subgroup['sublocation']"/>
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Brand</th>
+                                        <th>Model</th>
+                                        <th>HP</th>
+                                        <th>Qty</th>
+                                        <th>IPM Model</th>
+                                        <th>PCB Model</th>
+                                        <th>Capacitor</th>
+                                        <th>Refrigerant</th>
+                                        <th>Compressor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="subgroup['equipment']" t-as="e">
+                                        <td t-esc="e.brand"/>
+                                        <td t-esc="e.model"/>
+                                        <td t-esc="e.hp"/>
+                                        <td t-esc="e.qty"/>
+                                        <td t-esc="e.ipm_model"/>
+                                        <td t-esc="e.pcb_model"/>
+                                        <td>
+                                            <span t-esc="e.capacitor_brand"/>
+                                            <span t-if="e.capacitor_uf"> · <t t-esc="e.capacitor_uf"/>µF</span>
+                                            <span t-if="e.capacitor_volt"> / <t t-esc="e.capacitor_volt"/>V</span>
+                                        </td>
+                                        <td t-esc="e.refrigerant"/>
+                                        <td>
+                                            <span t-esc="e.compressor_brand"/>
+                                            <span t-if="e.compressor_details"> — <t t-esc="e.compressor_details"/></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_airlogic_parts_reference" model="ir.actions.report">
+        <field name="name">Parts Reference</field>
+        <field name="model">airlogic.equipment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">airlogic_core.report_airlogic_parts_reference</field>
+        <field name="report_file">airlogic_core.report_airlogic_parts_reference</field>
+        <field name="print_report_name">'Parts Reference'</field>
+        <field name="binding_model_id" ref="model_airlogic_equipment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>
