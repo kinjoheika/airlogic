@@ -25,10 +25,10 @@
                     <button name="action_submit" string="Submit" type="object"
                             class="oe_highlight airlogic-btn-primary" invisible="state == 'submitted'"/>
                     <button name="action_create_invoice" string="Create Invoice" type="object"
-                            class="airlogic-btn-invoice" groups="group_airlogic_manager"
+                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
                             invisible="invoice_id"/>
                     <button name="action_create_invoice" string="View Invoice" type="object"
-                            class="airlogic-btn-invoice" groups="group_airlogic_manager"
+                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
                             invisible="not invoice_id"/>
                     <field name="state" widget="statusbar"/>
                 </header>
@@ -44,8 +44,8 @@
                         <group>
                             <field name="technician_id"/>
                             <field name="date"/>
-                            <field name="service_price" groups="group_airlogic_manager"/>
-                            <field name="invoice_id" readonly="1" groups="group_airlogic_manager"/>
+                            <field name="service_price" groups="airlogic_core.group_airlogic_manager"/>
+                            <field name="invoice_id" readonly="1" groups="airlogic_core.group_airlogic_manager"/>
                         </group>
                     </group>
                     <notebook>

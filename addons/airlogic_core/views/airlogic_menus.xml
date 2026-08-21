@@ -2,7 +2,7 @@
 <odoo>
 
     <menuitem id="menu_airlogic_root" name="Standard Airlogic" sequence="25"
-              groups="group_airlogic_technician"/>
+              groups="airlogic_core.group_airlogic_technician"/>
 
     <menuitem id="menu_airlogic_service_job" name="Service Jobs"
               parent="menu_airlogic_root" action="action_airlogic_service_job"
@@ -14,7 +14,7 @@
 
     <menuitem id="menu_airlogic_configuration" name="Configuration"
               parent="menu_airlogic_root" sequence="90"
-              groups="group_airlogic_manager"/>
+              groups="airlogic_core.group_airlogic_manager"/>
 
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
               parent="menu_airlogic_configuration" action="action_airlogic_measurement_field"
