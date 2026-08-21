@@ -28,3 +28,14 @@ class AirlogicEquipment(models.Model):
     def _compute_job_count(self):
         for rec in self:
             rec.job_count = len(rec.job_ids)
+
+    def action_view_jobs(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Service Jobs',
+            'res_model': 'airlogic.service.job',
+            'view_mode': 'list,form',
+            'domain': [('equipment_id', '=', self.id)],
+            'context': {'default_equipment_id': self.id},
+        }

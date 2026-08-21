@@ -24,9 +24,8 @@
             <form>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="%(action_airlogic_service_job)d" type="action"
-                                class="oe_stat_button" icon="fa-wrench"
-                                context="{'search_default_equipment_id': active_id}">
+                        <button name="action_view_jobs" type="object"
+                                class="oe_stat_button" icon="fa-wrench">
                             <field name="job_count" widget="statinfo" string="Service Jobs"/>
                         </button>
                     </div>
