@@ -13,6 +13,8 @@ class AirlogicServiceJob(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Reference', default='/', copy=False, tracking=True)
+    visit_id = fields.Many2one(
+        'airlogic.service.visit', string='Visit', ondelete='set null', tracking=True)
     equipment_id = fields.Many2one(
         'airlogic.equipment', string='Equipment', required=True, tracking=True)
     partner_id = fields.Many2one(
@@ -34,9 +36,6 @@ class AirlogicServiceJob(models.Model):
         help='Job-site photos and videos. Stored as normal Odoo attachments '
              '-- if the filestore is later moved to object storage (e.g. '
              'Cloudflare R2), these move transparently with it.')
-    service_price = fields.Float(string='Service Price', default=0.0)
-    invoice_id = fields.Many2one(
-        'account.move', string='Invoice', readonly=True, copy=False)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -58,36 +57,6 @@ class AirlogicServiceJob(models.Model):
 
     def action_submit(self):
         self.write({'state': 'submitted'})
-
-    def action_create_invoice(self):
-        self.ensure_one()
-        if self.invoice_id:
-            return self._open_invoice()
-        if not self.partner_id:
-            raise UserError(_("Equipment must have a client before invoicing."))
-        move = self.env['account.move'].create({
-            'move_type': 'out_invoice',
-            'partner_id': self.partner_id.id,
-            'invoice_origin': self.name,
-            'invoice_line_ids': [(0, 0, {
-                'name': _('Service visit — %(equipment)s — %(job)s') % {
-                    'equipment': self.equipment_id.name, 'job': self.name},
-                'quantity': 1,
-                'price_unit': self.service_price,
-            })],
-        })
-        self.invoice_id = move.id
-        return self._open_invoice()
-
-    def _open_invoice(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Invoice'),
-            'res_model': 'account.move',
-            'view_mode': 'form',
-            'res_id': self.invoice_id.id,
-        }
 
     @api.model
     def _extract_pdf_lines(self, pdf_bytes):

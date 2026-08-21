@@ -4,6 +4,10 @@
     <menuitem id="menu_airlogic_root" name="Standard Airlogic" sequence="25"
               groups="airlogic_core.group_airlogic_technician"/>
 
+    <menuitem id="menu_airlogic_service_visit" name="Service Visits"
+              parent="menu_airlogic_root" action="action_airlogic_service_visit"
+              sequence="5"/>
+
     <menuitem id="menu_airlogic_service_job" name="Service Jobs"
               parent="menu_airlogic_root" action="action_airlogic_service_job"
               sequence="10"/>
@@ -19,5 +23,9 @@
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
               parent="menu_airlogic_configuration" action="action_airlogic_measurement_field"
               sequence="10"/>
+
+    <menuitem id="menu_airlogic_equipment_category" name="Equipment Categories"
+              parent="menu_airlogic_configuration" action="action_airlogic_equipment_category"
+              sequence="20"/>
 
 </odoo>

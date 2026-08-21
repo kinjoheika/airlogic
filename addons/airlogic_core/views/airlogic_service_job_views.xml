@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <list string="Service Jobs">
                 <field name="name"/>
+                <field name="visit_id"/>
                 <field name="date"/>
                 <field name="partner_id"/>
                 <field name="equipment_id"/>
@@ -24,12 +25,6 @@
                 <header>
                     <button name="action_submit" string="Submit" type="object"
                             class="oe_highlight airlogic-btn-primary" invisible="state == 'submitted'"/>
-                    <button name="action_create_invoice" string="Create Invoice" type="object"
-                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
-                            invisible="invoice_id"/>
-                    <button name="action_create_invoice" string="View Invoice" type="object"
-                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
-                            invisible="not invoice_id"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -38,14 +33,13 @@
                     </div>
                     <group>
                         <group>
+                            <field name="visit_id"/>
                             <field name="equipment_id"/>
                             <field name="partner_id" readonly="1"/>
                         </group>
                         <group>
                             <field name="technician_id"/>
                             <field name="date"/>
-                            <field name="service_price" groups="airlogic_core.group_airlogic_manager"/>
-                            <field name="invoice_id" readonly="1" groups="airlogic_core.group_airlogic_manager"/>
                         </group>
                     </group>
                     <notebook>

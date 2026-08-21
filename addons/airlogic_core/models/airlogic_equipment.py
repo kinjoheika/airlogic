@@ -13,12 +13,9 @@ class AirlogicEquipment(models.Model):
         'res.partner', string='Client', required=True, tracking=True)
     sublocation = fields.Char(string='Sublocation', help='e.g. Rooftop Parking, 3rd Floor Server Room')
     serial_number = fields.Char(string='Serial Number')
-    equipment_type = fields.Selection([
-        ('split_wall', 'Split-Wall'),
-        ('split_floor', 'Split-Floor'),
-        ('window', 'Window Type'),
-        ('other', 'Other'),
-    ], string='Type', default='split_wall')
+    category_id = fields.Many2one(
+        'airlogic.equipment.category', string='Category', required=True,
+        help='Drives per-unit service pricing on invoices.')
     install_year = fields.Integer(string='Install Year')
     active = fields.Boolean(default=True)
     job_ids = fields.One2many('airlogic.service.job', 'equipment_id', string='Service Jobs')

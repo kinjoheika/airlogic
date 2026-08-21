@@ -10,7 +10,7 @@
                 <field name="sublocation"/>
                 <field name="name"/>
                 <field name="serial_number"/>
-                <field name="equipment_type"/>
+                <field name="category_id"/>
                 <field name="install_year"/>
                 <field name="job_count"/>
             </list>
@@ -39,7 +39,7 @@
                             <field name="serial_number"/>
                         </group>
                         <group>
-                            <field name="equipment_type"/>
+                            <field name="category_id"/>
                             <field name="install_year"/>
                             <field name="active"/>
                         </group>

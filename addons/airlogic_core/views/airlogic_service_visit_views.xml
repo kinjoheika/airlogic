@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_airlogic_service_visit_list" model="ir.ui.view">
+        <field name="name">airlogic.service.visit.list</field>
+        <field name="model">airlogic.service.visit</field>
+        <field name="arch" type="xml">
+            <list string="Service Visits">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="technician_id"/>
+                <field name="job_count" string="Units"/>
+                <field name="invoice_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_airlogic_service_visit_form" model="ir.ui.view">
+        <field name="name">airlogic.service.visit.form</field>
+        <field name="model">airlogic.service.visit</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_create_invoice" string="Create Invoice" type="object"
+                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
+                            invisible="invoice_id"/>
+                    <button name="action_create_invoice" string="View Invoice" type="object"
+                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
+                            invisible="not invoice_id"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="technician_id"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="invoice_id" readonly="1" groups="airlogic_core.group_airlogic_manager"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Service Jobs" name="jobs">
+                            <field name="job_ids">
+                                <list string="Service Jobs">
+                                    <field name="equipment_id"/>
+                                    <field name="technician_id"/>
+                                    <field name="date"/>
+                                    <field name="state" widget="badge" class="airlogic-badge"
+                                           decoration-success="state == 'submitted'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_airlogic_service_visit_search" model="ir.ui.view">
+        <field name="name">airlogic.service.visit.search</field>
+        <field name="model">airlogic.service.visit</field>
+        <field name="arch" type="xml">
+            <search string="Service Visits">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="technician_id"/>
+                <separator/>
+                <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_airlogic_service_visit" model="ir.actions.act_window">
+        <field name="name">Service Visits</field>
+        <field name="res_model">airlogic.service.visit</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_airlogic_service_visit_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Log a site visit</p>
+            <p>A visit can cover multiple pieces of equipment -- add a
+               Service Job per unit serviced. Invoicing is priced per unit
+               per category, not per device: one invoice line summarizes
+               each category across the whole visit.</p>
+        </field>
+    </record>
+
+</odoo>

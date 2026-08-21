@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Starting equipment categories, ported from the old equipment_type
+  Selection values. Rates default to 0; set real per-unit rates under
+  Configuration > Equipment Categories before invoicing.
+-->
+<odoo noupdate="1">
+    <record id="cat_split_wall" model="airlogic.equipment.category">
+        <field name="name">Split-Wall</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="cat_split_floor" model="airlogic.equipment.category">
+        <field name="name">Split-Floor</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="cat_window" model="airlogic.equipment.category">
+        <field name="name">Window Type</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="cat_other" model="airlogic.equipment.category">
+        <field name="name">Other</field>
+        <field name="sequence">40</field>
+    </record>
+</odoo>

@@ -33,7 +33,10 @@ working create/read/write, not visual parity with the mockup yet.
         'security/ir.model.access.csv',
         'data/airlogic_sequence_data.xml',
         'data/airlogic_measurement_field_data.xml',
+        'data/airlogic_equipment_category_data.xml',
         'views/airlogic_measurement_field_views.xml',
+        'views/airlogic_equipment_category_views.xml',
+        'views/airlogic_service_visit_views.xml',
         # service_job must load before equipment: the equipment form's
         # smart button references action_airlogic_service_job via
         # %(...)d, which is resolved at XML-load time, not at runtime.
