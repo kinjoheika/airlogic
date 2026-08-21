@@ -9,6 +9,9 @@
                 <field name="partner_id"/>
                 <field name="sublocation"/>
                 <field name="name"/>
+                <field name="brand"/>
+                <field name="model"/>
+                <field name="hp"/>
                 <field name="serial_number"/>
                 <field name="category_id"/>
                 <field name="install_year"/>
@@ -30,20 +33,28 @@
                         </button>
                     </div>
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="e.g. Carrier 40MBFQ12"/></h1>
+                        <h1><field name="name" placeholder="e.g. Server Room AC"/></h1>
                     </div>
                     <group>
                         <group>
                             <field name="partner_id"/>
                             <field name="sublocation"/>
                             <field name="serial_number"/>
+                            <field name="category_id"/>
                         </group>
                         <group>
-                            <field name="category_id"/>
+                            <field name="brand"/>
+                            <field name="model"/>
+                            <field name="hp"/>
                             <field name="install_year"/>
                             <field name="active"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page string="Reading Comparison" name="reading_comparison">
+                            <field name="reading_comparison_html" readonly="1"/>
+                        </page>
+                    </notebook>
                 </sheet>
                 <chatter/>
             </form>

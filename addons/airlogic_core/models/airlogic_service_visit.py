@@ -20,7 +20,7 @@ class AirlogicServiceVisit(models.Model):
     partner_id = fields.Many2one('res.partner', string='Client', required=True, tracking=True)
     technician_id = fields.Many2one(
         'res.users', string='Technician', default=lambda self: self.env.user, tracking=True)
-    date = fields.Date(string='Visit Date', default=fields.Date.context_today, tracking=True)
+    date = fields.Datetime(string='Visit Date', default=fields.Datetime.now, tracking=True)
     job_ids = fields.One2many('airlogic.service.job', 'visit_id', string='Service Jobs')
     job_count = fields.Integer(compute='_compute_job_count')
     invoice_id = fields.Many2one(
