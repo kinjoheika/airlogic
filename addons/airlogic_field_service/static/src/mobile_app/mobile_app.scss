@@ -170,3 +170,169 @@
     display: flex;
     justify-content: flex-end;
 }
+
+// --- PIN gate screens ------------------------------------------------
+.o_airlogic_pin_screen {
+    text-align: center;
+    padding-top: 60px;
+
+    .o_airlogic_pin_icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+
+    button {
+        display: block;
+        width: 100%;
+        max-width: 260px;
+        margin: 10px auto 0;
+    }
+}
+
+.o_airlogic_pin_input {
+    max-width: 200px;
+    margin: 12px auto;
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 6px;
+}
+
+// --- Bottom nav (4 tabs) ----------------------------------------------
+.o_airlogic_bottom_nav {
+    display: flex;
+    border-top: 1px solid #D8DBDE;
+    background: #fff;
+    position: sticky;
+    bottom: 0;
+}
+
+.o_airlogic_bnav_tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #8B92A0;
+    cursor: pointer;
+
+    &.active {
+        color: #0ABFB8;
+    }
+}
+
+.o_airlogic_bnav_icon {
+    font-size: 18px;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.o_airlogic_locked {
+    background: #FEF3CD;
+    border: 1px solid #E8D066;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: #744D0A;
+}
+
+// --- Phase dots (DSR nav) ----------------------------------------------
+.o_airlogic_phase_nav_dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.o_airlogic_phase_dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #F3F4F6;
+    color: #5B6470;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &.on {
+        background: #0ABFB8;
+        color: #fff;
+    }
+}
+
+// --- Leak map (7 spots) -------------------------------------------------
+.o_airlogic_leak_map {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.o_airlogic_leak_spot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #F3F4F6;
+    border: 1.5px solid #D8DBDE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &.on {
+        background: #7A1F2B;
+        border-color: #7A1F2B;
+        color: #fff;
+    }
+}
+
+// --- Modal dialogs (Flag/Alert, Exit-confirm) ---------------------------
+.o_airlogic_dialog_overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 27, 42, 0.55);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.o_airlogic_dialog_sheet {
+    background: #fff;
+    border-radius: 10px 10px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+}
+
+.o_airlogic_dialog_hd {
+    font-weight: 800;
+    font-size: 15px;
+    margin-bottom: 6px;
+}
+
+.o_airlogic_dialog_item {
+    font-size: 12.5px;
+    color: #5B6470;
+    margin-bottom: 10px;
+}
+
+.o_airlogic_dialog_choices {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+
+    button {
+        flex: 1;
+    }
+}
+
+.o_airlogic_unit_table {
+    font-size: 11px;
+    overflow-x: auto;
+}

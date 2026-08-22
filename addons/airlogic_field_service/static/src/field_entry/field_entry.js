@@ -4,15 +4,26 @@ import { Component, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
-// Ph1-4 visual checklist, ported from the aircon-service-ui mockup's
-// buildEquipDataTable() rows. Keys here must match
+// Ph1-4 checklist, ported from the aircon-service-ui mockup's actual
+// mobile DSR flow (tab-mobile #pp-dsr / dsp-ph1..4) -- NOT the earlier
+// desktop Equipment Data table this was first built against, which
+// turned out to have a different phase grouping and was missing the
+// Megger insulation test. Keys/order here must match
 // models/airlogic_checklist_line.py's CHECKLIST_ITEMS -- keep both in
 // sync by hand. Exported so mobile_app.js can reuse it instead of a
 // second copy.
 export const PHASES = [
     {
         id: 1,
-        title: "Outdoor Unit — OFF",
+        title: "Outdoor — Power ON",
+        items: [
+            { key: "amp_draw", label: "Amp Draw", type: "number", unit: "A" },
+            { key: "cfm_outdoor", label: "Anemometer (Outdoor)", type: "number", unit: "CFM" },
+        ],
+    },
+    {
+        id: 2,
+        title: "Outdoor — Power OFF",
         items: [
             { key: "brk", label: "Breaker Wires & Terminals", type: "check" },
             { key: "comp", label: "Compressor Body", type: "check" },
@@ -22,39 +33,47 @@ export const PHASES = [
             { key: "ipm", label: "IPM", type: "check" },
             { key: "wires", label: "Wires & Terminals", type: "check" },
             { key: "cables", label: "Cable Ties / Paste / Grommets", type: "check" },
-        ],
-    },
-    {
-        id: 2,
-        title: "Outdoor Unit — ON",
-        items: [
-            { key: "volt", label: "Line Voltage", type: "number", unit: "V", standard: "198–242 V" },
-            { key: "a1", label: "Amp Draw L1", type: "number", unit: "A", standard: "Nameplate ±10%" },
-            { key: "a2", label: "Amp Draw L2", type: "number", unit: "A", standard: "Nameplate ±10%" },
-            { key: "a3", label: "Amp Draw L3", type: "number", unit: "A", standard: "Nameplate ±10%" },
+            { key: "meg_u", label: "Megger U Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
+            { key: "meg_v", label: "Megger V Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
+            { key: "meg_w", label: "Megger W Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
         ],
     },
     {
         id: 3,
         title: "Indoor Unit",
         items: [
-            { key: "cfm", label: "Anemometer", type: "number", unit: "CFM", standard: "Per BTU rating" },
+            { key: "cfm_indoor", label: "Anemometer (Indoor)", type: "number", unit: "CFM" },
             { key: "coil", label: "Coil & Fins", type: "check" },
             { key: "drain", label: "Drain Pan", type: "check" },
-            { key: "wiresIn", label: "Wires (tactile)", type: "check" },
+            { key: "drainline", label: "Drain Line", type: "check" },
+            { key: "blower", label: "Blower Fan", type: "check" },
+            { key: "fanmotor", label: "Fan Motor", type: "check" },
+            { key: "wires_in", label: "Wires", type: "check" },
         ],
     },
     {
         id: 4,
-        title: "Line Set",
+        title: "Line Set + Submit",
         items: [
             { key: "ins", label: "Insulation Tape", type: "check" },
-            { key: "wireCond", label: "Wire Condition", type: "check" },
+            { key: "wire_cond", label: "Wire Condition", type: "check" },
             { key: "cond", label: "Condensation", type: "check" },
             { key: "leak", label: "Leak Check", type: "leak" },
-            { key: "notes", label: "Tech Notes", type: "text" },
+            { key: "notes", label: "Technician Notes", type: "text" },
         ],
     },
+];
+
+// 7 leak-detector check spots for the Leak Check step, split into the
+// two zones shown in the mockup's leak map.
+export const LEAK_SPOTS = [
+    { index: 0, zone: "Indoor Unit" },
+    { index: 1, zone: "Indoor Unit" },
+    { index: 2, zone: "Indoor Unit" },
+    { index: 3, zone: "Condenser" },
+    { index: 4, zone: "Condenser" },
+    { index: 5, zone: "Condenser" },
+    { index: 6, zone: "Condenser" },
 ];
 
 export class AirlogicVisualChecklist extends Component {

@@ -65,7 +65,7 @@ class AirlogicServiceJob(models.Model):
         self.ensure_one()
         self.env['airlogic.checklist.line'].create([
             {'job_id': self.id, 'phase': phase, 'key': key, 'label': label}
-            for phase, key, label in CHECKLIST_ITEMS
+            for phase, key, label, item_type, unit in CHECKLIST_ITEMS
         ])
 
     def action_submit(self):
@@ -86,12 +86,14 @@ class AirlogicServiceJob(models.Model):
                 'job_name': self.name,
                 'equipment_name': self.equipment_id.display_name,
                 'values': {l.key: l.value for l in self.checklist_line_ids if l.value},
+                'notes': {l.key: l.note for l in self.checklist_line_ids if l.note},
             },
         }
 
-    def action_save_visual_checklist(self, values):
-        """Called by the OWL client action's Done button via the ORM
-        service. values: dict of item key -> entered value.
+    def action_save_visual_checklist(self, values, notes=None):
+        """Called by the OWL client actions' Done/flag-dialog Save via the
+        ORM service. values: dict of item key -> entered value. notes:
+        dict of item key -> note text (mainly for alert/flagged items).
         """
         self.ensure_one()
         lines_by_key = {line.key: line for line in self.checklist_line_ids}
@@ -99,6 +101,10 @@ class AirlogicServiceJob(models.Model):
             line = lines_by_key.get(key)
             if line is not None:
                 line.value = val
+        for key, note in (notes or {}).items():
+            line = lines_by_key.get(key)
+            if line is not None:
+                line.note = note
         return True
 
     def action_save_reading_lines(self, values):
@@ -139,6 +145,7 @@ class AirlogicServiceJob(models.Model):
                 'label': line.label,
                 'phase': line.phase,
                 'value': line.value,
+                'note': line.note,
             } for line in self.checklist_line_ids],
         }
 

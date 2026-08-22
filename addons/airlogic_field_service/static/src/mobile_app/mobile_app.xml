@@ -14,7 +14,27 @@
 
             <div t-if="state.loading" class="o_airlogic_mobile_loading">Loading…</div>
 
-            <!-- SCREEN: CLIENTS -->
+            <!-- PIN GATE 1 (before client list) -->
+            <div t-if="state.screen === 'pin1' and !state.loading" class="o_airlogic_mobile_body o_airlogic_pin_screen">
+                <div class="o_airlogic_pin_icon">🔐</div>
+                <h4>Technician Verification</h4>
+                <p class="text-muted">Enter your PIN to view clients.</p>
+                <button type="button" class="btn airlogic-btn-primary" t-on-click="() => this.startPinCheck('clients')">
+                    Continue
+                </button>
+            </div>
+
+            <div t-if="state.screen === 'pin1_check' and !state.loading" class="o_airlogic_mobile_body o_airlogic_pin_screen">
+                <div class="o_airlogic_pin_icon">🔐</div>
+                <h4>Enter PIN</h4>
+                <input type="password" inputmode="numeric" maxlength="6" class="form-control o_airlogic_pin_input"
+                       t-att-value="state.pinInput" t-on-input="onPinInput" placeholder="• • • • • •"/>
+                <p t-if="state.pinError" class="text-danger">Incorrect PIN. Try again.</p>
+                <button type="button" class="btn airlogic-btn-primary" t-on-click="confirmPin">Confirm</button>
+                <button type="button" class="btn btn-link" t-on-click="cancelPin">Cancel</button>
+            </div>
+
+            <!-- CLIENT LIST -->
             <div t-if="state.screen === 'clients' and !state.loading" class="o_airlogic_mobile_body">
                 <h4>Select Client</h4>
                 <div t-foreach="state.clients" t-as="client" t-key="client.id"
@@ -25,46 +45,209 @@
                 <p t-if="!state.clients.length" class="text-muted">No equipment on file yet.</p>
             </div>
 
-            <!-- SCREEN: DEVICES -->
-            <div t-if="state.screen === 'devices' and !state.loading" class="o_airlogic_mobile_body">
+            <!-- MAIN (bottom-nav tabs) -->
+            <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_mobile_body o_airlogic_main">
                 <div class="o_airlogic_back" t-on-click="backToClients">‹ Clients</div>
                 <h4><t t-esc="state.selectedPartner.name"/></h4>
-                <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
-                    <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
-                    <div t-foreach="grp.items" t-as="device" t-key="device.id"
-                         class="o_airlogic_card" t-on-click="() => this.selectDevice(device)">
-                        <div class="o_airlogic_card_title" t-esc="device.name"/>
-                        <div class="o_airlogic_card_sub">
-                            <t t-if="device.brand_id" t-esc="device.brand_id[1]"/>
-                            <t t-if="device.model"> · <t t-esc="device.model"/></t>
-                            <t t-if="device.hp_id"> · <t t-esc="device.hp_id[1]"/> HP</t>
+
+                <!-- VISIT TAB -->
+                <t t-if="state.tab === 'visit'">
+                    <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
+                        <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
+                        <div t-foreach="grp.items" t-as="device" t-key="device.id"
+                             class="o_airlogic_card" t-on-click="() => this.selectDeviceForEntry(device)">
+                            <div class="o_airlogic_card_title" t-esc="device.name"/>
+                            <div class="o_airlogic_card_sub">
+                                <t t-if="device.brand_id" t-esc="device.brand_id[1]"/>
+                                <t t-if="device.model"> · <t t-esc="device.model"/></t>
+                            </div>
                         </div>
+                    </t>
+                </t>
+
+                <!-- UNITS TAB -->
+                <t t-if="state.tab === 'units' and !state.unitEquipment">
+                    <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
+                        <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
+                        <div t-foreach="grp.items" t-as="device" t-key="device.id"
+                             class="o_airlogic_card" t-on-click="() => this.openUnit(device)">
+                            <div class="o_airlogic_card_title" t-esc="device.name"/>
+                        </div>
+                    </t>
+                </t>
+                <t t-if="state.tab === 'units' and state.unitEquipment">
+                    <div class="o_airlogic_back" t-on-click="closeUnit">‹ Units</div>
+                    <h5 t-esc="state.unitEquipment.name"/>
+                    <div class="o_airlogic_phase_bar">
+                        <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'reading' ? 'active' : ''}}"
+                             t-on-click="() => this.state.unitComparisonTab = 'reading'">Readings</div>
+                        <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'visual' ? 'active' : ''}}"
+                             t-on-click="() => this.state.unitComparisonTab = 'visual'">Checklist</div>
+                    </div>
+                    <div t-if="state.unitComparisonTab === 'reading'" class="o_airlogic_unit_table"
+                         t-out="state.unitEquipment.reading_comparison_html"/>
+                    <div t-if="state.unitComparisonTab === 'visual'" class="o_airlogic_unit_table"
+                         t-out="state.unitEquipment.visual_comparison_html"/>
+                </t>
+
+                <!-- HISTORY TAB -->
+                <t t-if="state.tab === 'history'">
+                    <div t-foreach="state.history" t-as="h" t-key="h.id" class="o_airlogic_card">
+                        <div class="o_airlogic_card_title" t-esc="h.equipment_id[1]"/>
+                        <div class="o_airlogic_card_sub">
+                            <t t-esc="h.name"/> · <t t-esc="h.technician_id[1]"/>
+                        </div>
+                        <div t-if="h.notes" class="o_airlogic_card_sub" t-esc="h.notes"/>
+                    </div>
+                    <p t-if="!state.history.length" class="text-muted">No submitted jobs yet for this client.</p>
+                </t>
+
+                <!-- EQUIPMENT (ADD/DELETE) TAB -->
+                <t t-if="state.tab === 'equipment' and !state.equipmentEdit">
+                    <p t-if="!state.isManager" class="o_airlogic_locked">
+                        🔒 View only — equipment editing requires the Manager role.
+                    </p>
+                    <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
+                        <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
+                        <div t-foreach="grp.items" t-as="device" t-key="device.id"
+                             class="o_airlogic_card" t-on-click="() => state.isManager ? this.openEquipmentEdit(device) : null">
+                            <div class="o_airlogic_card_title" t-esc="device.name"/>
+                        </div>
+                    </t>
+                </t>
+                <t t-if="state.tab === 'equipment' and state.equipmentEdit">
+                    <div class="o_airlogic_back" t-on-click="closeEquipmentEdit">‹ Equipment</div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>Unit Label</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.equipmentEdit.name"
+                               t-on-change="(ev) => state.equipmentEdit.name = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>Model</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.equipmentEdit.model"
+                               t-on-change="(ev) => state.equipmentEdit.model = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>Serial Number</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.equipmentEdit.serial_number"
+                               t-on-change="(ev) => state.equipmentEdit.serial_number = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_phase_nav">
+                        <button type="button" class="btn airlogic-btn-primary" t-on-click="saveEquipmentEdit">
+                            Save Equipment Info
+                        </button>
                     </div>
                 </t>
             </div>
 
-            <!-- SCREEN: JOB -->
-            <div t-if="state.screen === 'job' and state.job and !state.loading" class="o_airlogic_mobile_body">
-                <div class="o_airlogic_back" t-on-click="backToDevices">‹ Devices</div>
+            <!-- BOTTOM NAV (4 tabs) -->
+            <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_bottom_nav">
+                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'visit' ? 'active' : ''}}" t-on-click="() => this.setTab('visit')">
+                    <div class="o_airlogic_bnav_icon">📋</div>Visit
+                </div>
+                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'units' ? 'active' : ''}}" t-on-click="() => this.setTab('units')">
+                    <div class="o_airlogic_bnav_icon">📊</div>Units
+                </div>
+                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'history' ? 'active' : ''}}" t-on-click="() => this.setTab('history')">
+                    <div class="o_airlogic_bnav_icon">🕐</div>History
+                </div>
+                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'equipment' ? 'active' : ''}}" t-on-click="() => this.setTab('equipment')">
+                    <div class="o_airlogic_bnav_icon">🔧</div>Add/Delete
+                </div>
+            </div>
+
+            <!-- DSR: DEVICE ENTRY, PHASES 1-4 -->
+            <!-- (PIN GATE 2, before entering here, reuses the pin1_check
+                 screen above with pinPurpose='device') -->
+            <div t-if="state.screen === 'dsr' and state.job and !state.loading" class="o_airlogic_mobile_body">
+                <div class="o_airlogic_back" t-on-click="requestExitDsr">‹ Back to Visit</div>
                 <h4><t t-esc="state.job.equipment_name"/></h4>
                 <div class="text-muted mb-2"><t t-esc="state.job.name"/></div>
 
-                <div class="o_airlogic_phase_bar">
-                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'measurements' ? 'active' : ''}}"
-                         t-on-click="() => this.state.phase = 'measurements'">Measurements</div>
-                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'checklist' ? 'active' : ''}}"
-                         t-on-click="() => this.state.phase = 'checklist'">Visual Checklist</div>
-                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'pdf' ? 'active' : ''}}"
-                         t-on-click="() => this.state.phase = 'pdf'">PDF Import</div>
-                    <div t-attf-class="o_airlogic_phase_tab {{state.phase === 'photos' ? 'active' : ''}}"
-                         t-on-click="() => this.state.phase = 'photos'">Photos</div>
+                <div class="o_airlogic_phase_nav_dots">
+                    <button type="button" class="btn btn-secondary" t-on-click="() => state.dsrPhase = Math.max(1, state.dsrPhase - 1)"
+                            t-att-disabled="state.dsrPhase === 1">← Prev</button>
+                    <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
+                        <div t-attf-class="o_airlogic_phase_dot {{state.dsrPhase === p.id ? 'on' : ''}}"
+                             t-on-click="() => this.state.dsrPhase = p.id">
+                            <t t-esc="p.id"/>
+                        </div>
+                    </t>
+                    <button t-if="state.dsrPhase &lt; 4" type="button" class="btn airlogic-btn-primary"
+                            t-on-click="() => this.state.dsrPhase += 1">Save &amp; Next →</button>
+                    <button t-else="" type="button" class="btn airlogic-btn-invoice" t-on-click="onSubmitJob">
+                        Submit
+                    </button>
                 </div>
+                <div class="text-muted" style="font-size:11px;"><t t-esc="currentDsrPhase.title"/></div>
 
-                <!-- Measurements -->
-                <div t-if="state.phase === 'measurements'">
-                    <t t-foreach="groupedReadingLines" t-as="grp" t-key="grp.section">
-                        <div class="o_airlogic_group_hd" t-esc="grp.section"/>
-                        <div t-foreach="grp.items" t-as="line" t-key="line.code" class="o_airlogic_item">
+                <t t-foreach="currentDsrPhase.items" t-as="item" t-key="item.key">
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label">
+                            <span t-esc="item.label"/>
+                            <span t-if="item.standard" class="o_airlogic_item_std" t-esc="item.standard"/>
+                        </div>
+                        <div class="o_airlogic_item_control">
+                            <t t-if="item.type === 'check'">
+                                <t t-set="line" t-value="checklistLine(item.key)"/>
+                                <button type="button" class="btn btn-sm"
+                                        t-att-class="(line and line.value === 'flagged') ? 'btn-danger' : (line and line.value === 'alert') ? 'btn-warning' : 'btn-outline-secondary'"
+                                        t-on-click="() => this.openFlagDialog(item.key, item.label)">
+                                    <t t-if="line and line.value === 'flagged'">⚠ Flagged</t>
+                                    <t t-elif="line and line.value === 'alert'">⚡ Alert</t>
+                                    <t t-else="">✓ Normal</t>
+                                </button>
+                            </t>
+                            <t t-if="item.type === 'number'">
+                                <input type="number" step="0.1" class="form-control form-control-sm o_airlogic_number"
+                                       t-att-value="checklistLine(item.key) ? checklistLine(item.key).value : ''"
+                                       t-on-change="(ev) => this.onNumberChecklistChange(item.key, ev)"/>
+                                <span t-if="item.unit" class="o_airlogic_unit" t-esc="item.unit"/>
+                            </t>
+                            <t t-if="item.type === 'leak'">
+                                <div style="width:100%;">
+                                    <button type="button" class="btn btn-sm"
+                                            t-att-class="!leakDetected ? 'btn-success' : 'btn-outline-secondary'"
+                                            t-on-click="setLeakPass">✓ No Leak</button>
+                                    <button type="button" class="btn btn-sm"
+                                            t-att-class="leakDetected ? 'btn-danger' : 'btn-outline-secondary'"
+                                            t-on-click="() => this.toggleLeakSpot(0)">⚠ Leak Detected</button>
+                                    <div t-if="leakDetected" class="o_airlogic_leak_map">
+                                        <t t-foreach="leakSpots" t-as="spot" t-key="spot.index">
+                                            <div t-attf-class="o_airlogic_leak_spot {{leakSpotIndices.includes(spot.index) ? 'on' : ''}}"
+                                                 t-on-click="() => this.toggleLeakSpot(spot.index)"
+                                                 t-att-title="spot.zone">
+                                                <t t-esc="spot.index + 1"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-if="item.type === 'text'">
+                                <textarea class="form-control form-control-sm"
+                                          t-att-value="checklistLine(item.key) ? checklistLine(item.key).value : ''"
+                                          t-on-change="(ev) => this.onNumberChecklistChange(item.key, ev)"/>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Ph4 also carries the Fieldpiece 30-field grid + PDF import + photos -->
+                <t t-if="state.dsrPhase === 4">
+                    <div class="o_airlogic_group_hd">MeasureQuick / Fieldpiece Report</div>
+                    <div class="o_airlogic_upload_zone">
+                        <input type="file" accept="application/pdf" t-on-change="onPdfSelected"/>
+                    </div>
+                    <div class="o_airlogic_group_hd">Photos / Videos</div>
+                    <div class="o_airlogic_upload_zone">
+                        <input type="file" accept="image/*,video/*" multiple="multiple" t-on-change="onPhotoSelected"/>
+                    </div>
+                    <div class="o_airlogic_group_hd">Measurements</div>
+                    <t t-foreach="dsrReadingLinesForPhase" t-as="line" t-key="line.code">
+                        <div class="o_airlogic_item">
                             <div class="o_airlogic_item_label">
                                 <span t-esc="line.label"/>
                                 <span t-if="line.standard" class="o_airlogic_item_std" t-esc="line.standard"/>
@@ -77,73 +260,36 @@
                             </div>
                         </div>
                     </t>
-                </div>
+                </t>
+            </div>
 
-                <!-- Visual Checklist -->
-                <div t-if="state.phase === 'checklist'">
-                    <div class="o_airlogic_phase_bar">
-                        <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
-                            <div t-attf-class="o_airlogic_phase_tab {{state.checklistPhase === p.id ? 'active' : ''}}"
-                                 t-on-click="() => this.setChecklistPhase(p.id)">
-                                Ph<t t-esc="p.id"/>
-                            </div>
-                        </t>
+            <!-- FLAG / ALERT DIALOG -->
+            <div t-if="state.flagDialog" class="o_airlogic_dialog_overlay">
+                <div class="o_airlogic_dialog_sheet">
+                    <div class="o_airlogic_dialog_hd">Mark Issue</div>
+                    <div class="o_airlogic_dialog_item" t-esc="state.flagDialog.label"/>
+                    <textarea class="form-control" placeholder="Add note (optional)…" rows="3"
+                              t-att-value="state.flagDialog.note" t-on-change="onFlagNoteChange"/>
+                    <div class="o_airlogic_dialog_choices">
+                        <button type="button" class="btn btn-warning" t-on-click="() => this.setFlagState('alert')">⚡ Alert</button>
+                        <button type="button" class="btn btn-danger" t-on-click="() => this.setFlagState('flagged')">⚠ Flagged</button>
                     </div>
-                    <t t-foreach="currentChecklistPhase.items" t-as="item" t-key="item.key">
-                        <div class="o_airlogic_item">
-                            <div class="o_airlogic_item_label">
-                                <span t-esc="item.label"/>
-                                <span t-if="item.standard" class="o_airlogic_item_std" t-esc="item.standard"/>
-                            </div>
-                            <div class="o_airlogic_item_control">
-                                <t t-if="item.type === 'check'">
-                                    <button type="button" class="btn btn-sm"
-                                            t-att-class="checklistLineValue(item.key) === 'ok' ? 'btn-success' : 'btn-outline-secondary'"
-                                            t-on-click="() => this.setChecklistValue(item.key, 'ok')">✓</button>
-                                    <button type="button" class="btn btn-sm"
-                                            t-att-class="checklistLineValue(item.key) === 'flagged' ? 'btn-danger' : 'btn-outline-secondary'"
-                                            t-on-click="() => this.setChecklistValue(item.key, 'flagged')">⚠</button>
-                                </t>
-                                <t t-if="item.type === 'number'">
-                                    <input type="number" step="0.1" class="form-control form-control-sm o_airlogic_number"
-                                           t-att-value="checklistLineValue(item.key)"
-                                           t-on-change="(ev) => this.onChecklistTextChange(item.key, ev)"/>
-                                    <span t-if="item.unit" class="o_airlogic_unit" t-esc="item.unit"/>
-                                </t>
-                                <t t-if="item.type === 'leak'">
-                                    <button type="button" class="btn btn-sm"
-                                            t-att-class="checklistLineValue(item.key) === 'pass' ? 'btn-success' : 'btn-outline-secondary'"
-                                            t-on-click="() => this.setChecklistValue(item.key, 'pass')">No Leak</button>
-                                    <button type="button" class="btn btn-sm"
-                                            t-att-class="checklistLineValue(item.key) === 'leak' ? 'btn-danger' : 'btn-outline-secondary'"
-                                            t-on-click="() => this.setChecklistValue(item.key, 'leak')">Leak</button>
-                                </t>
-                                <t t-if="item.type === 'text'">
-                                    <textarea class="form-control form-control-sm"
-                                              t-att-value="checklistLineValue(item.key)"
-                                              t-on-change="(ev) => this.onChecklistTextChange(item.key, ev)"/>
-                                </t>
-                            </div>
-                        </div>
-                    </t>
+                    <button type="button" class="btn btn-outline-secondary w-100 mt-2" t-on-click="setNormal">✓ Set Normal</button>
+                    <button type="button" class="btn btn-link w-100" t-on-click="cancelFlagDialog">Cancel</button>
                 </div>
+            </div>
 
-                <!-- PDF Import -->
-                <div t-if="state.phase === 'pdf'" class="o_airlogic_upload_zone">
-                    <p>Import the Fieldpiece JobLink PDF report to auto-fill the Measurements tab.</p>
-                    <input type="file" accept="application/pdf" t-on-change="onPdfSelected"/>
-                </div>
-
-                <!-- Photos -->
-                <div t-if="state.phase === 'photos'" class="o_airlogic_upload_zone">
-                    <p>Attach photos/videos for this visit. On a phone, this opens the camera too.</p>
-                    <input type="file" accept="image/*,video/*" multiple="multiple" t-on-change="onPhotoSelected"/>
-                </div>
-
-                <div class="o_airlogic_phase_nav">
-                    <button type="button" class="btn airlogic-btn-primary" t-on-click="onSubmitJob">
-                        Submit Job
-                    </button>
+            <!-- EXIT-CONFIRM DIALOG -->
+            <div t-if="state.exitConfirm" class="o_airlogic_dialog_overlay">
+                <div class="o_airlogic_dialog_sheet text-center">
+                    <div style="font-size:28px;">💾</div>
+                    <div class="o_airlogic_dialog_hd">Exit Service Entry?</div>
+                    <p class="text-muted">
+                        <t t-if="state.pendingCount">You have <t t-esc="state.pendingCount"/> unsynced change(s). </t>
+                        Make sure your work is saved before leaving.
+                    </p>
+                    <button type="button" class="btn airlogic-btn-primary w-100 mb-2" t-on-click="stayInDsr">Stay</button>
+                    <button type="button" class="btn btn-outline-secondary w-100" t-on-click="confirmExitDsr">Exit</button>
                 </div>
             </div>
         </div>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_users_form_inherit_airlogic_field_pin" model="ir.ui.view">
+        <field name="name">res.users.form.airlogic.field.pin</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <!-- login has existed on this form since forever; a safer
+                 anchor than guessing at a specific page/group structure
+                 that's churned before on this Odoo build. -->
+            <field name="login" position="after">
+                <field name="airlogic_field_pin" password="True"
+                       string="Field App PIN"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
