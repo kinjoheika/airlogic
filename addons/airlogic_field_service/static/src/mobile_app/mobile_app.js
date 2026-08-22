@@ -394,7 +394,10 @@ export class AirlogicMobileFieldEntry extends Component {
         let unlocked = 1;
         for (const phaseId of [1, 2, 3]) {
             const phase = this.checklistPhases.find((p) => p.id === phaseId);
-            const required = phase.items.filter((it) => it.type !== "text");
+            // Only "number" items gate progress -- "check" items default
+            // to Normal and are only touched to flag an exception, so
+            // they stay blank by design and must not block the phase.
+            const required = phase.items.filter((it) => it.type === "number");
             const complete = required.length > 0 && required.every((it) => {
                 const line = this.checklistLine(it.key);
                 return line && line.value;

@@ -125,12 +125,18 @@ class AirlogicServiceJob(models.Model):
         self.write({'state': 'submitted'})
 
     def _phase_required_keys(self, phase):
-        """Every checklist key in this phase except free-text notes --
-        those are optional context, not something "Phase complete" should
-        hinge on.
+        """Only 'number' items gate phase completion -- actual measured
+        readings (Amp Draw, Megger, etc.) that must be entered, not
+        back-filled later. 'check' items are deliberately excluded: they
+        default to Normal and are only touched to flag an exception (see
+        the mobile app's Flag/Alert dialog), so most stay blank/unset for
+        the whole visit by design -- requiring a value on them here would
+        make a phase with any check items never register as complete.
+        'leak' and 'text' are Ph4-only and never factor into unlocking
+        anything (nothing comes after Ph4).
         """
         return [key for ph, key, label, item_type, unit in CHECKLIST_ITEMS
-                if ph == phase and item_type != 'text']
+                if ph == phase and item_type == 'number']
 
     def get_unlocked_phase(self):
         """Highest phase number (1-4) the technician may currently enter
