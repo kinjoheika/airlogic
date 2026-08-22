@@ -80,7 +80,10 @@ export class AirlogicMobileFieldEntry extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.user = useService("user");
+        // useService("user") throws "Service user is not available" on
+        // this build -- use the stable session_info global + a server-
+        // side has_group RPC instead of that service.
+        this.uid = odoo.session_info.uid;
         this.checklistPhases = CHECKLIST_PHASES;
         this.leakSpots = LEAK_SPOTS;
         this.state = useState({
@@ -117,7 +120,9 @@ export class AirlogicMobileFieldEntry extends Component {
         });
 
         onWillStart(async () => {
-            this.state.isManager = await this.user.hasGroup("airlogic_core.group_airlogic_manager");
+            this.state.isManager = await this.orm.call(
+                "res.users", "has_group", ["airlogic_core.group_airlogic_manager"]
+            );
         });
 
         this._onlineHandler = () => {
@@ -153,7 +158,7 @@ export class AirlogicMobileFieldEntry extends Component {
 
     async confirmPin() {
         const ok = await this.orm.call(
-            "res.users", "action_verify_field_pin", [[this.user.userId], this.state.pinInput]
+            "res.users", "action_verify_field_pin", [[this.uid], this.state.pinInput]
         );
         if (!ok) {
             this.state.pinError = true;
