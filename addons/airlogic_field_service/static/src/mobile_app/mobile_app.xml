@@ -188,7 +188,7 @@
                             <t t-else="">Add Equipment</t>
                         </button>
                     </div>
-                    <button t-if="state.equipmentEdit.id" type="button" class="btn btn-outline-danger w-100 mt-2"
+                    <button t-if="state.equipmentEdit.id" type="button" class="btn btn-outline-danger w-100 mt-2 o_airlogic_btn_lg"
                             t-on-click="() => this.requestDeleteEquipment(state.equipmentEdit)">
                         🗑 Delete Equipment
                     </button>

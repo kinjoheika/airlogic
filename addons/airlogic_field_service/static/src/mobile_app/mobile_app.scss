@@ -9,8 +9,8 @@
     background: #D9F5F4;
     color: #079D97;
     border-radius: 3px;
-    padding: 2px 8px;
-    font-size: 10px;
+    padding: 3px 9px;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -33,6 +33,10 @@
     box-shadow: 0 16px 40px rgba(13, 27, 42, 0.28);
     overflow: hidden;
     position: relative;
+    // Baseline for the whole app -- most specific classes below still
+    // set their own size, but anything that doesn't inherits this
+    // instead of the browser's 13-14px default.
+    font-size: 16px;
 }
 
 .o_airlogic_mobile_nav {
@@ -47,10 +51,12 @@
 }
 
 .o_airlogic_nav_exit {
-    font-size: 18px;
+    font-size: 24px;
+    line-height: 1;
     cursor: pointer;
     opacity: 0.8;
-    margin-right: 4px;
+    padding: 8px;
+    margin: -8px -4px -8px -8px;
 
     &:active {
         opacity: 1;
@@ -59,7 +65,7 @@
 
 .o_airlogic_mobile_brand {
     font-weight: 800;
-    font-size: 14.5px;
+    font-size: 17px;
     flex: 1;
 
     span {
@@ -68,9 +74,9 @@
 }
 
 .o_airlogic_conn_badge {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    padding: 3px 9px;
+    padding: 4px 10px;
     border-radius: 3px;
 
     &.online {
@@ -99,34 +105,54 @@
 // Sticky action bar pinned to the bottom of the phone frame -- every
 // screen gets one so "back"/"save"/"confirm" are always in the same
 // place, instead of buttons scrolling away inside a tall body.
+// Footer buttons are the main one-hand touch targets in the app -- 52px
+// tall (well above the ~44px minimum recommended tap-target size) and
+// sized to fill the bar, so a thumb can hit them without looking.
 .o_airlogic_footer_bar {
     flex: 0 0 auto;
     display: flex;
-    gap: 8px;
-    padding: 10px 16px;
+    gap: 10px;
+    padding: 12px 16px;
     border-top: 1px solid #D8DBDE;
     background: #fff;
 
     button {
         flex: 1;
+        min-height: 52px;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 8px;
     }
 }
 
+// Reusable sizing for any standalone full/half-width action button that
+// isn't already inside .o_airlogic_footer_bar/.o_airlogic_phase_nav/a
+// dialog sheet (which size their own buttons directly).
+.o_airlogic_btn_lg {
+    min-height: 52px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
 .o_airlogic_back {
-    font-size: 12.5px;
+    display: inline-block;
+    font-size: 15px;
     font-weight: 700;
     color: #0ABFB8;
     cursor: pointer;
-    margin-bottom: 8px;
+    padding: 6px 4px;
+    margin: -6px 0 4px -4px;
 }
 
 .o_airlogic_card {
     background: #fff;
     border: 1px solid #D8DBDE;
-    border-radius: 4px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 10px;
     cursor: pointer;
+    min-height: 44px;
 
     &:active {
         background: #F5F6F7;
@@ -135,7 +161,7 @@
 
 .o_airlogic_card_title {
     font-weight: 700;
-    font-size: 14px;
+    font-size: 17px;
 }
 
 .o_airlogic_add_card {
@@ -148,34 +174,34 @@
 }
 
 .o_airlogic_card_sub {
-    font-size: 12px;
+    font-size: 14px;
     color: #5B6470;
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 .o_airlogic_group_hd {
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
     letter-spacing: .05em;
     text-transform: uppercase;
     color: #8B92A0;
-    margin: 14px 0 6px;
+    margin: 16px 0 8px;
 }
 
 .o_airlogic_phase_bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     border-bottom: 1.5px solid #D8DBDE;
     margin-bottom: 14px;
     padding-bottom: 10px;
 }
 
 .o_airlogic_phase_tab {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 10px 16px;
+    font-size: 15px;
     font-weight: 700;
-    border-radius: 3px;
+    border-radius: 6px;
     background: #F3F4F6;
     color: #5B6470;
     cursor: pointer;
@@ -190,8 +216,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    padding: 10px 0;
+    gap: 10px;
+    padding: 12px 0;
     border-bottom: 1px solid #F1F3F4;
 }
 
@@ -199,11 +225,11 @@
     display: flex;
     flex-direction: column;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 16px;
 }
 
 .o_airlogic_item_std {
-    font-size: 10.5px;
+    font-size: 12px;
     color: #8B92A0;
     font-weight: 500;
 }
@@ -211,27 +237,39 @@
 .o_airlogic_item_control {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
+
+    // Flagged/Alert/Normal toggle + the leak-check pair live here and
+    // are tapped constantly through the whole walkthrough -- sized as
+    // real touch targets, not compact desktop-style buttons.
+    button {
+        min-height: 44px;
+        font-size: 14px;
+        padding: 8px 14px;
+        border-radius: 6px;
+    }
 }
 
 .o_airlogic_number {
-    width: 80px;
+    width: 96px;
+    min-height: 44px;
+    font-size: 16px;
 }
 
 .o_airlogic_unit {
-    font-size: 11px;
+    font-size: 13px;
     color: #8B92A0;
 }
 
 .o_airlogic_upload_zone {
     border: 2px dashed #D8DBDE;
-    border-radius: 4px;
-    padding: 20px;
+    border-radius: 8px;
+    padding: 24px;
     text-align: center;
 
     p {
-        font-size: 12.5px;
+        font-size: 14px;
         color: #5B6470;
     }
 }
@@ -239,7 +277,14 @@
 .o_airlogic_phase_nav {
     margin-top: 20px;
     display: flex;
-    justify-content: flex-end;
+
+    button {
+        flex: 1;
+        min-height: 52px;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 8px;
+    }
 }
 
 // --- PIN gate screens ------------------------------------------------
@@ -254,14 +299,17 @@
 }
 
 .o_airlogic_pin_input {
-    max-width: 200px;
-    margin: 12px auto;
+    max-width: 220px;
+    margin: 14px auto;
     text-align: center;
-    font-size: 22px;
-    letter-spacing: 6px;
+    font-size: 26px;
+    letter-spacing: 7px;
+    min-height: 52px;
 }
 
-// --- Bottom nav (4 tabs) ----------------------------------------------
+// --- Bottom nav (4 tabs) -- the other main one-hand touch strip,
+// tapped constantly to switch tabs, so each of the 4 targets gets a
+// generous height rather than a thin compact strip. -------------------
 .o_airlogic_bottom_nav {
     flex: 0 0 auto;
     display: flex;
@@ -272,8 +320,9 @@
 .o_airlogic_bnav_tab {
     flex: 1;
     text-align: center;
-    padding: 8px 4px;
-    font-size: 10.5px;
+    padding: 12px 4px;
+    min-height: 56px;
+    font-size: 13px;
     font-weight: 700;
     color: #8B92A0;
     cursor: pointer;
@@ -284,30 +333,30 @@
 }
 
 .o_airlogic_bnav_icon {
-    font-size: 18px;
+    font-size: 23px;
     line-height: 1;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
 // --- Phase dots (DSR nav) ----------------------------------------------
 .o_airlogic_phase_nav_dots {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 10px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
 }
 
 .o_airlogic_phase_dot {
-    width: 26px;
-    height: 26px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: #F3F4F6;
     color: #5B6470;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 800;
     cursor: pointer;
 
@@ -319,7 +368,7 @@
     &.locked {
         cursor: not-allowed;
         opacity: 0.55;
-        font-size: 11px;
+        font-size: 14px;
     }
 }
 
@@ -333,27 +382,27 @@
 
 .o_airlogic_oor_badge {
     color: #7A1F2B;
-    font-size: 13px;
+    font-size: 16px;
 }
 
 // --- Leak map (7 spots) -------------------------------------------------
 .o_airlogic_leak_map {
     display: flex;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 8px;
+    margin-top: 10px;
     flex-wrap: wrap;
 }
 
 .o_airlogic_leak_spot {
-    width: 28px;
-    height: 28px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: #F3F4F6;
     border: 1.5px solid #D8DBDE;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
 
@@ -380,28 +429,39 @@
 
 .o_airlogic_dialog_sheet {
     background: #fff;
-    border-radius: 10px 10px 0 0;
-    padding: 20px;
+    border-radius: 14px 14px 0 0;
+    padding: 22px 20px;
     width: 100%;
     max-height: 100%;
     overflow-y: auto;
+    font-size: 15px;
+
+    // Every action in a dialog is a full-width or half-width button --
+    // sized the same as the footer bar so Confirm/Cancel/Delete/etc.
+    // are all equally easy to hit one-handed.
+    > button, .o_airlogic_dialog_choices button {
+        min-height: 52px;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 8px;
+    }
 }
 
 .o_airlogic_dialog_hd {
     font-weight: 800;
-    font-size: 15px;
-    margin-bottom: 6px;
+    font-size: 18px;
+    margin-bottom: 8px;
 }
 
 .o_airlogic_dialog_item {
-    font-size: 12.5px;
+    font-size: 15px;
     color: #5B6470;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .o_airlogic_dialog_choices {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     margin-top: 10px;
 
     button {
@@ -416,22 +476,22 @@
 .o_airlogic_compare_card {
     background: #fff;
     border: 1px solid #D8DBDE;
-    border-radius: 4px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
 }
 
 .o_airlogic_compare_hd {
     font-weight: 700;
-    font-size: 13px;
-    margin-bottom: 4px;
+    font-size: 16px;
+    margin-bottom: 6px;
 }
 
 .o_airlogic_compare_row {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
-    padding: 3px 0;
+    font-size: 14px;
+    padding: 5px 0;
 
     &:not(:last-child) {
         border-bottom: 1px solid #F1F3F4;
