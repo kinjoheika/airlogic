@@ -132,10 +132,10 @@
         <field name="name">Owner Full Report — Option A</field>
         <field name="model">airlogic.service.visit</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">airlogic_core.report_airlogic_owner_report</field>
-        <field name="report_file">airlogic_core.report_airlogic_owner_report</field>
+        <field name="report_name">airlogic_field_service.report_airlogic_owner_report</field>
+        <field name="report_file">airlogic_field_service.report_airlogic_owner_report</field>
         <field name="print_report_name">'StandardAir_Field Service Report_%s_%s' % (object.partner_id.name, object.date and object.date.strftime('%Y-%m-%d') or '')</field>
-        <field name="binding_model_id" ref="model_airlogic_service_visit"/>
+        <field name="binding_model_id" ref="airlogic_core.model_airlogic_service_visit"/>
         <field name="binding_type">report</field>
     </record>
 

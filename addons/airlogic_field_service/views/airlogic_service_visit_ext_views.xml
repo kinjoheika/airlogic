@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adds the job-aware parts of the Visit views (Service Jobs tab,
+  invoicing buttons, Owner Report print/email buttons) back via
+  inheritance, since Inventory's base view has no knowledge of
+  airlogic.service.job.
+-->
+<odoo>
+
+    <record id="view_airlogic_service_visit_list_inherit_field_service" model="ir.ui.view">
+        <field name="name">airlogic.service.visit.list.field.service</field>
+        <field name="model">airlogic.service.visit</field>
+        <field name="inherit_id" ref="airlogic_core.view_airlogic_service_visit_list"/>
+        <field name="arch" type="xml">
+            <field name="technician_id" position="after">
+                <field name="job_count" string="Units"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_airlogic_service_visit_form_inherit_field_service" model="ir.ui.view">
+        <field name="name">airlogic.service.visit.form.field.service</field>
+        <field name="model">airlogic.service.visit</field>
+        <field name="inherit_id" ref="airlogic_core.view_airlogic_service_visit_form"/>
+        <field name="arch" type="xml">
+            <button name="action_reset_to_draft" position="after">
+                <button name="action_print_owner_report" string="Print Owner Report" type="object"
+                        class="btn-secondary" icon="fa-file-pdf-o"/>
+                <button name="action_send_report_email" string="Send Report by Email" type="object"
+                        class="btn-secondary" icon="fa-envelope-o"/>
+                <button name="action_create_invoice" string="Create Invoice" type="object"
+                        class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
+                        invisible="invoice_id"/>
+                <button name="action_create_invoice" string="View Invoice" type="object"
+                        class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
+                        invisible="not invoice_id"/>
+            </button>
+            <notebook position="inside">
+                <page string="Service Jobs" name="jobs">
+                    <field name="job_ids">
+                        <list string="Service Jobs">
+                            <field name="equipment_id"/>
+                            <field name="technician_id"/>
+                            <field name="date"/>
+                            <field name="state" widget="badge" class="airlogic-badge"
+                                   decoration-success="state == 'submitted'"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>

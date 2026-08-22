@@ -58,7 +58,7 @@ export const PHASES = [
 ];
 
 export class AirlogicVisualChecklist extends Component {
-    static template = "airlogic_core.VisualChecklist";
+    static template = "airlogic_field_service.VisualChecklist";
     static props = ["*"];
 
     setup() {

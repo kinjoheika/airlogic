@@ -10,7 +10,6 @@
                 <field name="date"/>
                 <field name="partner_id"/>
                 <field name="technician_id"/>
-                <field name="job_count" string="Units"/>
                 <field name="invoice_id"/>
                 <field name="state" widget="badge" class="airlogic-badge"
                        decoration-success="state == 'approved'" decoration-info="state == 'review'"/>
@@ -30,16 +29,6 @@
                             class="oe_highlight airlogic-btn-primary" invisible="state != 'review'"/>
                     <button name="action_reset_to_draft" string="Reset to Draft" type="object"
                             invisible="state == 'draft'"/>
-                    <button name="action_print_owner_report" string="Print Owner Report" type="object"
-                            class="btn-secondary" icon="fa-file-pdf-o"/>
-                    <button name="action_send_report_email" string="Send Report by Email" type="object"
-                            class="btn-secondary" icon="fa-envelope-o"/>
-                    <button name="action_create_invoice" string="Create Invoice" type="object"
-                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
-                            invisible="invoice_id"/>
-                    <button name="action_create_invoice" string="View Invoice" type="object"
-                            class="airlogic-btn-invoice" groups="airlogic_core.group_airlogic_manager"
-                            invisible="not invoice_id"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -56,19 +45,7 @@
                             <field name="invoice_id" readonly="1" groups="airlogic_core.group_airlogic_manager"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Service Jobs" name="jobs">
-                            <field name="job_ids">
-                                <list string="Service Jobs">
-                                    <field name="equipment_id"/>
-                                    <field name="technician_id"/>
-                                    <field name="date"/>
-                                    <field name="state" widget="badge" class="airlogic-badge"
-                                           decoration-success="state == 'submitted'"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
+                    <notebook/>
                 </sheet>
                 <chatter/>
             </form>

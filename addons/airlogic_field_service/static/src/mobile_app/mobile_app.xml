@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="airlogic_core.MobileFieldEntry">
+    <t t-name="airlogic_field_service.MobileFieldEntry">
         <div class="o_airlogic_mobile">
             <div class="o_airlogic_mobile_nav">
                 <div class="o_airlogic_mobile_brand">Standard <span>Airlogic</span></div>

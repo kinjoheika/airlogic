@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <menuitem id="menu_airlogic_root" name="Standard Airlogic" sequence="25"
+    <menuitem id="menu_airlogic_root" name="Inventory" sequence="25"
               groups="airlogic_core.group_airlogic_technician"/>
-
-    <menuitem id="menu_airlogic_mobile_field_entry" name="Field Entry (Mobile)"
-              parent="menu_airlogic_root" action="action_airlogic_mobile_field_entry"
-              sequence="1"/>
 
     <menuitem id="menu_airlogic_service_visit" name="Service Visits"
               parent="menu_airlogic_root" action="action_airlogic_service_visit"
               sequence="5"/>
-
-    <menuitem id="menu_airlogic_service_job" name="Service Jobs"
-              parent="menu_airlogic_root" action="action_airlogic_service_job"
-              sequence="10"/>
 
     <menuitem id="menu_airlogic_equipment" name="Equipment"
               parent="menu_airlogic_root" action="action_airlogic_equipment"
@@ -23,10 +15,6 @@
     <menuitem id="menu_airlogic_configuration" name="Configuration"
               parent="menu_airlogic_root" sequence="90"
               groups="airlogic_core.group_airlogic_manager"/>
-
-    <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
-              parent="menu_airlogic_configuration" action="action_airlogic_measurement_field"
-              sequence="10"/>
 
     <menuitem id="menu_airlogic_equipment_category" name="Equipment Categories"
               parent="menu_airlogic_configuration" action="action_airlogic_equipment_category"

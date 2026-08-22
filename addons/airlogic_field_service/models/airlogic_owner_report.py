@@ -11,7 +11,7 @@ class AirlogicOwnerReport(models.AbstractModel):
     this addon actually tracks (see AIR-T19 commit message for the
     deliberate omissions vs. the mockup).
     """
-    _name = 'report.airlogic_core.report_airlogic_owner_report'
+    _name = 'report.airlogic_field_service.report_airlogic_owner_report'
     _description = 'Airlogic Owner Service Report'
 
     def _get_report_values(self, docids, data=None):

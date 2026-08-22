@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="airlogic_core.VisualChecklist">
+    <t t-name="airlogic_field_service.VisualChecklist">
         <div class="o_airlogic_checklist">
             <div class="o_airlogic_checklist_header">
                 <div>

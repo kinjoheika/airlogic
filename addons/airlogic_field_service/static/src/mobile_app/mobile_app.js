@@ -3,7 +3,7 @@
 import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { PHASES as CHECKLIST_PHASES } from "@airlogic_core/field_entry/field_entry";
+import { PHASES as CHECKLIST_PHASES } from "@airlogic_field_service/field_entry/field_entry";
 
 // --- Local-first cache + offline write queue -----------------------------
 // Readings/checklist/PDF-import are cached to localStorage on every change
@@ -74,7 +74,7 @@ function saveLocalValues(jobId, values) {
 }
 
 export class AirlogicMobileFieldEntry extends Component {
-    static template = "airlogic_core.MobileFieldEntry";
+    static template = "airlogic_field_service.MobileFieldEntry";
     static props = ["*"];
 
     setup() {

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adds the job-aware parts of the Equipment views (stat button + the
+  Reading/Visual Comparison tabs) back via inheritance, since Inventory's
+  base view has no knowledge of airlogic.service.job.
+-->
+<odoo>
+
+    <record id="view_airlogic_equipment_list_inherit_field_service" model="ir.ui.view">
+        <field name="name">airlogic.equipment.list.field.service</field>
+        <field name="model">airlogic.equipment</field>
+        <field name="inherit_id" ref="airlogic_core.view_airlogic_equipment_list"/>
+        <field name="arch" type="xml">
+            <field name="install_year" position="after">
+                <field name="job_count"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_airlogic_equipment_form_inherit_field_service" model="ir.ui.view">
+        <field name="name">airlogic.equipment.form.field.service</field>
+        <field name="model">airlogic.equipment</field>
+        <field name="inherit_id" ref="airlogic_core.view_airlogic_equipment_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_jobs" type="object"
+                        class="oe_stat_button" icon="fa-wrench">
+                    <field name="job_count" widget="statinfo" string="Service Jobs"/>
+                </button>
+            </div>
+            <notebook position="inside">
+                <page string="Reading Comparison" name="reading_comparison">
+                    <field name="reading_comparison_html" readonly="1"/>
+                </page>
+                <page string="Visual Comparison" name="visual_comparison">
+                    <field name="visual_comparison_html" readonly="1"/>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>

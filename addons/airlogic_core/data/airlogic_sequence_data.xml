@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
-    <record id="seq_airlogic_service_job" model="ir.sequence">
-        <field name="name">Airlogic Service Job</field>
-        <field name="code">airlogic.service.job</field>
-        <field name="prefix">SVC-%(year)s-</field>
-        <field name="padding">4</field>
-    </record>
     <record id="seq_airlogic_service_visit" model="ir.sequence">
         <field name="name">Airlogic Service Visit</field>
         <field name="code">airlogic.service.visit</field>
