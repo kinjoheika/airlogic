@@ -35,7 +35,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="visit_id"/>
+                            <field name="visit_id" readonly="visit_id != False"/>
                             <field name="equipment_id"/>
                             <field name="partner_id" readonly="1"/>
                         </group>

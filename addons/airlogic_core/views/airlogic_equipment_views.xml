@@ -27,12 +27,12 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box"/>
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="e.g. Server Room AC"/></h1>
+                        <h1><field name="name" placeholder="e.g. AC Unit 1 - Server Room"/></h1>
                     </div>
                     <group>
                         <group>
                             <field name="partner_id"/>
-                            <field name="sublocation_id"/>
+                            <field name="sublocation_id" required="1"/>
                             <field name="serial_number"/>
                             <field name="category_id"/>
                         </group>
@@ -48,7 +48,6 @@
                         <page string="Parts Reference" name="parts_reference">
                             <group>
                                 <group>
-                                    <field name="qty"/>
                                     <field name="ipm_model"/>
                                     <field name="pcb_model"/>
                                     <field name="refrigerant"/>

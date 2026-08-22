@@ -24,7 +24,6 @@
                                         <th>Brand</th>
                                         <th>Model</th>
                                         <th>HP</th>
-                                        <th>Qty</th>
                                         <th>IPM Model</th>
                                         <th>PCB Model</th>
                                         <th>Capacitor</th>
@@ -37,7 +36,6 @@
                                         <td t-esc="e.brand_id.name"/>
                                         <td t-esc="e.model"/>
                                         <td t-esc="e.hp_id.name"/>
-                                        <td t-esc="e.qty"/>
                                         <td t-esc="e.ipm_model"/>
                                         <td t-esc="e.pcb_model"/>
                                         <td>
