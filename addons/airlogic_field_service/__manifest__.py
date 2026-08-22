@@ -36,6 +36,7 @@ airlogic.service.job.
         'data/airlogic_sequence_data.xml',
         'data/airlogic_measurement_field_data.xml',
         'data/airlogic_history_tag_data.xml',
+        'data/airlogic_seed_action_data.xml',
         'views/airlogic_measurement_field_views.xml',
         'views/airlogic_history_tag_views.xml',
         'views/airlogic_equipment_ext_views.xml',
@@ -59,4 +60,8 @@ airlogic.service.job.
     'installable': True,
     'application': True,
     'auto_install': False,
+    # Backfills 4 past visits (readings + checklist) for the demo
+    # equipment seeded in airlogic_core's airlogic_demo_seed_data.xml --
+    # see hooks.py for why this runs as a hook, not static XML.
+    'post_init_hook': 'seed_demo_service_history',
 }
