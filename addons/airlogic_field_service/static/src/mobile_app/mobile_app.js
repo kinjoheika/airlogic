@@ -124,6 +124,10 @@ export class AirlogicMobileFieldEntry extends Component {
             deleteConfirmDevice: null,
 
             toast: null, // {message, type}
+
+            partsCatalog: [], // [{id, name, zone}], loaded once and cached
+            partRequests: [], // this job's airlogic.part.request rows
+            partsExpanded: { 2: false, 3: false, 4: false },
         });
 
         this._onlineHandler = () => {
@@ -367,6 +371,11 @@ export class AirlogicMobileFieldEntry extends Component {
         }
         this.state.pendingCount = getPending(jobId).length;
         this.persistLocal();
+
+        await this.loadPartsCatalog();
+        this.state.partRequests = await this.orm.searchRead(
+            "airlogic.part.request", [["job_id", "=", jobId]], ["part_id", "state"]
+        );
     }
 
     persistLocal() {
@@ -386,6 +395,22 @@ export class AirlogicMobileFieldEntry extends Component {
 
     get currentDsrPhase() {
         return this.checklistPhases.find((p) => p.id === this.state.dsrPhase);
+    }
+
+    // Warn, don't block: a visit open a long time with unsynced changes
+    // is worth flagging (spotty signal, technician forgot to check
+    // back), but the spec is explicit this should never stop them from
+    // continuing to work offline.
+    get syncWarning() {
+        if (!this.state.job || !this.state.job.started_at || !this.state.pendingCount) {
+            return null;
+        }
+        const startedAt = new Date(this.state.job.started_at.replace(" ", "T") + "Z");
+        const hoursOpen = (Date.now() - startedAt.getTime()) / 3600000;
+        if (hoursOpen < 2) {
+            return null;
+        }
+        return `Open ${Math.floor(hoursOpen)}h with ${this.state.pendingCount} unsynced change(s) -- reconnect when you can.`;
     }
 
     // --- Phase lock (mirrors get_unlocked_phase in airlogic_service_job.py
@@ -433,6 +458,60 @@ export class AirlogicMobileFieldEntry extends Component {
 
     onNumberChecklistChange(key, ev) {
         this.commitChecklistValue(key, ev.target.value, this.checklistLine(key)?.note);
+    }
+
+    // --- Request Parts (bottom of Ph2/3/4) ---------------------------
+    // A tick list, not a real stock/consumption ledger -- see
+    // airlogic_part.py for why. Phase 2 shows the Outdoor zone, Phase 3
+    // shows Indoor, Phase 4 shows everything as a final catch-all before
+    // submit.
+
+    async loadPartsCatalog() {
+        if (this.state.partsCatalog.length) {
+            return; // catalog doesn't change mid-session, load once
+        }
+        this.state.partsCatalog = await this.orm.searchRead(
+            "airlogic.part", [], ["name", "zone"]
+        );
+    }
+
+    get currentPhaseParts() {
+        if (this.state.dsrPhase === 2) {
+            return this.state.partsCatalog.filter((p) => p.zone === "outdoor");
+        } else if (this.state.dsrPhase === 3) {
+            return this.state.partsCatalog.filter((p) => p.zone === "indoor");
+        } else if (this.state.dsrPhase === 4) {
+            return this.state.partsCatalog;
+        }
+        return [];
+    }
+
+    togglePartsSection(phase) {
+        this.state.partsExpanded[phase] = !this.state.partsExpanded[phase];
+    }
+
+    findPartRequest(partId) {
+        return this.state.partRequests.find((r) => r.part_id[0] === partId);
+    }
+
+    async togglePartRequest(partId) {
+        const existing = this.findPartRequest(partId);
+        if (existing) {
+            if (existing.state !== "requested") {
+                this.showToast(
+                    "Already reviewed -- ask a Supervisor to change it.", "warning"
+                );
+                return;
+            }
+            await this.orm.unlink("airlogic.part.request", [existing.id]);
+            this.state.partRequests = this.state.partRequests.filter((r) => r.id !== existing.id);
+        } else {
+            const [id] = await this.orm.create("airlogic.part.request", [{
+                job_id: this.state.job.id,
+                part_id: partId,
+            }]);
+            this.state.partRequests.push({ id, part_id: [partId, ""], state: "requested" });
+        }
     }
 
     // --- Flag/Alert dialog -------------------------------------------------
@@ -614,6 +693,25 @@ export class AirlogicMobileFieldEntry extends Component {
         }
     }
 
+    // Best-effort geolocation for photo auto-tagging -- resolves null
+    // (never rejects) if the browser has no geolocation, the technician
+    // denies the permission prompt, or it just takes too long. Upload
+    // proceeds either way; location is a nice-to-have on the tag, not a
+    // requirement.
+    _tryGetLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(null);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                () => resolve(null),
+                { timeout: 4000 }
+            );
+        });
+    }
+
     async onPhotoSelected(ev) {
         const files = Array.from(ev.target.files || []);
         if (!files.length) {
@@ -628,6 +726,18 @@ export class AirlogicMobileFieldEntry extends Component {
         }
         this.state.loading = true;
         try {
+            // Auto-tag at capture time, not upload time: phase + when +
+            // (if granted) where. Saved into the attachment's own
+            // description so a Manager reviewing photos later in
+            // Inventory sees it without the technician typing anything.
+            const geo = await this._tryGetLocation();
+            const capturedAt = new Date().toLocaleString();
+            const phaseLabel = this.currentDsrPhase ? this.currentDsrPhase.title : "";
+            const tagParts = [`Phase ${this.state.dsrPhase} — ${phaseLabel}`, `Captured ${capturedAt}`];
+            if (geo) {
+                tagParts.push(`Location ${geo.lat.toFixed(5)}, ${geo.lon.toFixed(5)}`);
+            }
+            const description = tagParts.join(" · ");
             for (const file of files) {
                 const b64 = await this._fileToBase64(file);
                 const [attachmentId] = await this.orm.create("ir.attachment", [{
@@ -636,6 +746,7 @@ export class AirlogicMobileFieldEntry extends Component {
                     res_model: "airlogic.service.job",
                     res_id: this.state.job.id,
                     mimetype: file.type,
+                    description,
                 }]);
                 await this.orm.call("airlogic.service.job", "write", [[this.state.job.id], {
                     media_ids: [[4, attachmentId]],

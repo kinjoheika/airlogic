@@ -27,6 +27,8 @@
                             class="oe_highlight airlogic-btn-primary" invisible="state != 'draft'"/>
                     <button name="action_submit" string="Submit" type="object"
                             class="oe_highlight airlogic-btn-primary" invisible="state != 'in_progress'"/>
+                    <button name="action_request_revision" string="Request Correction" type="object"
+                            invisible="state != 'submitted'"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -77,10 +79,48 @@
                             </field>
                         </page>
                         <page string="Photos &amp; Videos" name="media">
-                            <field name="media_ids" widget="many2many_binary"/>
+                            <!-- Only Supervisor+ can remove an attached file once
+                                 uploaded (see write()/_check_no_media_removal on
+                                 the model). These two fields show the SAME
+                                 data, but only one renders per user: Odoo only
+                                 keeps the element matching the viewer's groups. -->
+                            <field name="media_ids" widget="many2many_binary"
+                                   readonly="1" groups="!airlogic_core.group_airlogic_supervisor"/>
+                            <field name="media_ids" widget="many2many_binary"
+                                   groups="airlogic_core.group_airlogic_supervisor"/>
                         </page>
                         <page string="Notes" name="notes">
                             <field name="notes" placeholder="Technician notes for this visit..."/>
+                        </page>
+                        <page string="Part Requests" name="part_requests">
+                            <field name="part_request_ids">
+                                <list editable="bottom" create="0">
+                                    <field name="part_id"/>
+                                    <field name="requested_by" readonly="1"/>
+                                    <field name="state" widget="badge" class="airlogic-badge"
+                                           decoration-success="state == 'fulfilled'" decoration-info="state == 'approved'"
+                                           decoration-danger="state == 'rejected'"/>
+                                    <button name="action_approve" string="Approve" type="object"
+                                            invisible="state != 'requested'" groups="airlogic_core.group_airlogic_supervisor"/>
+                                    <button name="action_reject" string="Reject" type="object"
+                                            invisible="state != 'requested'" groups="airlogic_core.group_airlogic_supervisor"/>
+                                    <button name="action_fulfill" string="Fulfill" type="object"
+                                            invisible="state != 'approved'" groups="airlogic_core.group_airlogic_supervisor"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Revisions" name="revisions">
+                            <field name="revision_ids" readonly="1">
+                                <list>
+                                    <field name="create_date" string="Requested"/>
+                                    <field name="field_label"/>
+                                    <field name="old_value"/>
+                                    <field name="new_value"/>
+                                    <field name="reason"/>
+                                    <field name="state" widget="badge" class="airlogic-badge"
+                                           decoration-success="state == 'approved'" decoration-danger="state == 'rejected'"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

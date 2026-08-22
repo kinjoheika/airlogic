@@ -60,4 +60,61 @@
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
     </record>
 
+    <!-- GLOBAL (no groups field): applies to every user, ANDed on top
+         of the own/all rules above, instead of OR-combining with them
+         like same-group rules do. Once a job is Submitted, its
+         reading/checklist lines are read-only for EVERYONE, Supervisor
+         and Manager included, unless job_id.revision_open is
+         momentarily True, which only airlogic.job.revision.action_approve
+         sets (see that method). This is the actual "Completed visits
+         lock" from the spec; a Supervisor fixing a value still has to go
+         through the same Revision Request door as anyone else. -->
+    <record id="rule_reading_line_lock_submitted" model="ir.rule">
+        <field name="name">Lock reading lines once Submitted (unless revision open)</field>
+        <field name="model_id" ref="model_airlogic_reading_line"/>
+        <field name="domain_force">['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
+    <record id="rule_checklist_line_lock_submitted" model="ir.rule">
+        <field name="name">Lock checklist lines once Submitted (unless revision open)</field>
+        <field name="model_id" ref="model_airlogic_checklist_line"/>
+        <field name="domain_force">['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
+    <record id="rule_job_revision_technician_own" model="ir.rule">
+        <field name="name">Technician: revision requests on own jobs only</field>
+        <field name="model_id" ref="model_airlogic_job_revision"/>
+        <field name="domain_force">[('job_id.technician_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+    </record>
+
+    <record id="rule_job_revision_supervisor_all" model="ir.rule">
+        <field name="name">Supervisor+: all revision requests</field>
+        <field name="model_id" ref="model_airlogic_job_revision"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
+    </record>
+
+    <record id="rule_part_request_technician_own" model="ir.rule">
+        <field name="name">Technician: part requests on own jobs only</field>
+        <field name="model_id" ref="model_airlogic_part_request"/>
+        <field name="domain_force">[('job_id.technician_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+    </record>
+
+    <record id="rule_part_request_supervisor_all" model="ir.rule">
+        <field name="name">Supervisor+: all part requests</field>
+        <field name="model_id" ref="model_airlogic_part_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
+    </record>
+
 </odoo>

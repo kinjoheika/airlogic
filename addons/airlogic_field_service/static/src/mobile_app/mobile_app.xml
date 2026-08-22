@@ -241,6 +241,7 @@
                         </t>
                     </div>
                     <div class="text-muted" style="font-size:11px;"><t t-esc="currentDsrPhase.title"/></div>
+                    <div t-if="syncWarning" class="o_airlogic_sync_warning">⚠ <t t-esc="syncWarning"/></div>
                 </div>
 
                 <t t-foreach="currentDsrPhase.items" t-as="item" t-key="item.key">
@@ -309,6 +310,27 @@
                         <input type="file" accept="image/*,video/*" multiple="multiple" t-on-change="onPhotoSelected"/>
                     </div>
                 </t>
+
+                <!-- Request Parts: bottom of Ph2 (Outdoor), Ph3 (Indoor),
+                     Ph4 (both, final catch-all). currentPhaseParts is
+                     empty on Ph1, so this whole block just doesn't show
+                     there. -->
+                <div t-if="currentPhaseParts.length" class="o_airlogic_parts_section">
+                    <div class="o_airlogic_parts_toggle" t-on-click="() => this.togglePartsSection(state.dsrPhase)">
+                        <span>🧰 Request Parts<t t-if="state.partRequests.length"> (<t t-esc="state.partRequests.length"/>)</t></span>
+                        <span t-esc="state.partsExpanded[state.dsrPhase] ? '▲' : '▼'"/>
+                    </div>
+                    <div t-if="state.partsExpanded[state.dsrPhase]" class="o_airlogic_parts_list">
+                        <label t-foreach="currentPhaseParts" t-as="part" t-key="part.id" class="o_airlogic_part_row">
+                            <input type="checkbox" t-att-checked="findPartRequest(part.id) ? true : false"
+                                   t-on-change="() => this.togglePartRequest(part.id)"/>
+                            <span t-esc="part.name"/>
+                            <span t-if="findPartRequest(part.id) and findPartRequest(part.id).state !== 'requested'"
+                                  t-attf-class="o_airlogic_part_state o_airlogic_part_state_{{findPartRequest(part.id).state}}"
+                                  t-esc="findPartRequest(part.id).state"/>
+                        </label>
+                    </div>
+                </div>
             </div>
             <div t-if="state.screen === 'dsr' and state.job and !state.loading" class="o_airlogic_footer_bar">
                 <button type="button" class="btn btn-outline-secondary" t-on-click="requestExitDsr">‹ Back</button>

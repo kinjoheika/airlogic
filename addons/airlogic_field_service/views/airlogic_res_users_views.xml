@@ -13,6 +13,16 @@
                 <field name="airlogic_field_pin" password="True"
                        string="Field App PIN"/>
                 <field name="airlogic_is_senior_technician"/>
+                <!-- Documentation-completeness proxy, not for every
+                     viewer. Manager-only, matching the spec's "let
+                     Admin only see aggregate revision-rate per
+                     technician". -->
+                <field name="airlogic_submitted_job_count" readonly="1"
+                       groups="airlogic_core.group_airlogic_manager"/>
+                <field name="airlogic_revision_count" readonly="1"
+                       groups="airlogic_core.group_airlogic_manager"/>
+                <field name="airlogic_revision_rate" readonly="1"
+                       groups="airlogic_core.group_airlogic_manager"/>
             </field>
         </field>
     </record>

@@ -20,6 +20,17 @@
               parent="airlogic_core.menu_airlogic_root" action="action_airlogic_service_job"
               sequence="15"/>
 
+    <!-- Supervisor+ (not Configuration, which is Manager-only):
+         reviewing requests/corrections is a day-to-day Supervisor task,
+         not admin configuration. -->
+    <menuitem id="menu_airlogic_part_request" name="Part Requests"
+              parent="airlogic_core.menu_airlogic_root" action="action_airlogic_part_request"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="17"/>
+
+    <menuitem id="menu_airlogic_job_revision" name="Revision Requests"
+              parent="airlogic_core.menu_airlogic_root" action="action_airlogic_job_revision"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="18"/>
+
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_measurement_field"
               sequence="60"/>
@@ -27,6 +38,10 @@
     <menuitem id="menu_airlogic_history_tag" name="History Tags"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_history_tag"
               sequence="70"/>
+
+    <menuitem id="menu_airlogic_part" name="Requestable Parts"
+              parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_part"
+              sequence="80"/>
 
     <!-- Manual fallback for hooks.py:seed_demo_service_history. See
          data/airlogic_seed_action_data.xml for why this exists. -->

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Catalog (Configuration, Manager-only edit) -->
+    <record id="view_airlogic_part_list" model="ir.ui.view">
+        <field name="name">airlogic.part.list</field>
+        <field name="model">airlogic.part</field>
+        <field name="arch" type="xml">
+            <list string="Requestable Parts" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="zone"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_part" model="ir.actions.act_window">
+        <field name="name">Requestable Parts</field>
+        <field name="res_model">airlogic.part</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_zone': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a requestable part</p>
+            <p>Shown in the mobile app's Request Parts section -- Outdoor
+               on Phase 2, Indoor on Phase 3, both on Phase 4.</p>
+        </field>
+    </record>
+
+    <!-- Requests (Supervisor+ review) -->
+    <record id="view_airlogic_part_request_list" model="ir.ui.view">
+        <field name="name">airlogic.part.request.list</field>
+        <field name="model">airlogic.part.request</field>
+        <field name="arch" type="xml">
+            <list string="Part Requests" default_order="create_date desc">
+                <field name="create_date" string="Requested"/>
+                <field name="job_id"/>
+                <field name="part_id"/>
+                <field name="requested_by"/>
+                <field name="state" widget="badge" class="airlogic-badge"
+                       decoration-success="state == 'fulfilled'" decoration-info="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+                <button name="action_approve" string="Approve" type="object"
+                        invisible="state != 'requested'" groups="airlogic_core.group_airlogic_supervisor"/>
+                <button name="action_reject" string="Reject" type="object"
+                        invisible="state != 'requested'" groups="airlogic_core.group_airlogic_supervisor"/>
+                <button name="action_fulfill" string="Fulfill" type="object"
+                        invisible="state != 'approved'" groups="airlogic_core.group_airlogic_supervisor"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_airlogic_part_request_search" model="ir.ui.view">
+        <field name="name">airlogic.part.request.search</field>
+        <field name="model">airlogic.part.request</field>
+        <field name="arch" type="xml">
+            <search string="Part Requests">
+                <field name="job_id"/>
+                <field name="part_id"/>
+                <field name="requested_by"/>
+                <filter name="requested" string="Requested" domain="[('state','=','requested')]"/>
+                <filter name="approved" string="Approved" domain="[('state','=','approved')]"/>
+                <separator/>
+                <filter name="group_technician" string="Technician" context="{'group_by': 'requested_by'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_airlogic_part_request" model="ir.actions.act_window">
+        <field name="name">Part Requests</field>
+        <field name="res_model">airlogic.part.request</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_airlogic_part_request_search"/>
+        <field name="context">{'search_default_requested': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No part requests yet</p>
+            <p>Technicians tick parts they need from the mobile app's DSR
+               phases 2-4; they land here for review.</p>
+        </field>
+    </record>
+
+</odoo>

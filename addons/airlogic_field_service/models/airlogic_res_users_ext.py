@@ -26,6 +26,33 @@ class ResUsersFieldServiceExt(models.Model):
              'added this way still goes through the Manager\'s normal '
              'review in Inventory > Equipment.')
 
+    # Revision rate: a proxy for documentation-completeness. Read-only,
+    # computed on demand (not stored) -- these are Manager-only stats
+    # (see the res.users form view groups), not something queried often
+    # enough to need indexing/storing.
+    airlogic_submitted_job_count = fields.Integer(
+        string='Submitted Jobs', compute='_compute_airlogic_revision_stats')
+    airlogic_revision_count = fields.Integer(
+        string='Revisions Requested', compute='_compute_airlogic_revision_stats')
+    airlogic_revision_rate = fields.Float(
+        string='Revision Rate (%)', compute='_compute_airlogic_revision_stats',
+        help='Revisions requested against this technician\'s submitted '
+             'jobs, as a percentage. Not a punitive metric by itself -- a '
+             'proxy for how often first-pass documentation needed '
+             'correcting, worth watching for a trend rather than acting '
+             'on a single number.')
+
+    def _compute_airlogic_revision_stats(self):
+        Job = self.env['airlogic.service.job']
+        Revision = self.env['airlogic.job.revision']
+        for user in self:
+            job_count = Job.search_count([
+                ('technician_id', '=', user.id), ('state', '=', 'submitted')])
+            revision_count = Revision.search_count([('job_id.technician_id', '=', user.id)])
+            user.airlogic_submitted_job_count = job_count
+            user.airlogic_revision_count = revision_count
+            user.airlogic_revision_rate = (revision_count / job_count * 100) if job_count else 0.0
+
     @api.model
     def action_verify_field_pin(self, *args, **kwargs):
         """Always checks the CALLING user's own PIN (self.env.user),

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_airlogic_job_revision_form" model="ir.ui.view">
+        <field name="name">airlogic.job.revision.form</field>
+        <field name="model">airlogic.job.revision</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="oe_highlight airlogic-btn-primary" invisible="state != 'requested'"
+                            groups="airlogic_core.group_airlogic_supervisor"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            invisible="state != 'requested'"
+                            groups="airlogic_core.group_airlogic_supervisor"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="job_id" readonly="state != 'requested'"/>
+                            <field name="line_model" readonly="state != 'requested'"/>
+                            <field name="field_label" readonly="state != 'requested'"/>
+                            <field name="line_key" readonly="state != 'requested'"/>
+                        </group>
+                        <group>
+                            <field name="old_value" readonly="state != 'requested'"/>
+                            <field name="new_value" readonly="state != 'requested'"/>
+                            <field name="requested_by"/>
+                            <field name="approved_by" invisible="state == 'requested'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reason" readonly="state != 'requested'" placeholder="Why this needs correcting..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_airlogic_job_revision_list" model="ir.ui.view">
+        <field name="name">airlogic.job.revision.list</field>
+        <field name="model">airlogic.job.revision</field>
+        <field name="arch" type="xml">
+            <list string="Revision Requests" default_order="create_date desc">
+                <field name="create_date" string="Requested"/>
+                <field name="job_id"/>
+                <field name="field_label"/>
+                <field name="old_value"/>
+                <field name="new_value"/>
+                <field name="requested_by"/>
+                <field name="state" widget="badge" class="airlogic-badge"
+                       decoration-success="state == 'approved'" decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_airlogic_job_revision_search" model="ir.ui.view">
+        <field name="name">airlogic.job.revision.search</field>
+        <field name="model">airlogic.job.revision</field>
+        <field name="arch" type="xml">
+            <search string="Revision Requests">
+                <field name="job_id"/>
+                <field name="requested_by"/>
+                <filter name="requested" string="Requested" domain="[('state','=','requested')]"/>
+                <separator/>
+                <filter name="group_technician" string="Technician" context="{'group_by': 'requested_by'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_airlogic_job_revision" model="ir.actions.act_window">
+        <field name="name">Revision Requests</field>
+        <field name="res_model">airlogic.job.revision</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_airlogic_job_revision_search"/>
+        <field name="context">{'search_default_requested': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No revision requests yet</p>
+            <p>Once a job is Submitted its readings/checklist lock -- a
+               correction has to come through here, with a reason,
+               approved by a Supervisor or Manager who isn't the one who
+               requested it.</p>
+        </field>
+    </record>
+
+</odoo>

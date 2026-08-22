@@ -573,3 +573,84 @@
 .o_airlogic_compare_val {
     font-weight: 600;
 }
+
+// --- Sync warning (open a long time, still unsynced) --------------------
+.o_airlogic_sync_warning {
+    background: #FEF3CD;
+    color: #744D0A;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+// --- Request Parts (bottom of Ph2/3/4) -----------------------------
+.o_airlogic_parts_section {
+    margin-top: 16px;
+    border: 1px solid #D8DBDE;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.o_airlogic_parts_toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    min-height: 52px;
+    background: #F8F9FA;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.o_airlogic_parts_list {
+    padding: 4px 16px 8px;
+}
+
+.o_airlogic_part_row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    min-height: 44px;
+    font-size: 15px;
+    border-bottom: 1px solid #F1F3F4;
+    cursor: pointer;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+}
+
+.o_airlogic_part_state {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    padding: 2px 8px;
+    border-radius: 3px;
+
+    &.o_airlogic_part_state_approved {
+        background: #D9F5F4;
+        color: #079D97;
+    }
+
+    &.o_airlogic_part_state_fulfilled {
+        background: #DCEFDC;
+        color: #1E7B34;
+    }
+
+    &.o_airlogic_part_state_rejected {
+        background: #F4DBDC;
+        color: #7A1F2B;
+    }
+}

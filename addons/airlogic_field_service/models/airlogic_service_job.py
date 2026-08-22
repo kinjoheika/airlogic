@@ -52,6 +52,18 @@ class AirlogicServiceJob(models.Model):
         help='Set automatically on submit by keyword-matching notes/flagged '
              'checklist items against Configuration > History Tags. Drives '
              "the mobile app's Unit History feed.")
+    revision_open = fields.Boolean(
+        default=False, copy=False, tracking=True,
+        help='Briefly True while an approved airlogic.job.revision is '
+             'being applied -- the only window in which reading/checklist '
+             'lines can be written once this job is Submitted (see '
+             'rule_reading_line_lock_submitted / '
+             'rule_checklist_line_lock_submitted in airlogic_ir_rule.xml). '
+             'Not meant to be toggled by hand.')
+    revision_ids = fields.One2many(
+        'airlogic.job.revision', 'job_id', string='Revision Requests')
+    part_request_ids = fields.One2many(
+        'airlogic.part.request', 'job_id', string='Part Requests')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -69,7 +81,47 @@ class AirlogicServiceJob(models.Model):
     def write(self, vals):
         if 'technician_id' in vals:
             self._check_technician_reassignment([vals])
+        if 'media_ids' in vals and not self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
+            self._check_no_media_removal(vals['media_ids'])
         return super().write(vals)
+
+    def _check_no_media_removal(self, commands):
+        """Only Supervisor+ can remove an attached photo/video. (2,) and
+        (3,) commands are both a removal (delete-the-record vs. just
+        unlink-the-relation); a (6, 0, ids) replace-all command is a
+        removal too if it drops any id the job currently has. Adding via
+        (4,)/a bigger (6, 0, ids) is untouched -- technicians can still
+        upload freely.
+        """
+        for cmd in commands:
+            if cmd[0] in (2, 3):
+                raise AccessError(_(
+                    "Only a Supervisor or Manager can remove a photo/video "
+                    "once attached."))
+            if cmd[0] == 6:
+                new_ids = set(cmd[2])
+                for job in self:
+                    if not set(job.media_ids.ids) <= new_ids:
+                        raise AccessError(_(
+                            "Only a Supervisor or Manager can remove a photo/video "
+                            "once attached."))
+
+    def action_request_revision(self):
+        """Opens a blank airlogic.job.revision form pre-linked to this
+        job -- the technician (or anyone) fills in which item, old/new
+        value, and a reason; Supervisor+ approves or rejects it from
+        there. See airlogic_job_revision.py for the actual apply/lock
+        mechanics.
+        """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Request Correction'),
+            'res_model': 'airlogic.job.revision',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_job_id': self.id},
+        }
 
     def _check_technician_reassignment(self, vals_list):
         """Only Supervisor+ can assign/reassign a job to a technician other
@@ -258,6 +310,7 @@ class AirlogicServiceJob(models.Model):
             'id': self.id,
             'name': self.name,
             'state': self.state,
+            'started_at': self.started_at and fields.Datetime.to_string(self.started_at),
             'unlocked_phase': self.get_unlocked_phase(),
             'equipment_name': self.equipment_id.display_name,
             'has_pdf': bool(self.fp_pdf),

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Requestable-part catalog shown in the mobile app's Request Parts
+  section: Outdoor on Phase 2 (Power OFF), Indoor on Phase 3, both
+  combined on Phase 4 as a final catch-all. noupdate="1" so a Manager
+  editing/extending this list under Configuration survives upgrades.
+-->
+<odoo noupdate="1">
+
+    <record id="part_compressor" model="airlogic.part">
+        <field name="name">Compressor</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="part_condenser_fan" model="airlogic.part">
+        <field name="name">Condenser Fan</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="part_outdoor_fan_motor" model="airlogic.part">
+        <field name="name">Fan Motor</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="part_pcb" model="airlogic.part">
+        <field name="name">PCB</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="part_ipm" model="airlogic.part">
+        <field name="name">IPM</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="part_thermistor" model="airlogic.part">
+        <field name="name">Thermistor</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">60</field>
+    </record>
+    <record id="part_diode" model="airlogic.part">
+        <field name="name">Diode</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">70</field>
+    </record>
+    <record id="part_capacitor" model="airlogic.part">
+        <field name="name">Capacitor</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">80</field>
+    </record>
+    <record id="part_grommets_cable_tie" model="airlogic.part">
+        <field name="name">Grommets/Cable Tie</field>
+        <field name="zone">outdoor</field>
+        <field name="sequence">90</field>
+    </record>
+
+    <record id="part_blower_fan" model="airlogic.part">
+        <field name="name">Blower Fan</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="part_indoor_fan_motor" model="airlogic.part">
+        <field name="name">Fan Motor</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="part_thermal_device" model="airlogic.part">
+        <field name="name">Thermal Device</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="part_sensor" model="airlogic.part">
+        <field name="name">Sensor</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="part_drain_pan" model="airlogic.part">
+        <field name="name">Drain Pan</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="part_sealant" model="airlogic.part">
+        <field name="name">Sealant</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">60</field>
+    </record>
+    <record id="part_wire" model="airlogic.part">
+        <field name="name">Wire</field>
+        <field name="zone">indoor</field>
+        <field name="sequence">70</field>
+    </record>
+
+</odoo>
