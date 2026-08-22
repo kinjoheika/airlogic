@@ -1,4 +1,5 @@
 from . import airlogic_measurement_field
+from . import airlogic_history_tag
 from . import airlogic_service_job
 from . import airlogic_reading_line
 from . import airlogic_checklist_line

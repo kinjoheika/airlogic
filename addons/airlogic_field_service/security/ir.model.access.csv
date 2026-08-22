@@ -7,3 +7,5 @@ access_airlogic_reading_line_technician,airlogic.reading.line.technician,model_a
 access_airlogic_reading_line_manager,airlogic.reading.line.manager,model_airlogic_reading_line,airlogic_core.group_airlogic_manager,1,1,1,1
 access_airlogic_checklist_line_technician,airlogic.checklist.line.technician,model_airlogic_checklist_line,airlogic_core.group_airlogic_technician,1,1,1,0
 access_airlogic_checklist_line_manager,airlogic.checklist.line.manager,model_airlogic_checklist_line,airlogic_core.group_airlogic_manager,1,1,1,1
+access_airlogic_history_tag_technician,airlogic.history.tag.technician,model_airlogic_history_tag,airlogic_core.group_airlogic_technician,1,0,0,0
+access_airlogic_history_tag_manager,airlogic.history.tag.manager,model_airlogic_history_tag,airlogic_core.group_airlogic_manager,1,1,1,1

@@ -90,16 +90,22 @@
                          t-out="state.unitEquipment.visual_comparison_html"/>
                 </t>
 
-                <!-- HISTORY TAB -->
+                <!-- HISTORY TAB: major-events feed, filtered by History Tags -->
                 <t t-if="state.tab === 'history'">
                     <div t-foreach="state.history" t-as="h" t-key="h.id" class="o_airlogic_card">
                         <div class="o_airlogic_card_title" t-esc="h.equipment_id[1]"/>
                         <div class="o_airlogic_card_sub">
                             <t t-esc="h.name"/> · <t t-esc="h.technician_id[1]"/>
                         </div>
+                        <div class="o_airlogic_tag_row">
+                            <span t-foreach="h.tagNames" t-as="tag" t-key="tag" class="o_airlogic_tag_badge" t-esc="tag"/>
+                        </div>
                         <div t-if="h.notes" class="o_airlogic_card_sub" t-esc="h.notes"/>
                     </div>
-                    <p t-if="!state.history.length" class="text-muted">No submitted jobs yet for this client.</p>
+                    <p t-if="!state.history.length" class="text-muted">
+                        No major events yet for this client -- jobs only show up here when their
+                        notes match a History Tag (Configuration &gt; History Tags).
+                    </p>
                 </t>
 
                 <!-- EQUIPMENT (ADD/DELETE) TAB -->

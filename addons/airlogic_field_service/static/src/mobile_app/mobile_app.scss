@@ -1,3 +1,19 @@
+.o_airlogic_tag_row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.o_airlogic_tag_badge {
+    background: #D9F5F4;
+    color: #079D97;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
 .o_airlogic_mobile {
     max-width: 480px;
     margin: 0 auto;

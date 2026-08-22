@@ -21,4 +21,8 @@
               parent="menu_airlogic_field_service_configuration" action="action_airlogic_measurement_field"
               sequence="10"/>
 
+    <menuitem id="menu_airlogic_history_tag" name="History Tags"
+              parent="menu_airlogic_field_service_configuration" action="action_airlogic_history_tag"
+              sequence="20"/>
+
 </odoo>

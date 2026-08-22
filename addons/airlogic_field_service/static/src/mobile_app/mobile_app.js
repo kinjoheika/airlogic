@@ -604,17 +604,31 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.unitEquipment = null;
     }
 
-    // --- History tab (recent submitted jobs for this client) -------------
+    // --- History tab (major-events feed, filtered by History Tags) -------
 
     async loadHistory() {
         this.state.loading = true;
         try {
-            this.state.history = await this.orm.searchRead(
+            const jobs = await this.orm.searchRead(
                 "airlogic.service.job",
-                [["partner_id", "=", this.state.selectedPartner.id], ["state", "=", "submitted"]],
-                ["name", "equipment_id", "technician_id", "date", "notes"],
+                [
+                    ["partner_id", "=", this.state.selectedPartner.id],
+                    ["state", "=", "submitted"],
+                    ["history_tag_ids", "!=", false],
+                ],
+                ["name", "equipment_id", "technician_id", "date", "notes", "history_tag_ids"],
                 { order: "date desc", limit: 30 }
             );
+            const allTagIds = [...new Set(jobs.flatMap((j) => j.history_tag_ids))];
+            let tagsById = {};
+            if (allTagIds.length) {
+                const tags = await this.orm.read("airlogic.history.tag", allTagIds, ["name"]);
+                tagsById = Object.fromEntries(tags.map((t) => [t.id, t.name]));
+            }
+            this.state.history = jobs.map((j) => ({
+                ...j,
+                tagNames: j.history_tag_ids.map((id) => tagsById[id]).filter(Boolean),
+            }));
         } finally {
             this.state.loading = false;
         }

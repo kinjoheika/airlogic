@@ -40,6 +40,11 @@ class AirlogicServiceJob(models.Model):
         help='Job-site photos and videos. Stored as normal Odoo attachments '
              '-- if the filestore is later moved to object storage (e.g. '
              'Cloudflare R2), these move transparently with it.')
+    history_tag_ids = fields.Many2many(
+        'airlogic.history.tag', string='History Tags', copy=False,
+        help='Set automatically on submit by keyword-matching notes/flagged '
+             'checklist items against Configuration > History Tags. Drives '
+             "the mobile app's Unit History feed.")
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -69,7 +74,32 @@ class AirlogicServiceJob(models.Model):
         ])
 
     def action_submit(self):
+        self._match_history_tags()
         self.write({'state': 'submitted'})
+
+    def _match_history_tags(self):
+        """Keyword-match this job's notes + flagged/alert checklist item
+        notes against active History Tags. Run once, at submit time --
+        not a recomputed field, so re-editing a submitted job's notes
+        doesn't silently change its history classification.
+        """
+        tags = self.env['airlogic.history.tag'].search([])
+        tag_keywords = [
+            (tag, [k.strip().lower() for k in (tag.keywords or '').split(',') if k.strip()])
+            for tag in tags
+        ]
+        for job in self:
+            text_parts = [job.notes or '']
+            for line in job.checklist_line_ids:
+                if line.value in ('flagged', 'alert'):
+                    text_parts.append(line.label or '')
+                    text_parts.append(line.note or '')
+            haystack = ' '.join(text_parts).lower()
+            matched = self.env['airlogic.history.tag']
+            for tag, keywords in tag_keywords:
+                if any(kw in haystack for kw in keywords):
+                    matched |= tag
+            job.history_tag_ids = [(6, 0, matched.ids)]
 
     def action_open_visual_checklist(self):
         """Launch the Ph1-4 visual-checklist OWL client action, pre-filled
