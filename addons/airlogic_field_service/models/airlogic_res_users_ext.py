@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResUsersFieldServiceExt(models.Model):
@@ -17,8 +17,15 @@ class ResUsersFieldServiceExt(models.Model):
              'the client list, and before opening a device\'s entry '
              'screen. Leave blank to skip the PIN gate for this user.')
 
+    @api.model
     def action_verify_field_pin(self, pin):
-        self.ensure_one()
-        if not self.airlogic_field_pin:
+        """Always checks the CALLING user's own PIN (self.env.user),
+        regardless of which record self is bound to -- avoids the JS
+        side needing to know its own uid via a service/global that's
+        proven unreliable on this build. Same calling pattern as the
+        already-working has_group RPC: no ids in the JS call at all.
+        """
+        user = self.env.user
+        if not user.airlogic_field_pin:
             return True
-        return pin == self.airlogic_field_pin
+        return pin == user.airlogic_field_pin

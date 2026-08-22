@@ -80,10 +80,10 @@ export class AirlogicMobileFieldEntry extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
-        // useService("user") throws "Service user is not available" on
-        // this build -- use the stable session_info global + a server-
-        // side has_group RPC instead of that service.
-        this.uid = odoo.session_info.uid;
+        // Neither useService("user") nor the odoo.session_info global
+        // proved reliable on this build -- both PIN verification and the
+        // manager-role check now run entirely server-side against
+        // self.env.user, so the client never needs to know its own uid.
         this.checklistPhases = CHECKLIST_PHASES;
         this.leakSpots = LEAK_SPOTS;
         this.state = useState({
@@ -158,7 +158,7 @@ export class AirlogicMobileFieldEntry extends Component {
 
     async confirmPin() {
         const ok = await this.orm.call(
-            "res.users", "action_verify_field_pin", [[this.uid], this.state.pinInput]
+            "res.users", "action_verify_field_pin", [this.state.pinInput]
         );
         if (!ok) {
             this.state.pinError = true;
