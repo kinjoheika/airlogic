@@ -315,6 +315,25 @@
         background: #0ABFB8;
         color: #fff;
     }
+
+    &.locked {
+        cursor: not-allowed;
+        opacity: 0.55;
+        font-size: 11px;
+    }
+}
+
+// --- Out-of-range readings (auto-flag vs. configured min/max) ----------
+.o_airlogic_number.out_of_range {
+    border-color: #7A1F2B;
+    background: #FBEAEC;
+    color: #7A1F2B;
+    font-weight: 700;
+}
+
+.o_airlogic_oor_badge {
+    color: #7A1F2B;
+    font-size: 13px;
 }
 
 // --- Leak map (7 spots) -------------------------------------------------

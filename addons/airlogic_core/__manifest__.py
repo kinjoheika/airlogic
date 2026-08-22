@@ -22,6 +22,7 @@ module itself has no knowledge of airlogic.service.job.
     'data': [
         'security/airlogic_security.xml',
         'security/ir.model.access.csv',
+        'security/airlogic_ir_rule.xml',
         'data/airlogic_sequence_data.xml',
         'data/airlogic_equipment_category_data.xml',
         'data/airlogic_equipment_lookup_data.xml',

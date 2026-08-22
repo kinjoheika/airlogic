@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class AirlogicReadingLine(models.Model):
@@ -21,3 +21,26 @@ class AirlogicReadingLine(models.Model):
     unit = fields.Char(related='field_id.unit', string='Unit', readonly=True)
     standard = fields.Char(related='field_id.standard', string='Mfr. Standard', readonly=True)
     sequence = fields.Integer(related='field_id.sequence', store=True, readonly=True)
+    is_out_of_range = fields.Boolean(
+        string='Out of Range', compute='_compute_is_out_of_range', store=True,
+        help='True when the entered value parses as a number and falls '
+             "outside the field's configured Min/Max (Configuration > "
+             'Measurement Fields). Non-numeric values (blank, "OL", "-") '
+             "and fields with no threshold set never flag -- there's "
+             'nothing to compare.')
+
+    @api.depends('value', 'field_id.min_value', 'field_id.max_value')
+    def _compute_is_out_of_range(self):
+        for line in self:
+            line.is_out_of_range = False
+            f = line.field_id
+            if not line.value or (not f.min_value and not f.max_value):
+                continue
+            try:
+                v = float(line.value)
+            except ValueError:
+                continue
+            if f.min_value and v < f.min_value:
+                line.is_out_of_range = True
+            elif f.max_value and v > f.max_value:
+                line.is_out_of_range = True

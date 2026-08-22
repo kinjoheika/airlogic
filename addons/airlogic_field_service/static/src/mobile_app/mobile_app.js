@@ -281,9 +281,11 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.loading = true;
         try {
             const device = this.state.selectedEquipment;
+            // draft AND in_progress: a technician who exited mid-entry and
+            // comes back must resume the same job, not spawn a duplicate.
             const jobIds = await this.orm.search(
                 "airlogic.service.job",
-                [["equipment_id", "=", device.id], ["state", "=", "draft"]],
+                [["equipment_id", "=", device.id], ["state", "in", ["draft", "in_progress"]]],
                 { order: "date desc", limit: 1 }
             );
             let jobId;
@@ -295,6 +297,10 @@ export class AirlogicMobileFieldEntry extends Component {
                 ]);
                 jobId = created[0];
             }
+            // Flips draft -> in_progress with an honest start timestamp,
+            // right as entry actually begins -- no separate "Start Visit"
+            // tap needed on mobile. No-ops if already past draft.
+            await this.orm.call("airlogic.service.job", "action_start_visit", [[jobId]]);
             await this.loadJob(jobId);
             this.state.dsrPhase = 1;
             this.state.screen = "dsr";
@@ -376,6 +382,43 @@ export class AirlogicMobileFieldEntry extends Component {
         return this.state.readingLines;
     }
 
+    // --- Phase lock (mirrors get_unlocked_phase in airlogic_service_job.py
+    // -- keep both in sync by hand, same convention as PHASES/
+    // CHECKLIST_ITEMS). Computed client-side from live state rather than
+    // the server's snapshot from load time, so it stays correct the
+    // instant a required field is filled, no round-trip needed. The
+    // server re-checks independently in action_save_visual_checklist --
+    // this is UI responsiveness, not the actual security boundary. -----
+
+    get unlockedPhase() {
+        let unlocked = 1;
+        for (const phaseId of [1, 2, 3]) {
+            const phase = this.checklistPhases.find((p) => p.id === phaseId);
+            const required = phase.items.filter((it) => it.type !== "text");
+            const complete = required.length > 0 && required.every((it) => {
+                const line = this.checklistLine(it.key);
+                return line && line.value;
+            });
+            if (complete) {
+                unlocked = phaseId + 1;
+            } else {
+                break;
+            }
+        }
+        return unlocked;
+    }
+
+    goToPhase(id) {
+        if (id > this.unlockedPhase) {
+            this.notification.add(
+                "Complete this phase's required items before moving on.",
+                { type: "warning" }
+            );
+            return;
+        }
+        this.state.dsrPhase = id;
+    }
+
     checklistLine(key) {
         return this.state.checklistLines.find((l) => l.key === key);
     }
@@ -392,6 +435,27 @@ export class AirlogicMobileFieldEntry extends Component {
 
     onNumberChecklistChange(key, ev) {
         this.commitChecklistValue(key, ev.target.value, this.checklistLine(key)?.note);
+    }
+
+    // Mirrors _compute_is_out_of_range on airlogic.reading.line -- computed
+    // client-side from the same min/max thresholds so the red highlight
+    // updates the instant the technician types, not just after the next
+    // server round-trip/reload.
+    isReadingOutOfRange(line) {
+        if (!line.value || (!line.min_value && !line.max_value)) {
+            return false;
+        }
+        const v = parseFloat(line.value);
+        if (Number.isNaN(v)) {
+            return false;
+        }
+        if (line.min_value && v < line.min_value) {
+            return true;
+        }
+        if (line.max_value && v > line.max_value) {
+            return true;
+        }
+        return false;
     }
 
     // --- Flag/Alert dialog -------------------------------------------------
@@ -418,8 +482,16 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     async setNormal() {
-        const { key } = this.state.flagDialog;
-        await this.commitChecklistValue(key, "ok", "");
+        const { key, note } = this.state.flagDialog;
+        const line = this.checklistLine(key);
+        const wasFlagged = line && (line.value === "flagged" || line.value === "alert");
+        if (wasFlagged && !note.trim()) {
+            this.notification.add(
+                "A reason is required to clear a flagged/alert item.", { type: "danger" }
+            );
+            return;
+        }
+        await this.commitChecklistValue(key, "ok", note);
         this.state.flagDialog = null;
     }
 

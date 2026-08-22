@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import _, api, fields, models
+from odoo.exceptions import AccessError
 
 
 class AirlogicServiceVisit(models.Model):
@@ -28,11 +29,32 @@ class AirlogicServiceVisit(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        self._check_technician_reassignment(vals_list)
         visits = super().create(vals_list)
         for visit in visits:
             if visit.name == '/':
                 visit.name = self.env['ir.sequence'].next_by_code('airlogic.service.visit') or '/'
         return visits
+
+    def write(self, vals):
+        if 'technician_id' in vals:
+            self._check_technician_reassignment([vals])
+        return super().write(vals)
+
+    def _check_technician_reassignment(self, vals_list):
+        """Only Supervisor+ can assign/reassign a visit to a technician
+        other than the acting user -- a plain Technician can still create
+        or keep their own visits (technician_id defaults to self.env.user),
+        just not hand one to, or take one from, someone else.
+        """
+        if self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
+            return
+        for vals in vals_list:
+            tech_id = vals.get('technician_id')
+            if tech_id and tech_id != self.env.user.id:
+                raise AccessError(_(
+                    "Only a Supervisor or Manager can assign or reassign "
+                    "the technician on a Service Visit."))
 
     def action_submit_for_review(self):
         self.write({'state': 'review'})

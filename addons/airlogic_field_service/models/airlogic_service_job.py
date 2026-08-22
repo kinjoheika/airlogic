@@ -3,7 +3,7 @@ import base64
 import io
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 from .airlogic_checklist_line import CHECKLIST_ITEMS
 
@@ -26,8 +26,15 @@ class AirlogicServiceJob(models.Model):
     date = fields.Datetime(string='Visit Date', default=fields.Datetime.now, tracking=True)
     state = fields.Selection([
         ('draft', 'Draft'),
+        ('in_progress', 'In Progress'),
         ('submitted', 'Submitted'),
     ], string='Status', default='draft', tracking=True)
+    started_at = fields.Datetime(
+        string='Started At', tracking=True,
+        help='Set once, the first time the technician actually opens the '
+             'entry screen (action_start_visit) -- kept separate from Visit '
+             'Date so this stays an honest capture-time record even if '
+             'Visit Date is edited later.')
     notes = fields.Text(string='Tech Notes')
     reading_line_ids = fields.One2many(
         'airlogic.reading.line', 'job_id', string='Measurements')
@@ -48,6 +55,7 @@ class AirlogicServiceJob(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        self._check_technician_reassignment(vals_list)
         jobs = super().create(vals_list)
         for job in jobs:
             if job.name == '/':
@@ -57,6 +65,27 @@ class AirlogicServiceJob(models.Model):
             if not job.checklist_line_ids:
                 job._populate_checklist_lines()
         return jobs
+
+    def write(self, vals):
+        if 'technician_id' in vals:
+            self._check_technician_reassignment([vals])
+        return super().write(vals)
+
+    def _check_technician_reassignment(self, vals_list):
+        """Only Supervisor+ can assign/reassign a job to a technician other
+        than the acting user -- mirrors airlogic.service.visit's guard in
+        airlogic_core (same rationale: technician_id defaults to
+        self.env.user, so a technician claiming their own default job is
+        fine, handing it to or taking it from someone else is not).
+        """
+        if self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
+            return
+        for vals in vals_list:
+            tech_id = vals.get('technician_id')
+            if tech_id and tech_id != self.env.user.id:
+                raise AccessError(_(
+                    "Only a Supervisor or Manager can assign or reassign "
+                    "the technician on a Service Job."))
 
     def _populate_reading_lines(self):
         self.ensure_one()
@@ -73,9 +102,52 @@ class AirlogicServiceJob(models.Model):
             for phase, key, label, item_type, unit in CHECKLIST_ITEMS
         ])
 
+    def action_start_visit(self):
+        """First real step of the 4-phase walkthrough: flips draft ->
+        in_progress and stamps started_at. Idempotent -- called
+        automatically the moment the mobile app opens the entry screen
+        (see enterDsr() in mobile_app.js), not as a separate tap, so the
+        walkthrough stays fast while still recording an honest start
+        time. Safe to call again on an already-started job; only acts
+        while still draft.
+        """
+        for job in self:
+            if job.state == 'draft':
+                job.write({'state': 'in_progress', 'started_at': fields.Datetime.now()})
+
     def action_submit(self):
+        for job in self:
+            if job.state != 'in_progress':
+                raise UserError(_(
+                    "Start the visit before submitting -- readings can't "
+                    "be locked in from Draft."))
         self._match_history_tags()
         self.write({'state': 'submitted'})
+
+    def _phase_required_keys(self, phase):
+        """Every checklist key in this phase except free-text notes --
+        those are optional context, not something "Phase complete" should
+        hinge on.
+        """
+        return [key for ph, key, label, item_type, unit in CHECKLIST_ITEMS
+                if ph == phase and item_type != 'text']
+
+    def get_unlocked_phase(self):
+        """Highest phase number (1-4) the technician may currently enter
+        data into: phase N+1 unlocks only once every required item in
+        phase N has a value. Phase 4 has nothing after it to unlock, so
+        the loop only walks phases 1-3.
+        """
+        self.ensure_one()
+        values_by_key = {line.key: line.value for line in self.checklist_line_ids}
+        unlocked = 1
+        for phase in (1, 2, 3):
+            required = self._phase_required_keys(phase)
+            if required and all(values_by_key.get(key) for key in required):
+                unlocked = phase + 1
+            else:
+                break
+        return unlocked
 
     def _match_history_tags(self):
         """Keyword-match this job's notes + flagged/alert checklist item
@@ -124,14 +196,36 @@ class AirlogicServiceJob(models.Model):
         """Called by the OWL client actions' Done/flag-dialog Save via the
         ORM service. values: dict of item key -> entered value. notes:
         dict of item key -> note text (mainly for alert/flagged items).
+
+        Two integrity checks live here (not just in the mobile UI) so
+        they hold regardless of which client calls this -- mobile app or
+        the desktop Visual Checklist action:
+        - Phase lock: can't write into a phase beyond get_unlocked_phase().
+        - Override reason: clearing a flagged/alert item back to 'ok'
+          needs a non-blank note, either passed in this same call or
+          already on the line.
         """
         self.ensure_one()
         lines_by_key = {line.key: line for line in self.checklist_line_ids}
+        unlocked = self.get_unlocked_phase()
+        notes = notes or {}
         for key, val in (values or {}).items():
             line = lines_by_key.get(key)
-            if line is not None:
-                line.value = val
-        for key, note in (notes or {}).items():
+            if line is None:
+                continue
+            if line.phase > unlocked:
+                raise UserError(_(
+                    "Phase %(phase)d is locked until Phase %(prev)d's "
+                    "required items are complete.") % {
+                        'phase': line.phase, 'prev': line.phase - 1})
+            if line.value in ('flagged', 'alert') and val == 'ok':
+                reason = (notes.get(key) or line.note or '').strip()
+                if not reason:
+                    raise UserError(_(
+                        "A reason is required when clearing a flagged/alert "
+                        "item back to Normal."))
+            line.value = val
+        for key, note in notes.items():
             line = lines_by_key.get(key)
             if line is not None:
                 line.note = note
@@ -158,6 +252,7 @@ class AirlogicServiceJob(models.Model):
             'id': self.id,
             'name': self.name,
             'state': self.state,
+            'unlocked_phase': self.get_unlocked_phase(),
             'equipment_name': self.equipment_id.display_name,
             'has_pdf': bool(self.fp_pdf),
             'media_count': len(self.media_ids),
@@ -169,6 +264,9 @@ class AirlogicServiceJob(models.Model):
                 'standard': line.standard,
                 'sequence': line.sequence,
                 'value': line.value,
+                'is_out_of_range': line.is_out_of_range,
+                'min_value': line.field_id.min_value,
+                'max_value': line.field_id.max_value,
             } for line in self.reading_line_ids],
             'checklist_lines': [{
                 'key': line.key,

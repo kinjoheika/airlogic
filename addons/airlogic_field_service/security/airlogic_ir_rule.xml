@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Same pattern as airlogic_core/security/airlogic_ir_rule.xml: a narrow
+  rule for Technician paired with a broad one for Supervisor+, relying on
+  Odoo unioning (OR-ing) every group-scoped rule a user matches. A
+  Manager/Supervisor is also implicitly a Technician (implied_ids), so
+  without the broader rule they'd incorrectly inherit the narrow one.
+
+  Reading/checklist lines don't have their own technician_id, so they're
+  scoped through job_id.technician_id instead.
+-->
+<odoo>
+
+    <record id="rule_service_job_technician_own" model="ir.rule">
+        <field name="name">Technician: own jobs only</field>
+        <field name="model_id" ref="model_airlogic_service_job"/>
+        <field name="domain_force">[('technician_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+    </record>
+
+    <record id="rule_service_job_supervisor_all" model="ir.rule">
+        <field name="name">Supervisor+: all jobs</field>
+        <field name="model_id" ref="model_airlogic_service_job"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
+    </record>
+
+    <record id="rule_service_job_accounting_closed" model="ir.rule">
+        <field name="name">Accounting: submitted jobs only</field>
+        <field name="model_id" ref="model_airlogic_service_job"/>
+        <field name="domain_force">[('state', '=', 'submitted')]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_accounting'))]"/>
+    </record>
+
+    <record id="rule_reading_line_technician_own" model="ir.rule">
+        <field name="name">Technician: reading lines on own jobs only</field>
+        <field name="model_id" ref="model_airlogic_reading_line"/>
+        <field name="domain_force">[('job_id.technician_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+    </record>
+
+    <record id="rule_reading_line_supervisor_all" model="ir.rule">
+        <field name="name">Supervisor+: all reading lines</field>
+        <field name="model_id" ref="model_airlogic_reading_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
+    </record>
+
+    <record id="rule_checklist_line_technician_own" model="ir.rule">
+        <field name="name">Technician: checklist lines on own jobs only</field>
+        <field name="model_id" ref="model_airlogic_checklist_line"/>
+        <field name="domain_force">[('job_id.technician_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+    </record>
+
+    <record id="rule_checklist_line_supervisor_all" model="ir.rule">
+        <field name="name">Supervisor+: all checklist lines</field>
+        <field name="model_id" ref="model_airlogic_checklist_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
+    </record>
+
+</odoo>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Row-level visibility on top of the model-level grants in
+  ir.model.access.csv. Because group_airlogic_manager implies
+  group_airlogic_supervisor implies group_airlogic_technician, a Manager
+  or Supervisor user is ALSO a member of the Technician group, so the
+  "own records only" rule below is paired with a broader rule scoped to
+  Supervisor for every model it restricts. Odoo unions (ORs) the domains
+  of every group-scoped rule a user matches, so a Supervisor/Manager
+  ends up with the union of both (i.e. everything), while a plain
+  Technician only matches the narrow rule.
+-->
+<odoo>
+
+    <record id="rule_service_visit_technician_own" model="ir.rule">
+        <field name="name">Technician: own visits only</field>
+        <field name="model_id" ref="model_airlogic_service_visit"/>
+        <field name="domain_force">[('technician_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_airlogic_technician'))]"/>
+    </record>
+
+    <record id="rule_service_visit_supervisor_all" model="ir.rule">
+        <field name="name">Supervisor+: all visits</field>
+        <field name="model_id" ref="model_airlogic_service_visit"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_airlogic_supervisor'))]"/>
+    </record>
+
+    <record id="rule_service_visit_accounting_closed" model="ir.rule">
+        <field name="name">Accounting: approved visits only</field>
+        <field name="model_id" ref="model_airlogic_service_visit"/>
+        <field name="domain_force">[('state', '=', 'approved')]</field>
+        <field name="groups" eval="[(4, ref('group_airlogic_accounting'))]"/>
+    </record>
+
+</odoo>

@@ -32,6 +32,18 @@ class AirlogicMeasurementField(models.Model):
         string='Mfr. Standard',
         help='Expected/manufacturer standard shown as a hint next to the '
              'entered value, e.g. "≥ 8 °C". Leave blank for N/A.')
+    min_value = fields.Float(
+        string='Min (Pass/Fail)',
+        help='Auto-flags a reading below this number as out of range. '
+             'Leave at 0 for no minimum -- 0 itself is treated as "not '
+             'set" here, so this field is not suitable for a field whose '
+             'real lower bound is exactly zero.')
+    max_value = fields.Float(
+        string='Max (Pass/Fail)',
+        help='Auto-flags a reading above this number as out of range. '
+             'Leave at 0 for no maximum. This is the structured pass/fail '
+             'threshold used for auto-flagging -- Mfr. Standard above is '
+             'just a descriptive hint text, not compared against.')
     sequence = fields.Integer(string='Sequence', default=10)
     active = fields.Boolean(default=True)
 

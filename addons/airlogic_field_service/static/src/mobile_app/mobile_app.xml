@@ -220,9 +220,10 @@
 
                 <div class="o_airlogic_phase_nav_dots">
                     <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
-                        <div t-attf-class="o_airlogic_phase_dot {{state.dsrPhase === p.id ? 'on' : ''}}"
-                             t-on-click="() => this.state.dsrPhase = p.id">
-                            <t t-esc="p.id"/>
+                        <div t-attf-class="o_airlogic_phase_dot {{state.dsrPhase === p.id ? 'on' : ''}} {{p.id > unlockedPhase ? 'locked' : ''}}"
+                             t-on-click="() => this.goToPhase(p.id)">
+                            <t t-if="p.id > unlockedPhase">🔒</t>
+                            <t t-else=""><t t-esc="p.id"/></t>
                         </div>
                     </t>
                 </div>
@@ -297,10 +298,11 @@
                                 <span t-if="line.standard" class="o_airlogic_item_std" t-esc="line.standard"/>
                             </div>
                             <div class="o_airlogic_item_control">
-                                <input type="text" class="form-control form-control-sm o_airlogic_number"
+                                <input type="text" t-attf-class="form-control form-control-sm o_airlogic_number {{isReadingOutOfRange(line) ? 'out_of_range' : ''}}"
                                        t-att-value="line.value"
                                        t-on-change="(ev) => this.onReadingChange(line.code, ev)"/>
                                 <span t-if="line.unit" class="o_airlogic_unit" t-esc="line.unit"/>
+                                <span t-if="isReadingOutOfRange(line)" class="o_airlogic_oor_badge" title="Outside pass/fail range">⚠</span>
                             </div>
                         </div>
                     </t>
@@ -311,7 +313,8 @@
                 <button type="button" class="btn btn-secondary" t-on-click="() => state.dsrPhase = Math.max(1, state.dsrPhase - 1)"
                         t-att-disabled="state.dsrPhase === 1">← Prev</button>
                 <button t-if="state.dsrPhase &lt; 4" type="button" class="btn airlogic-btn-primary"
-                        t-on-click="() => this.state.dsrPhase += 1">Save &amp; Next →</button>
+                        t-att-disabled="unlockedPhase &lt;= state.dsrPhase"
+                        t-on-click="() => this.goToPhase(state.dsrPhase + 1)">Save &amp; Next →</button>
                 <button t-else="" type="button" class="btn airlogic-btn-invoice" t-on-click="onSubmitJob">
                     Submit
                 </button>

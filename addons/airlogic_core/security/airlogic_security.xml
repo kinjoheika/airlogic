@@ -29,11 +29,35 @@
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
+    <!-- Inserted between Technician and Manager: sees/approves across all
+         technicians instead of just their own (dispatch-wide review),
+         without the full Admin-level catalog/pricing/security access
+         Manager has. implied_ids makes Manager automatically a Supervisor
+         too, so Manager's own ACL/ir.rule rows still need to grant at
+         least as much as Supervisor's for that to actually widen access
+         rather than narrow it. See ir.model.access.csv and
+         airlogic_ir_rule.xml. -->
+    <record id="group_airlogic_supervisor" model="res.groups">
+        <field name="name">Supervisor</field>
+        <field name="privilege_id" ref="privilege_airlogic"/>
+        <field name="implied_ids" eval="[(4, ref('group_airlogic_technician'))]"/>
+    </record>
+
     <record id="group_airlogic_manager" model="res.groups">
         <field name="name">Manager</field>
         <field name="privilege_id" ref="privilege_airlogic"/>
-        <field name="implied_ids" eval="[(4, ref('group_airlogic_technician'))]"/>
+        <field name="implied_ids" eval="[(4, ref('group_airlogic_supervisor'))]"/>
         <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Separate branch, not implied by/from Technician: read-only,
+         closed-stage-only visibility for billing/sign-off. Deliberately
+         does NOT imply base.group_user's broader backend access beyond
+         what its own ACL/ir.rule rows grant. -->
+    <record id="group_airlogic_accounting" model="res.groups">
+        <field name="name">Accounting (View Only)</field>
+        <field name="privilege_id" ref="privilege_airlogic"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
 </odoo>

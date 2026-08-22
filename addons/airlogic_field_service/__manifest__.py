@@ -32,6 +32,7 @@ airlogic.service.job.
     'depends': ['base', 'web', 'mail', 'account', 'airlogic_core'],
     'data': [
         'security/ir.model.access.csv',
+        'security/airlogic_ir_rule.xml',
         'data/airlogic_sequence_data.xml',
         'data/airlogic_measurement_field_data.xml',
         'data/airlogic_history_tag_data.xml',

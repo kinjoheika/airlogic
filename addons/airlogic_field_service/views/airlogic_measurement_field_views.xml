@@ -18,6 +18,8 @@
                 <field name="code"/>
                 <field name="unit"/>
                 <field name="standard"/>
+                <field name="min_value" optional="hide"/>
+                <field name="max_value" optional="hide"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
         </field>
@@ -42,6 +44,8 @@
                         <group>
                             <field name="unit"/>
                             <field name="standard"/>
+                            <field name="min_value"/>
+                            <field name="max_value"/>
                             <field name="active"/>
                         </group>
                     </group>
