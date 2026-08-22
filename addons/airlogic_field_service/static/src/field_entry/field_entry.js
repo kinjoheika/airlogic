@@ -46,9 +46,8 @@ export const PHASES = [
             { key: "coil", label: "Coil & Fins", type: "check" },
             { key: "drain", label: "Drain Pan", type: "check" },
             { key: "drainline", label: "Drain Line", type: "check" },
-            { key: "blower", label: "Blower Fan", type: "check" },
-            { key: "fanmotor", label: "Fan Motor", type: "check" },
-            { key: "wires_in", label: "Wires", type: "check" },
+            { key: "motor_fan", label: "Motor & Fan", type: "check" },
+            { key: "wires_in", label: "Wires & Sensors", type: "check" },
         ],
     },
     {

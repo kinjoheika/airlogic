@@ -79,7 +79,11 @@ export class AirlogicMobileFieldEntry extends Component {
 
     setup() {
         this.orm = useService("orm");
-        this.notification = useService("notification");
+        // Odoo's own notification service renders toasts at the browser
+        // viewport's corner, outside the phone-frame div entirely -- that
+        // breaks the "looks like a real phone" illusion, so this app
+        // shows its own toast (state.toast, styled/positioned inside
+        // .o_airlogic_mobile) instead of using useService("notification").
         // Neither useService("user") nor the odoo.session_info global
         // proved reliable on this build -- PIN verification runs entirely
         // server-side against self.env.user, so the client never needs to
@@ -118,6 +122,8 @@ export class AirlogicMobileFieldEntry extends Component {
 
             equipmentEdit: null,
             deleteConfirmDevice: null,
+
+            toast: null, // {message, type}
         });
 
         this._onlineHandler = () => {
@@ -134,7 +140,16 @@ export class AirlogicMobileFieldEntry extends Component {
         onWillUnmount(() => {
             window.removeEventListener("online", this._onlineHandler);
             window.removeEventListener("offline", this._offlineHandler);
+            clearTimeout(this._toastTimer);
         });
+    }
+
+    showToast(message, type = "success") {
+        this.state.toast = { message, type };
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+            this.state.toast = null;
+        }, 3000);
     }
 
     // --- Exit (target=fullscreen hides Odoo's own navbar, so this app
@@ -373,15 +388,6 @@ export class AirlogicMobileFieldEntry extends Component {
         return this.checklistPhases.find((p) => p.id === this.state.dsrPhase);
     }
 
-    get dsrReadingLinesForPhase() {
-        // Ph1's Amp Draw/Anemometer are checklist items, not
-        // measurement-field reading lines -- the 30-field Fieldpiece
-        // grid isn't phase-scoped in the mockup's DSR, so it's reachable
-        // as its own phase-independent list at the end of Ph4 (folded
-        // into "Line Set + Submit" alongside the PDF import).
-        return this.state.readingLines;
-    }
-
     // --- Phase lock (mirrors get_unlocked_phase in airlogic_service_job.py
     // -- keep both in sync by hand, same convention as PHASES/
     // CHECKLIST_ITEMS). Computed client-side from live state rather than
@@ -413,9 +419,8 @@ export class AirlogicMobileFieldEntry extends Component {
 
     goToPhase(id) {
         if (id > this.unlockedPhase) {
-            this.notification.add(
-                "Complete this phase's required items before moving on.",
-                { type: "warning" }
+            this.showToast(
+                "Complete this phase's required items before moving on.", "warning"
             );
             return;
         }
@@ -426,39 +431,8 @@ export class AirlogicMobileFieldEntry extends Component {
         return this.state.checklistLines.find((l) => l.key === key);
     }
 
-    async onReadingChange(code, ev) {
-        const value = ev.target.value;
-        const line = this.state.readingLines.find((l) => l.code === code);
-        if (line) {
-            line.value = value;
-        }
-        this.persistLocal();
-        await this.trySync({ type: "save_readings", values: { [code]: value } });
-    }
-
     onNumberChecklistChange(key, ev) {
         this.commitChecklistValue(key, ev.target.value, this.checklistLine(key)?.note);
-    }
-
-    // Mirrors _compute_is_out_of_range on airlogic.reading.line -- computed
-    // client-side from the same min/max thresholds so the red highlight
-    // updates the instant the technician types, not just after the next
-    // server round-trip/reload.
-    isReadingOutOfRange(line) {
-        if (!line.value || (!line.min_value && !line.max_value)) {
-            return false;
-        }
-        const v = parseFloat(line.value);
-        if (Number.isNaN(v)) {
-            return false;
-        }
-        if (line.min_value && v < line.min_value) {
-            return true;
-        }
-        if (line.max_value && v > line.max_value) {
-            return true;
-        }
-        return false;
     }
 
     // --- Flag/Alert dialog -------------------------------------------------
@@ -489,8 +463,8 @@ export class AirlogicMobileFieldEntry extends Component {
         const line = this.checklistLine(key);
         const wasFlagged = line && (line.value === "flagged" || line.value === "alert");
         if (wasFlagged && !note.trim()) {
-            this.notification.add(
-                "A reason is required to clear a flagged/alert item.", { type: "danger" }
+            this.showToast(
+                "A reason is required to clear a flagged/alert item.", "danger"
             );
             return;
         }
@@ -601,7 +575,7 @@ export class AirlogicMobileFieldEntry extends Component {
         setPending(jobId, remaining);
         this.state.pendingCount = remaining.length;
         if (!remaining.length) {
-            this.notification.add("All offline changes synced.", { type: "success" });
+            this.showToast("All offline changes synced.", "success");
             await this.loadJob(jobId);
         }
     }
@@ -626,15 +600,15 @@ export class AirlogicMobileFieldEntry extends Component {
         const action = { type: "import_pdf", b64, filename: file.name };
         if (!navigator.onLine) {
             this.state.pendingCount = queueAction(this.state.job.id, action);
-            this.notification.add(
-                "Offline -- PDF queued, will import once back online.", { type: "warning" }
+            this.showToast(
+                "Offline -- PDF queued, will import once back online.", "warning"
             );
             return;
         }
         try {
             await this.runAction(action);
             await this.loadJob(this.state.job.id);
-            this.notification.add("PDF imported.", { type: "success" });
+            this.showToast("PDF imported.", "success");
         } catch (e) {
             this.state.pendingCount = queueAction(this.state.job.id, action);
         }
@@ -646,9 +620,9 @@ export class AirlogicMobileFieldEntry extends Component {
             return;
         }
         if (!navigator.onLine) {
-            this.notification.add(
+            this.showToast(
                 "Photos need a live connection to upload -- try again once online.",
-                { type: "warning" }
+                "warning"
             );
             return;
         }
@@ -667,7 +641,7 @@ export class AirlogicMobileFieldEntry extends Component {
                     media_ids: [[4, attachmentId]],
                 }]);
             }
-            this.notification.add(`${files.length} file(s) uploaded.`, { type: "success" });
+            this.showToast(`${files.length} file(s) uploaded.`, "success");
         } finally {
             this.state.loading = false;
         }
@@ -676,14 +650,14 @@ export class AirlogicMobileFieldEntry extends Component {
     async onSubmitJob() {
         await this.syncPending();
         if (this.state.pendingCount > 0) {
-            this.notification.add(
+            this.showToast(
                 "Still has unsynced changes -- can't submit yet. Try again once online.",
-                { type: "danger" }
+                "danger"
             );
             return;
         }
         await this.orm.call("airlogic.service.job", "action_submit", [[this.state.job.id]]);
-        this.notification.add("Job submitted.", { type: "success" });
+        this.showToast("Job submitted.", "success");
         this.state.screen = "main";
         this.state.tab = "visit";
     }
@@ -769,10 +743,10 @@ export class AirlogicMobileFieldEntry extends Component {
                 model: e.model,
                 serial_number: e.serial_number,
             }]);
-            this.notification.add("Equipment saved.", { type: "success" });
+            this.showToast("Equipment saved.", "success");
         } else {
             if (!e.name) {
-                this.notification.add("Unit label is required.", { type: "danger" });
+                this.showToast("Unit label is required.", "danger");
                 return;
             }
             await this.orm.call("airlogic.equipment", "action_senior_tech_create", [[], {
@@ -781,7 +755,7 @@ export class AirlogicMobileFieldEntry extends Component {
                 model: e.model,
                 serial_number: e.serial_number,
             }]);
-            this.notification.add("Equipment added.", { type: "success" });
+            this.showToast("Equipment added.", "success");
         }
         this.state.equipmentEdit = null;
         await this.loadDevices();
@@ -798,7 +772,7 @@ export class AirlogicMobileFieldEntry extends Component {
     async confirmDeleteEquipment() {
         const device = this.state.deleteConfirmDevice;
         await this.orm.call("airlogic.equipment", "action_senior_tech_unlink", [[device.id]]);
-        this.notification.add("Equipment deleted.", { type: "success" });
+        this.showToast("Equipment deleted.", "success");
         this.state.deleteConfirmDevice = null;
         this.state.equipmentEdit = null;
         await this.loadDevices();

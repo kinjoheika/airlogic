@@ -13,6 +13,14 @@
                 </div>
             </div>
 
+            <!-- In-app toast, replaces Odoo's own notification service (see
+                 setup()/showToast) so status messages like "Job submitted"
+                 stay inside the phone frame instead of popping up over the
+                 Odoo backend behind it. -->
+            <div t-if="state.toast" t-attf-class="o_airlogic_toast o_airlogic_toast_{{state.toast.type}}">
+                <t t-esc="state.toast.message"/>
+            </div>
+
             <div t-if="state.loading" class="o_airlogic_mobile_loading">Loading…</div>
 
             <!-- PIN GATE 1 (before client list) -->
@@ -53,8 +61,10 @@
 
             <!-- MAIN (bottom-nav tabs) -->
             <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_mobile_body o_airlogic_main">
-                <div class="o_airlogic_back" t-on-click="backToClients">‹ Clients</div>
-                <h4><t t-esc="state.selectedPartner.name"/></h4>
+                <div class="o_airlogic_title_row">
+                    <span class="o_airlogic_back_arrow" t-on-click="backToClients" title="Back to Clients">‹</span>
+                    <h4><t t-esc="state.selectedPartner.name"/></h4>
+                </div>
 
                 <!-- VISIT TAB -->
                 <t t-if="state.tab === 'visit'">
@@ -82,13 +92,17 @@
                     </t>
                 </t>
                 <t t-if="state.tab === 'units' and state.unitEquipment">
-                    <div class="o_airlogic_back" t-on-click="closeUnit">‹ Units</div>
-                    <h5 t-esc="state.unitEquipment.name"/>
-                    <div class="o_airlogic_phase_bar">
-                        <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'reading' ? 'active' : ''}}"
-                             t-on-click="() => this.state.unitComparisonTab = 'reading'">Readings</div>
-                        <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'visual' ? 'active' : ''}}"
-                             t-on-click="() => this.state.unitComparisonTab = 'visual'">Checklist</div>
+                    <div class="o_airlogic_sticky_header">
+                        <div class="o_airlogic_title_row">
+                            <span class="o_airlogic_back_arrow" t-on-click="closeUnit" title="Back to Units">‹</span>
+                            <h5 t-esc="state.unitEquipment.name"/>
+                        </div>
+                        <div class="o_airlogic_phase_bar">
+                            <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'reading' ? 'active' : ''}}"
+                                 t-on-click="() => this.state.unitComparisonTab = 'reading'">Readings</div>
+                            <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'visual' ? 'active' : ''}}"
+                                 t-on-click="() => this.state.unitComparisonTab = 'visual'">Checklist</div>
+                        </div>
                     </div>
 
                     <!-- Stacked cards, not a wide table: up to 3 past
@@ -215,19 +229,19 @@
             <!-- (PIN GATE 2, before entering here, reuses the pin1_check
                  screen above with pinPurpose='device') -->
             <div t-if="state.screen === 'dsr' and state.job and !state.loading" class="o_airlogic_mobile_body">
-                <h4><t t-esc="state.job.equipment_name"/></h4>
-                <div class="text-muted mb-2"><t t-esc="state.job.name"/></div>
-
-                <div class="o_airlogic_phase_nav_dots">
-                    <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
-                        <div t-attf-class="o_airlogic_phase_dot {{state.dsrPhase === p.id ? 'on' : ''}} {{p.id > unlockedPhase ? 'locked' : ''}}"
-                             t-on-click="() => this.goToPhase(p.id)">
-                            <t t-if="p.id > unlockedPhase">🔒</t>
-                            <t t-else=""><t t-esc="p.id"/></t>
-                        </div>
-                    </t>
+                <div class="o_airlogic_sticky_header">
+                    <h4><t t-esc="state.job.equipment_name"/> <small class="text-muted"><t t-esc="state.job.name"/></small></h4>
+                    <div class="o_airlogic_phase_nav_dots">
+                        <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
+                            <div t-attf-class="o_airlogic_phase_dot {{state.dsrPhase === p.id ? 'on' : ''}} {{p.id > unlockedPhase ? 'locked' : ''}}"
+                                 t-on-click="() => this.goToPhase(p.id)">
+                                <t t-if="p.id > unlockedPhase">🔒</t>
+                                <t t-else=""><t t-esc="p.id"/></t>
+                            </div>
+                        </t>
+                    </div>
+                    <div class="text-muted" style="font-size:11px;"><t t-esc="currentDsrPhase.title"/></div>
                 </div>
-                <div class="text-muted" style="font-size:11px;"><t t-esc="currentDsrPhase.title"/></div>
 
                 <t t-foreach="currentDsrPhase.items" t-as="item" t-key="item.key">
                     <div class="o_airlogic_item">
@@ -280,7 +294,11 @@
                     </div>
                 </t>
 
-                <!-- Ph4 also carries the Fieldpiece 30-field grid + PDF import + photos -->
+                <!-- Ph4 also carries the PDF import + photos. The 30-field
+                     Fieldpiece grid itself is no longer entered here. The
+                     PDF import fills those same reading_line_ids directly,
+                     and they're reviewable on the desktop Service Job form
+                     or the Units tab's Readings comparison. -->
                 <t t-if="state.dsrPhase === 4">
                     <div class="o_airlogic_group_hd">MeasureQuick / Fieldpiece Report</div>
                     <div class="o_airlogic_upload_zone">
@@ -290,22 +308,6 @@
                     <div class="o_airlogic_upload_zone">
                         <input type="file" accept="image/*,video/*" multiple="multiple" t-on-change="onPhotoSelected"/>
                     </div>
-                    <div class="o_airlogic_group_hd">Measurements</div>
-                    <t t-foreach="dsrReadingLinesForPhase" t-as="line" t-key="line.code">
-                        <div class="o_airlogic_item">
-                            <div class="o_airlogic_item_label">
-                                <span t-esc="line.label"/>
-                                <span t-if="line.standard" class="o_airlogic_item_std" t-esc="line.standard"/>
-                            </div>
-                            <div class="o_airlogic_item_control">
-                                <input type="text" t-attf-class="form-control form-control-sm o_airlogic_number {{isReadingOutOfRange(line) ? 'out_of_range' : ''}}"
-                                       t-att-value="line.value"
-                                       t-on-change="(ev) => this.onReadingChange(line.code, ev)"/>
-                                <span t-if="line.unit" class="o_airlogic_unit" t-esc="line.unit"/>
-                                <span t-if="isReadingOutOfRange(line)" class="o_airlogic_oor_badge" title="Outside pass/fail range">⚠</span>
-                            </div>
-                        </div>
-                    </t>
                 </t>
             </div>
             <div t-if="state.screen === 'dsr' and state.job and !state.loading" class="o_airlogic_footer_bar">

@@ -34,9 +34,8 @@ CHECKLIST_ITEMS = [
     (3, 'coil', 'Coil & Fins', 'check', None),
     (3, 'drain', 'Drain Pan', 'check', None),
     (3, 'drainline', 'Drain Line', 'check', None),
-    (3, 'blower', 'Blower Fan', 'check', None),
-    (3, 'fanmotor', 'Fan Motor', 'check', None),
-    (3, 'wires_in', 'Wires', 'check', None),
+    (3, 'motor_fan', 'Motor & Fan', 'check', None),
+    (3, 'wires_in', 'Wires & Sensors', 'check', None),
     # Phase 4 -- Line Set + Submit
     (4, 'ins', 'Insulation Tape', 'check', None),
     (4, 'wire_cond', 'Wire Condition', 'check', None),
