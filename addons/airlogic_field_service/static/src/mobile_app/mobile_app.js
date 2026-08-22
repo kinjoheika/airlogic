@@ -121,7 +121,7 @@ export class AirlogicMobileFieldEntry extends Component {
 
         onWillStart(async () => {
             this.state.isManager = await this.orm.call(
-                "res.users", "has_group", ["airlogic_core.group_airlogic_manager"]
+                "res.users", "has_group", [[], "airlogic_core.group_airlogic_manager"]
             );
         });
 
@@ -158,7 +158,7 @@ export class AirlogicMobileFieldEntry extends Component {
 
     async confirmPin() {
         const ok = await this.orm.call(
-            "res.users", "action_verify_field_pin", [this.state.pinInput]
+            "res.users", "action_verify_field_pin", [[], this.state.pinInput]
         );
         if (!ok) {
             this.state.pinError = true;
