@@ -18,23 +18,39 @@ class ResUsersFieldServiceExt(models.Model):
              'screen. Leave blank to skip the PIN gate for this user.')
 
     @api.model
-    def action_verify_field_pin(self, pin):
+    def action_verify_field_pin(self, *args, **kwargs):
         """Always checks the CALLING user's own PIN (self.env.user),
         regardless of which record self is bound to -- avoids the JS
         side needing to know its own uid via a service/global that's
-        proven unreliable on this build. Same calling pattern as the
-        already-working has_group RPC: no ids in the JS call at all.
+        proven unreliable on this build.
+
+        Takes *args instead of a plain `pin` positional param: this
+        build's call_kw dispatch has been inconsistent about whether it
+        strips a leading ids placeholder from the JS orm.call args list
+        before invoking @api.model methods (confirmed inconsistent by
+        action_am_i_field_manager below, which received one more
+        positional argument than its own zero-param signature allows).
+        Taking the LAST positional arg is convention-agnostic: the pin
+        value is always the last thing sent from the JS side, whether or
+        not an ids placeholder precedes it.
         """
+        pin = args[-1] if args else kwargs.get('pin')
         user = self.env.user
         if not user.airlogic_field_pin:
             return True
         return pin == user.airlogic_field_pin
 
     @api.model
-    def action_am_i_field_manager(self):
+    def action_am_i_field_manager(self, *args, **kwargs):
         """core has_group() calls self.ensure_one() on this build, so it
         can't be called on an empty/unbound recordset from the JS side
         (self.env['res.users'].has_group(...) errors: Expected singleton).
         self.env.user is always a real singleton, so wrap it here instead.
+
+        Takes *args, **kwargs (all ignored) purely defensively: this
+        method has no real parameters, but call_kw on this build has
+        been observed passing an extra positional argument even when the
+        JS side sends an empty ids placeholder ([[]]) -- see the note on
+        action_verify_field_pin above.
         """
         return self.env.user.has_group('airlogic_core.group_airlogic_manager')
