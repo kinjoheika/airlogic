@@ -117,6 +117,7 @@ export class AirlogicMobileFieldEntry extends Component {
             history: [],
 
             equipmentEdit: null,
+            newClientForm: null,
         });
 
         onWillStart(async () => {
@@ -233,6 +234,16 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     setTab(tab) {
+        if (this.state.screen === "clients") {
+            // No client selected yet -- only "Add/Delete" makes sense here,
+            // as the entry point for a brand-new client's first unit.
+            if (tab === "equipment") {
+                this.openAddClient();
+            } else {
+                this.notification.add("Select a client first.", { type: "warning" });
+            }
+            return;
+        }
         this.state.tab = tab;
         this.state.unitEquipment = null;
         this.state.equipmentEdit = null;
@@ -659,6 +670,43 @@ export class AirlogicMobileFieldEntry extends Component {
         this.notification.add("Equipment saved.", { type: "success" });
         this.state.equipmentEdit = null;
         await this.loadDevices();
+    }
+
+    // --- Add New Client -----------------------------------------------
+    // The client list is derived from existing airlogic.equipment records
+    // (grouped by partner), so a brand-new client has no way in otherwise
+    // -- this is the entry point for a technician's first visit to a site
+    // that has nothing on file yet.
+
+    openAddClient() {
+        this.state.newClientForm = { name: "", equipName: "", model: "", serial_number: "" };
+    }
+
+    closeAddClient() {
+        this.state.newClientForm = null;
+    }
+
+    async saveAddClient() {
+        const f = this.state.newClientForm;
+        if (!f.name || !f.equipName) {
+            this.notification.add("Client name and unit label are required.", { type: "danger" });
+            return;
+        }
+        this.state.loading = true;
+        try {
+            const [partnerId] = await this.orm.create("res.partner", [{ name: f.name }]);
+            await this.orm.create("airlogic.equipment", [{
+                partner_id: partnerId,
+                name: f.equipName,
+                model: f.model,
+                serial_number: f.serial_number,
+            }]);
+            this.notification.add("Client and equipment added.", { type: "success" });
+            this.state.newClientForm = null;
+            await this.selectClient({ id: partnerId, name: f.name });
+        } finally {
+            this.state.loading = false;
+        }
     }
 }
 

@@ -19,6 +19,8 @@
                 <div class="o_airlogic_pin_icon">🔐</div>
                 <h4>Technician Verification</h4>
                 <p class="text-muted">Enter your PIN to view clients.</p>
+            </div>
+            <div t-if="state.screen === 'pin1' and !state.loading" class="o_airlogic_footer_bar">
                 <button type="button" class="btn airlogic-btn-primary" t-on-click="() => this.startPinCheck('clients')">
                     Continue
                 </button>
@@ -30,19 +32,24 @@
                 <input type="password" inputmode="numeric" maxlength="6" class="form-control o_airlogic_pin_input"
                        t-att-value="state.pinInput" t-on-input="onPinInput" placeholder="• • • • • •"/>
                 <p t-if="state.pinError" class="text-danger">Incorrect PIN. Try again.</p>
+            </div>
+            <div t-if="state.screen === 'pin1_check' and !state.loading" class="o_airlogic_footer_bar">
+                <button type="button" class="btn btn-outline-secondary" t-on-click="cancelPin">Cancel</button>
                 <button type="button" class="btn airlogic-btn-primary" t-on-click="confirmPin">Confirm</button>
-                <button type="button" class="btn btn-link" t-on-click="cancelPin">Cancel</button>
             </div>
 
             <!-- CLIENT LIST -->
             <div t-if="state.screen === 'clients' and !state.loading" class="o_airlogic_mobile_body">
                 <h4>Select Client</h4>
+                <div class="o_airlogic_card o_airlogic_add_card" t-on-click="openAddClient">
+                    <div class="o_airlogic_card_title">+ Add New Client</div>
+                </div>
                 <div t-foreach="state.clients" t-as="client" t-key="client.id"
                      class="o_airlogic_card" t-on-click="() => this.selectClient(client)">
                     <div class="o_airlogic_card_title" t-esc="client.name"/>
                     <div class="o_airlogic_card_sub"><t t-esc="client.count"/> unit(s)</div>
                 </div>
-                <p t-if="!state.clients.length" class="text-muted">No equipment on file yet.</p>
+                <p t-if="!state.clients.length" class="text-muted">No equipment on file yet — add your first client above.</p>
             </div>
 
             <!-- MAIN (bottom-nav tabs) -->
@@ -150,7 +157,7 @@
             </div>
 
             <!-- BOTTOM NAV (4 tabs) -->
-            <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_bottom_nav">
+            <div t-if="(state.screen === 'main' or state.screen === 'clients') and !state.loading" class="o_airlogic_bottom_nav">
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'visit' ? 'active' : ''}}" t-on-click="() => this.setTab('visit')">
                     <div class="o_airlogic_bnav_icon">📋</div>Visit
                 </div>
@@ -169,24 +176,16 @@
             <!-- (PIN GATE 2, before entering here, reuses the pin1_check
                  screen above with pinPurpose='device') -->
             <div t-if="state.screen === 'dsr' and state.job and !state.loading" class="o_airlogic_mobile_body">
-                <div class="o_airlogic_back" t-on-click="requestExitDsr">‹ Back to Visit</div>
                 <h4><t t-esc="state.job.equipment_name"/></h4>
                 <div class="text-muted mb-2"><t t-esc="state.job.name"/></div>
 
                 <div class="o_airlogic_phase_nav_dots">
-                    <button type="button" class="btn btn-secondary" t-on-click="() => state.dsrPhase = Math.max(1, state.dsrPhase - 1)"
-                            t-att-disabled="state.dsrPhase === 1">← Prev</button>
                     <t t-foreach="checklistPhases" t-as="p" t-key="p.id">
                         <div t-attf-class="o_airlogic_phase_dot {{state.dsrPhase === p.id ? 'on' : ''}}"
                              t-on-click="() => this.state.dsrPhase = p.id">
                             <t t-esc="p.id"/>
                         </div>
                     </t>
-                    <button t-if="state.dsrPhase &lt; 4" type="button" class="btn airlogic-btn-primary"
-                            t-on-click="() => this.state.dsrPhase += 1">Save &amp; Next →</button>
-                    <button t-else="" type="button" class="btn airlogic-btn-invoice" t-on-click="onSubmitJob">
-                        Submit
-                    </button>
                 </div>
                 <div class="text-muted" style="font-size:11px;"><t t-esc="currentDsrPhase.title"/></div>
 
@@ -268,6 +267,16 @@
                     </t>
                 </t>
             </div>
+            <div t-if="state.screen === 'dsr' and state.job and !state.loading" class="o_airlogic_footer_bar">
+                <button type="button" class="btn btn-outline-secondary" t-on-click="requestExitDsr">‹ Back</button>
+                <button type="button" class="btn btn-secondary" t-on-click="() => state.dsrPhase = Math.max(1, state.dsrPhase - 1)"
+                        t-att-disabled="state.dsrPhase === 1">← Prev</button>
+                <button t-if="state.dsrPhase &lt; 4" type="button" class="btn airlogic-btn-primary"
+                        t-on-click="() => this.state.dsrPhase += 1">Save &amp; Next →</button>
+                <button t-else="" type="button" class="btn airlogic-btn-invoice" t-on-click="onSubmitJob">
+                    Submit
+                </button>
+            </div>
 
             <!-- FLAG / ALERT DIALOG -->
             <div t-if="state.flagDialog" class="o_airlogic_dialog_overlay">
@@ -282,6 +291,41 @@
                     </div>
                     <button type="button" class="btn btn-outline-secondary w-100 mt-2" t-on-click="setNormal">✓ Set Normal</button>
                     <button type="button" class="btn btn-link w-100" t-on-click="cancelFlagDialog">Cancel</button>
+                </div>
+            </div>
+
+            <!-- ADD NEW CLIENT DIALOG -->
+            <div t-if="state.newClientForm" class="o_airlogic_dialog_overlay">
+                <div class="o_airlogic_dialog_sheet">
+                    <div class="o_airlogic_dialog_hd">Add New Client</div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>Client Name</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.newClientForm.name"
+                               t-on-change="(ev) => state.newClientForm.name = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>First Unit Label</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.newClientForm.equipName"
+                               t-on-change="(ev) => state.newClientForm.equipName = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>Model</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.newClientForm.model"
+                               t-on-change="(ev) => state.newClientForm.model = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_item">
+                        <div class="o_airlogic_item_label"><span>Serial Number</span></div>
+                        <input type="text" class="form-control form-control-sm"
+                               t-att-value="state.newClientForm.serial_number"
+                               t-on-change="(ev) => state.newClientForm.serial_number = ev.target.value"/>
+                    </div>
+                    <div class="o_airlogic_dialog_choices">
+                        <button type="button" class="btn btn-outline-secondary" t-on-click="closeAddClient">Cancel</button>
+                        <button type="button" class="btn airlogic-btn-primary" t-on-click="saveAddClient">Save</button>
+                    </div>
                 </div>
             </div>
 

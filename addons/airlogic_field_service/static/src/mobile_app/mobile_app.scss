@@ -14,13 +14,29 @@
     font-weight: 700;
 }
 
+// The app renders inside Odoo's own backend canvas (full-width, unbounded
+// height), so without a real frame it just reads as a mostly-empty page.
+// This wraps it as a fixed-size phone frame -- bezel border, rounded
+// corners, capped height with the body scrolling internally -- so header
+// and footer stay pinned like a real device instead of the page just
+// trailing off into blank space below short content.
 .o_airlogic_mobile {
-    max-width: 480px;
-    margin: 0 auto;
-    padding-bottom: 40px;
+    max-width: 420px;
+    height: 820px;
+    max-height: calc(100vh - 48px);
+    margin: 24px auto;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 10px solid #0D1B2A;
+    border-radius: 34px;
+    box-shadow: 0 16px 40px rgba(13, 27, 42, 0.28);
+    overflow: hidden;
+    position: relative;
 }
 
 .o_airlogic_mobile_nav {
+    flex: 0 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -63,7 +79,25 @@
 }
 
 .o_airlogic_mobile_body {
+    flex: 1 1 auto;
+    overflow-y: auto;
     padding: 16px;
+}
+
+// Sticky action bar pinned to the bottom of the phone frame -- every
+// screen gets one so "back"/"save"/"confirm" are always in the same
+// place, instead of buttons scrolling away inside a tall body.
+.o_airlogic_footer_bar {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid #D8DBDE;
+    background: #fff;
+
+    button {
+        flex: 1;
+    }
 }
 
 .o_airlogic_back {
@@ -90,6 +124,15 @@
 .o_airlogic_card_title {
     font-weight: 700;
     font-size: 14px;
+}
+
+.o_airlogic_add_card {
+    border: 1.5px dashed #0ABFB8;
+    background: #F0FDFC;
+
+    .o_airlogic_card_title {
+        color: #079D97;
+    }
 }
 
 .o_airlogic_card_sub {
@@ -196,13 +239,6 @@
         font-size: 40px;
         margin-bottom: 10px;
     }
-
-    button {
-        display: block;
-        width: 100%;
-        max-width: 260px;
-        margin: 10px auto 0;
-    }
 }
 
 .o_airlogic_pin_input {
@@ -215,11 +251,10 @@
 
 // --- Bottom nav (4 tabs) ----------------------------------------------
 .o_airlogic_bottom_nav {
+    flex: 0 0 auto;
     display: flex;
     border-top: 1px solid #D8DBDE;
     background: #fff;
-    position: sticky;
-    bottom: 0;
 }
 
 .o_airlogic_bnav_tab {
@@ -307,9 +342,12 @@
     }
 }
 
-// --- Modal dialogs (Flag/Alert, Exit-confirm) ---------------------------
+// --- Modal dialogs (Flag/Alert, Exit-confirm, Add Client) ---------------
+// Positioned absolute within the phone frame (not fixed to the viewport)
+// so the dialog slides up over the phone itself, not the whole browser
+// page around it.
 .o_airlogic_dialog_overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background: rgba(13, 27, 42, 0.55);
     display: flex;
@@ -323,7 +361,8 @@
     border-radius: 10px 10px 0 0;
     padding: 20px;
     width: 100%;
-    max-width: 480px;
+    max-height: 100%;
+    overflow-y: auto;
 }
 
 .o_airlogic_dialog_hd {
