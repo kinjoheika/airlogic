@@ -29,3 +29,12 @@ class ResUsersFieldServiceExt(models.Model):
         if not user.airlogic_field_pin:
             return True
         return pin == user.airlogic_field_pin
+
+    @api.model
+    def action_am_i_field_manager(self):
+        """core has_group() calls self.ensure_one() on this build, so it
+        can't be called on an empty/unbound recordset from the JS side
+        (self.env['res.users'].has_group(...) errors: Expected singleton).
+        self.env.user is always a real singleton, so wrap it here instead.
+        """
+        return self.env.user.has_group('airlogic_core.group_airlogic_manager')

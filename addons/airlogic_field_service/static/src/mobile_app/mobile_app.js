@@ -121,7 +121,7 @@ export class AirlogicMobileFieldEntry extends Component {
 
         onWillStart(async () => {
             this.state.isManager = await this.orm.call(
-                "res.users", "has_group", [[], "airlogic_core.group_airlogic_manager"]
+                "res.users", "action_am_i_field_manager", [[]]
             );
         });
 
