@@ -12,6 +12,7 @@
             <field name="login" position="after">
                 <field name="airlogic_field_pin" password="True"
                        string="Field App PIN"/>
+                <field name="airlogic_is_senior_technician"/>
             </field>
         </field>
     </record>

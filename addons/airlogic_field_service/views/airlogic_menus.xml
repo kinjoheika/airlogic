@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Field Service is a launcher for the mobile app only. Service Jobs and
+  Configuration (Measurement Fields, History Tags) live under Inventory's
+  menu tree instead (see the parent="airlogic_core...." refs below): a
+  Manager reviewing/configuring that data works from the desktop Inventory
+  app, technicians in the field only ever want the mobile entry point.
+
+  The root menuitem below carries the mobile action directly and has no
+  child menu of its own, so opening Field Service goes straight into the
+  app with no secondary menu bar to show first.
+-->
 <odoo>
 
     <menuitem id="menu_airlogic_field_service_root" name="Field Service" sequence="24"
               action="action_airlogic_mobile_field_entry"
               groups="airlogic_core.group_airlogic_technician"/>
 
-    <menuitem id="menu_airlogic_mobile_field_entry" name="Field Entry (Mobile)"
-              parent="menu_airlogic_field_service_root" action="action_airlogic_mobile_field_entry"
-              sequence="1"/>
-
     <menuitem id="menu_airlogic_service_job" name="Service Jobs"
-              parent="menu_airlogic_field_service_root" action="action_airlogic_service_job"
-              sequence="10"/>
-
-    <menuitem id="menu_airlogic_field_service_configuration" name="Configuration"
-              parent="menu_airlogic_field_service_root" sequence="90"
-              groups="airlogic_core.group_airlogic_manager"/>
+              parent="airlogic_core.menu_airlogic_root" action="action_airlogic_service_job"
+              sequence="15"/>
 
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
-              parent="menu_airlogic_field_service_configuration" action="action_airlogic_measurement_field"
-              sequence="10"/>
+              parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_measurement_field"
+              sequence="60"/>
 
     <menuitem id="menu_airlogic_history_tag" name="History Tags"
-              parent="menu_airlogic_field_service_configuration" action="action_airlogic_history_tag"
-              sequence="20"/>
+              parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_history_tag"
+              sequence="70"/>
 
 </odoo>

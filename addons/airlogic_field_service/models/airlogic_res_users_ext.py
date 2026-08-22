@@ -13,9 +13,18 @@ class ResUsersFieldServiceExt(models.Model):
 
     airlogic_field_pin = fields.Char(
         string='Field App PIN',
-        help='PIN required twice in the mobile Field Service app: before '
-             'the client list, and before opening a device\'s entry '
-             'screen. Leave blank to skip the PIN gate for this user.')
+        help='PIN required in the mobile Field Service app: before the '
+             'client list, before opening a device\'s entry screen, and '
+             '(for Senior Technicians) before Add/Delete Equipment. '
+             'Leave blank to skip the PIN gate for this user.')
+    airlogic_is_senior_technician = fields.Boolean(
+        string='Senior Technician (Field App)',
+        help='Only Senior Technicians can add or delete equipment from the '
+             'mobile Field Service app -- everyone else can view units and '
+             'record readings, but the Add/Delete Equipment tab stays '
+             'locked behind this role plus their Field App PIN. Equipment '
+             'added this way still goes through the Manager\'s normal '
+             'review in Inventory > Equipment.')
 
     @api.model
     def action_verify_field_pin(self, *args, **kwargs):
@@ -41,16 +50,21 @@ class ResUsersFieldServiceExt(models.Model):
         return pin == user.airlogic_field_pin
 
     @api.model
-    def action_am_i_field_manager(self, *args, **kwargs):
-        """core has_group() calls self.ensure_one() on this build, so it
-        can't be called on an empty/unbound recordset from the JS side
-        (self.env['res.users'].has_group(...) errors: Expected singleton).
-        self.env.user is always a real singleton, so wrap it here instead.
+    def action_verify_senior_tech_pin(self, *args, **kwargs):
+        """Gate for the mobile app's Add/Delete Equipment tab: passes only
+        if the calling user is flagged Senior Technician AND their Field
+        App PIN matches (reuses the same PIN field/UX as the other two
+        gates, just with the extra role check). A non-senior user gets the
+        same "incorrect PIN" outcome as a wrong PIN, rather than a separate
+        "not allowed" message -- keeps the one PIN screen doing double
+        duty without leaking which reason it failed for.
 
-        Takes *args, **kwargs (all ignored) purely defensively: this
-        method has no real parameters, but call_kw on this build has
-        been observed passing an extra positional argument even when the
-        JS side sends an empty ids placeholder ([[]]) -- see the note on
-        action_verify_field_pin above.
+        Unlike action_verify_field_pin, a blank PIN does NOT pass through
+        here: Add/Delete is the one gate that must not be skippable just
+        because a Senior Technician forgot to set a PIN.
         """
-        return self.env.user.has_group('airlogic_core.group_airlogic_manager')
+        pin = args[-1] if args else kwargs.get('pin')
+        user = self.env.user
+        if not user.airlogic_is_senior_technician or not user.airlogic_field_pin:
+            return False
+        return pin == user.airlogic_field_pin

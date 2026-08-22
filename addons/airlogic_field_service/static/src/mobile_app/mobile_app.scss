@@ -46,9 +46,21 @@
     border-bottom: 3px solid #C9A227;
 }
 
+.o_airlogic_nav_exit {
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.8;
+    margin-right: 4px;
+
+    &:active {
+        opacity: 1;
+    }
+}
+
 .o_airlogic_mobile_brand {
     font-weight: 800;
     font-size: 14.5px;
+    flex: 1;
 
     span {
         color: #C9A227;
@@ -277,15 +289,6 @@
     margin-bottom: 2px;
 }
 
-.o_airlogic_locked {
-    background: #FEF3CD;
-    border: 1px solid #E8D066;
-    border-radius: 4px;
-    padding: 10px 12px;
-    font-size: 12.5px;
-    color: #744D0A;
-}
-
 // --- Phase dots (DSR nav) ----------------------------------------------
 .o_airlogic_phase_nav_dots {
     display: flex;
@@ -342,7 +345,7 @@
     }
 }
 
-// --- Modal dialogs (Flag/Alert, Exit-confirm, Add Client) ---------------
+// --- Modal dialogs (Flag/Alert, Exit-confirm, Delete Equipment) ---------
 // Positioned absolute within the phone frame (not fixed to the viewport)
 // so the dialog slides up over the phone itself, not the whole browser
 // page around it.
@@ -387,7 +390,39 @@
     }
 }
 
-.o_airlogic_unit_table {
-    font-size: 11px;
-    overflow-x: auto;
+// --- Unit comparison cards (Units tab) -----------------------------
+// Stacked cards, one per field/checklist item, each listing up to 3
+// past visits' values -- replaces a wide desktop-style table that
+// doesn't fit a phone-width body.
+.o_airlogic_compare_card {
+    background: #fff;
+    border: 1px solid #D8DBDE;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.o_airlogic_compare_hd {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.o_airlogic_compare_row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 3px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid #F1F3F4;
+    }
+}
+
+.o_airlogic_compare_when {
+    color: #8B92A0;
+}
+
+.o_airlogic_compare_val {
+    font-weight: 600;
 }

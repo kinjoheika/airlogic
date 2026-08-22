@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { PHASES as CHECKLIST_PHASES, LEAK_SPOTS } from "@airlogic_field_service/field_entry/field_entry";
@@ -81,9 +81,9 @@ export class AirlogicMobileFieldEntry extends Component {
         this.orm = useService("orm");
         this.notification = useService("notification");
         // Neither useService("user") nor the odoo.session_info global
-        // proved reliable on this build -- both PIN verification and the
-        // manager-role check now run entirely server-side against
-        // self.env.user, so the client never needs to know its own uid.
+        // proved reliable on this build -- PIN verification runs entirely
+        // server-side against self.env.user, so the client never needs to
+        // know its own uid.
         this.checklistPhases = CHECKLIST_PHASES;
         this.leakSpots = LEAK_SPOTS;
         this.state = useState({
@@ -94,8 +94,8 @@ export class AirlogicMobileFieldEntry extends Component {
             loading: false,
             pinInput: "",
             pinError: false,
-            pinPurpose: null, // 'clients' | 'device'
-            isManager: false,
+            pinPurpose: null, // 'clients' | 'device' | 'equipment'
+            equipmentUnlocked: false,
 
             clients: [],
             selectedPartner: null,
@@ -117,13 +117,7 @@ export class AirlogicMobileFieldEntry extends Component {
             history: [],
 
             equipmentEdit: null,
-            newClientForm: null,
-        });
-
-        onWillStart(async () => {
-            this.state.isManager = await this.orm.call(
-                "res.users", "action_am_i_field_manager", [[]]
-            );
+            deleteConfirmDevice: null,
         });
 
         this._onlineHandler = () => {
@@ -143,6 +137,17 @@ export class AirlogicMobileFieldEntry extends Component {
         });
     }
 
+    // --- Exit (target=fullscreen hides Odoo's own navbar, so this app
+    // needs its own way back to the backend) -------------------------
+    // Plain browser navigation, not the action service: this build's
+    // action-service internals have been unreliable enough elsewhere
+    // (see the PIN-gate RPC notes below) that a guaranteed, framework-
+    // independent way back is worth more here than a "proper" API call.
+
+    exitApp() {
+        window.location.href = "/odoo";
+    }
+
     // --- PIN gates --------------------------------------------------------
 
     startPinCheck(purpose) {
@@ -158,6 +163,19 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     async confirmPin() {
+        if (this.state.pinPurpose === "equipment") {
+            const ok = await this.orm.call(
+                "res.users", "action_verify_senior_tech_pin", [[], this.state.pinInput]
+            );
+            if (!ok) {
+                this.state.pinError = true;
+                return;
+            }
+            this.state.equipmentUnlocked = true;
+            this.state.screen = "main";
+            this.state.tab = "equipment";
+            return;
+        }
         const ok = await this.orm.call(
             "res.users", "action_verify_field_pin", [[], this.state.pinInput]
         );
@@ -174,7 +192,7 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     cancelPin() {
-        if (this.state.pinPurpose === "device") {
+        if (this.state.pinPurpose === "device" || this.state.pinPurpose === "equipment") {
             this.state.screen = "main";
         } else {
             this.state.screen = "pin1";
@@ -234,14 +252,8 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     setTab(tab) {
-        if (this.state.screen === "clients") {
-            // No client selected yet -- only "Add/Delete" makes sense here,
-            // as the entry point for a brand-new client's first unit.
-            if (tab === "equipment") {
-                this.openAddClient();
-            } else {
-                this.notification.add("Select a client first.", { type: "warning" });
-            }
+        if (tab === "equipment" && !this.state.equipmentUnlocked) {
+            this.startPinCheck("equipment");
             return;
         }
         this.state.tab = tab;
@@ -255,6 +267,7 @@ export class AirlogicMobileFieldEntry extends Component {
     backToClients() {
         this.state.screen = "clients";
         this.state.selectedPartner = null;
+        this.state.equipmentUnlocked = false;
     }
 
     // --- Device tap -> PIN2 -> DSR ---------------------------------------
@@ -600,16 +613,20 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.tab = "visit";
     }
 
-    // --- Units tab (Reading/Visual comparison, reused from Equipment) ----
+    // --- Units tab (Reading/Visual comparison, mobile-friendly cards) ----
+    // Same underlying data as the desktop Equipment form's comparison
+    // tabs, but fetched as JSON (get_*_comparison_data) instead of the
+    // desktop's wide HTML table, and rendered as stacked cards here --
+    // a 5-column table doesn't fit a 380px-wide phone body.
 
     async openUnit(device) {
         this.state.loading = true;
         try {
-            const [data] = await this.orm.read(
-                "airlogic.equipment", [device.id],
-                ["reading_comparison_html", "visual_comparison_html"]
-            );
-            this.state.unitEquipment = { ...device, ...data };
+            const [readingData, visualData] = await Promise.all([
+                this.orm.call("airlogic.equipment", "get_reading_comparison_data", [[device.id]]),
+                this.orm.call("airlogic.equipment", "get_visual_comparison_data", [[device.id]]),
+            ]);
+            this.state.unitEquipment = { ...device, readingData, visualData };
             this.state.unitComparisonTab = "reading";
         } finally {
             this.state.loading = false;
@@ -650,7 +667,16 @@ export class AirlogicMobileFieldEntry extends Component {
         }
     }
 
-    // --- Equipment tab (Add/Delete, Manager-only edit) --------------------
+    // --- Equipment tab (Add/Delete) ----------------------------------
+    // Locked behind the Senior Technician PIN gate (see confirmPin /
+    // setTab above) -- only reachable for the currently selected,
+    // already-existing client. Whatever gets added or deleted here is
+    // the same airlogic.equipment record the Manager reviews under
+    // Inventory > Equipment; there's no separate mobile-only store.
+
+    openNewEquipment() {
+        this.state.equipmentEdit = { id: null, name: "", model: "", serial_number: "" };
+    }
 
     openEquipmentEdit(device) {
         this.state.equipmentEdit = { ...device };
@@ -662,51 +688,45 @@ export class AirlogicMobileFieldEntry extends Component {
 
     async saveEquipmentEdit() {
         const e = this.state.equipmentEdit;
-        await this.orm.write("airlogic.equipment", [e.id], {
-            name: e.name,
-            model: e.model,
-            serial_number: e.serial_number,
-        });
-        this.notification.add("Equipment saved.", { type: "success" });
+        if (e.id) {
+            await this.orm.call("airlogic.equipment", "action_senior_tech_write", [[e.id], {
+                name: e.name,
+                model: e.model,
+                serial_number: e.serial_number,
+            }]);
+            this.notification.add("Equipment saved.", { type: "success" });
+        } else {
+            if (!e.name) {
+                this.notification.add("Unit label is required.", { type: "danger" });
+                return;
+            }
+            await this.orm.call("airlogic.equipment", "action_senior_tech_create", [[], {
+                partner_id: this.state.selectedPartner.id,
+                name: e.name,
+                model: e.model,
+                serial_number: e.serial_number,
+            }]);
+            this.notification.add("Equipment added.", { type: "success" });
+        }
         this.state.equipmentEdit = null;
         await this.loadDevices();
     }
 
-    // --- Add New Client -----------------------------------------------
-    // The client list is derived from existing airlogic.equipment records
-    // (grouped by partner), so a brand-new client has no way in otherwise
-    // -- this is the entry point for a technician's first visit to a site
-    // that has nothing on file yet.
-
-    openAddClient() {
-        this.state.newClientForm = { name: "", equipName: "", model: "", serial_number: "" };
+    requestDeleteEquipment(device) {
+        this.state.deleteConfirmDevice = device;
     }
 
-    closeAddClient() {
-        this.state.newClientForm = null;
+    cancelDeleteEquipment() {
+        this.state.deleteConfirmDevice = null;
     }
 
-    async saveAddClient() {
-        const f = this.state.newClientForm;
-        if (!f.name || !f.equipName) {
-            this.notification.add("Client name and unit label are required.", { type: "danger" });
-            return;
-        }
-        this.state.loading = true;
-        try {
-            const [partnerId] = await this.orm.create("res.partner", [{ name: f.name }]);
-            await this.orm.create("airlogic.equipment", [{
-                partner_id: partnerId,
-                name: f.equipName,
-                model: f.model,
-                serial_number: f.serial_number,
-            }]);
-            this.notification.add("Client and equipment added.", { type: "success" });
-            this.state.newClientForm = null;
-            await this.selectClient({ id: partnerId, name: f.name });
-        } finally {
-            this.state.loading = false;
-        }
+    async confirmDeleteEquipment() {
+        const device = this.state.deleteConfirmDevice;
+        await this.orm.call("airlogic.equipment", "action_senior_tech_unlink", [[device.id]]);
+        this.notification.add("Equipment deleted.", { type: "success" });
+        this.state.deleteConfirmDevice = null;
+        this.state.equipmentEdit = null;
+        await this.loadDevices();
     }
 }
 

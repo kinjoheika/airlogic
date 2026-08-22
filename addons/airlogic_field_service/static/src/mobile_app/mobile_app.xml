@@ -4,6 +4,7 @@
     <t t-name="airlogic_field_service.MobileFieldEntry">
         <div class="o_airlogic_mobile">
             <div class="o_airlogic_mobile_nav">
+                <div class="o_airlogic_nav_exit" t-on-click="exitApp" title="Exit to Odoo">⌂</div>
                 <div class="o_airlogic_mobile_brand">Standard <span>Airlogic</span></div>
                 <div t-attf-class="o_airlogic_conn_badge {{state.online ? 'online' : 'offline'}}">
                     <t t-if="state.online">Online</t>
@@ -38,18 +39,16 @@
                 <button type="button" class="btn airlogic-btn-primary" t-on-click="confirmPin">Confirm</button>
             </div>
 
-            <!-- CLIENT LIST -->
+            <!-- CLIENT LIST (existing clients only, no client creation
+                 in the mobile app) -->
             <div t-if="state.screen === 'clients' and !state.loading" class="o_airlogic_mobile_body">
                 <h4>Select Client</h4>
-                <div class="o_airlogic_card o_airlogic_add_card" t-on-click="openAddClient">
-                    <div class="o_airlogic_card_title">+ Add New Client</div>
-                </div>
                 <div t-foreach="state.clients" t-as="client" t-key="client.id"
                      class="o_airlogic_card" t-on-click="() => this.selectClient(client)">
                     <div class="o_airlogic_card_title" t-esc="client.name"/>
                     <div class="o_airlogic_card_sub"><t t-esc="client.count"/> unit(s)</div>
                 </div>
-                <p t-if="!state.clients.length" class="text-muted">No equipment on file yet — add your first client above.</p>
+                <p t-if="!state.clients.length" class="text-muted">No clients on file yet.</p>
             </div>
 
             <!-- MAIN (bottom-nav tabs) -->
@@ -91,10 +90,44 @@
                         <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'visual' ? 'active' : ''}}"
                              t-on-click="() => this.state.unitComparisonTab = 'visual'">Checklist</div>
                     </div>
-                    <div t-if="state.unitComparisonTab === 'reading'" class="o_airlogic_unit_table"
-                         t-out="state.unitEquipment.reading_comparison_html"/>
-                    <div t-if="state.unitComparisonTab === 'visual'" class="o_airlogic_unit_table"
-                         t-out="state.unitEquipment.visual_comparison_html"/>
+
+                    <!-- Stacked cards, not a wide table: up to 3 past
+                         visits per field/item, most recent first. -->
+                    <t t-if="state.unitComparisonTab === 'reading'">
+                        <p t-if="!state.unitEquipment.readingData.sections.length" class="text-muted">
+                            No readings yet for this unit.
+                        </p>
+                        <t t-foreach="state.unitEquipment.readingData.sections" t-as="section" t-key="section.section">
+                            <div class="o_airlogic_group_hd" t-esc="section.section"/>
+                            <div t-foreach="section.fields" t-as="f" t-key="f.name" class="o_airlogic_compare_card">
+                                <div class="o_airlogic_compare_hd">
+                                    <span t-esc="f.name"/>
+                                    <span t-if="f.standard" class="o_airlogic_item_std"> (<t t-esc="f.standard"/>)</span>
+                                </div>
+                                <div t-foreach="f.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
+                                    <span class="o_airlogic_compare_when"
+                                          t-esc="(state.unitEquipment.readingData.job_headers[v_index] || {}).when || '—'"/>
+                                    <span class="o_airlogic_compare_val" t-esc="v"/>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-if="state.unitComparisonTab === 'visual'">
+                        <p t-if="!state.unitEquipment.visualData.phases.length" class="text-muted">
+                            No visual checklist entries yet for this unit.
+                        </p>
+                        <t t-foreach="state.unitEquipment.visualData.phases" t-as="ph" t-key="ph.phase">
+                            <div class="o_airlogic_group_hd">Phase <t t-esc="ph.phase"/></div>
+                            <div t-foreach="ph.items" t-as="it" t-key="it.label" class="o_airlogic_compare_card">
+                                <div class="o_airlogic_compare_hd" t-esc="it.label"/>
+                                <div t-foreach="it.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
+                                    <span class="o_airlogic_compare_when"
+                                          t-esc="(state.unitEquipment.visualData.job_headers[v_index] || {}).when || '—'"/>
+                                    <span class="o_airlogic_compare_val" t-esc="v"/>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
                 </t>
 
                 <!-- HISTORY TAB: major-events feed, filtered by History Tags -->
@@ -115,15 +148,16 @@
                     </p>
                 </t>
 
-                <!-- EQUIPMENT (ADD/DELETE) TAB -->
+                <!-- EQUIPMENT (ADD/DELETE) TAB, only reachable after the
+                     Senior Technician PIN gate (see setTab/confirmPin) -->
                 <t t-if="state.tab === 'equipment' and !state.equipmentEdit">
-                    <p t-if="!state.isManager" class="o_airlogic_locked">
-                        🔒 View only — equipment editing requires the Manager role.
-                    </p>
+                    <div class="o_airlogic_card o_airlogic_add_card" t-on-click="openNewEquipment">
+                        <div class="o_airlogic_card_title">+ Add New Equipment</div>
+                    </div>
                     <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
                         <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
                         <div t-foreach="grp.items" t-as="device" t-key="device.id"
-                             class="o_airlogic_card" t-on-click="() => state.isManager ? this.openEquipmentEdit(device) : null">
+                             class="o_airlogic_card" t-on-click="() => this.openEquipmentEdit(device)">
                             <div class="o_airlogic_card_title" t-esc="device.name"/>
                         </div>
                     </t>
@@ -150,14 +184,19 @@
                     </div>
                     <div class="o_airlogic_phase_nav">
                         <button type="button" class="btn airlogic-btn-primary" t-on-click="saveEquipmentEdit">
-                            Save Equipment Info
+                            <t t-if="state.equipmentEdit.id">Save Equipment Info</t>
+                            <t t-else="">Add Equipment</t>
                         </button>
                     </div>
+                    <button t-if="state.equipmentEdit.id" type="button" class="btn btn-outline-danger w-100 mt-2"
+                            t-on-click="() => this.requestDeleteEquipment(state.equipmentEdit)">
+                        🗑 Delete Equipment
+                    </button>
                 </t>
             </div>
 
             <!-- BOTTOM NAV (4 tabs) -->
-            <div t-if="(state.screen === 'main' or state.screen === 'clients') and !state.loading" class="o_airlogic_bottom_nav">
+            <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_bottom_nav">
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'visit' ? 'active' : ''}}" t-on-click="() => this.setTab('visit')">
                     <div class="o_airlogic_bnav_icon">📋</div>Visit
                 </div>
@@ -294,38 +333,18 @@
                 </div>
             </div>
 
-            <!-- ADD NEW CLIENT DIALOG -->
-            <div t-if="state.newClientForm" class="o_airlogic_dialog_overlay">
-                <div class="o_airlogic_dialog_sheet">
-                    <div class="o_airlogic_dialog_hd">Add New Client</div>
-                    <div class="o_airlogic_item">
-                        <div class="o_airlogic_item_label"><span>Client Name</span></div>
-                        <input type="text" class="form-control form-control-sm"
-                               t-att-value="state.newClientForm.name"
-                               t-on-change="(ev) => state.newClientForm.name = ev.target.value"/>
-                    </div>
-                    <div class="o_airlogic_item">
-                        <div class="o_airlogic_item_label"><span>First Unit Label</span></div>
-                        <input type="text" class="form-control form-control-sm"
-                               t-att-value="state.newClientForm.equipName"
-                               t-on-change="(ev) => state.newClientForm.equipName = ev.target.value"/>
-                    </div>
-                    <div class="o_airlogic_item">
-                        <div class="o_airlogic_item_label"><span>Model</span></div>
-                        <input type="text" class="form-control form-control-sm"
-                               t-att-value="state.newClientForm.model"
-                               t-on-change="(ev) => state.newClientForm.model = ev.target.value"/>
-                    </div>
-                    <div class="o_airlogic_item">
-                        <div class="o_airlogic_item_label"><span>Serial Number</span></div>
-                        <input type="text" class="form-control form-control-sm"
-                               t-att-value="state.newClientForm.serial_number"
-                               t-on-change="(ev) => state.newClientForm.serial_number = ev.target.value"/>
-                    </div>
-                    <div class="o_airlogic_dialog_choices">
-                        <button type="button" class="btn btn-outline-secondary" t-on-click="closeAddClient">Cancel</button>
-                        <button type="button" class="btn airlogic-btn-primary" t-on-click="saveAddClient">Save</button>
-                    </div>
+            <!-- DELETE EQUIPMENT CONFIRM DIALOG -->
+            <div t-if="state.deleteConfirmDevice" class="o_airlogic_dialog_overlay">
+                <div class="o_airlogic_dialog_sheet text-center">
+                    <div style="font-size:28px;">🗑</div>
+                    <div class="o_airlogic_dialog_hd">Delete Equipment?</div>
+                    <p class="text-muted">
+                        Remove <t t-esc="state.deleteConfirmDevice.name"/>? Units with existing
+                        service history are protected and can't be deleted here — ask a Manager
+                        to remove those from Inventory instead.
+                    </p>
+                    <button type="button" class="btn btn-danger w-100 mb-2" t-on-click="confirmDeleteEquipment">Delete</button>
+                    <button type="button" class="btn btn-outline-secondary w-100" t-on-click="cancelDeleteEquipment">Cancel</button>
                 </div>
             </div>
 

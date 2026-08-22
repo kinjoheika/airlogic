@@ -4,6 +4,11 @@
     <record id="action_airlogic_mobile_field_entry" model="ir.actions.client">
         <field name="name">Field Entry (Mobile)</field>
         <field name="tag">airlogic_mobile_field_entry</field>
+        <!-- fullscreen hides Odoo's own top navbar/app-switcher (same
+             mechanism Point of Sale uses). This app has its own header,
+             footer nav, and exit control, so the backend chrome around
+             it is just noise on a phone screen. -->
+        <field name="target">fullscreen</field>
     </record>
 
 </odoo>
