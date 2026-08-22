@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Always-present pre-fill data: 3 clients, 10 equipment units (each with
+  its own unique Sublocation, per the partner+sublocation 1:1 rule). In
+  the regular 'data' list (not demo_xml), so it loads on every fresh
+  install regardless of whether "Load demo data" is checked. This dev
+  branch's database is expected to reset on push, and having real
+  client/equipment records to test against immediately (client list,
+  Units tab comparisons, Add/Delete, etc.) matters more here than it
+  would on a production install. noupdate="1" so it only seeds once and
+  survives being edited/deleted afterward.
+-->
+<odoo noupdate="1">
+
+    <!-- Clients -->
+    <record id="demo_partner_meridian" model="res.partner">
+        <field name="name">Meridian Business Park</field>
+        <field name="is_company">True</field>
+        <field name="city">Makati City</field>
+    </record>
+    <record id="demo_partner_cornerstone" model="res.partner">
+        <field name="name">Cornerstone Residences</field>
+        <field name="is_company">True</field>
+        <field name="city">Quezon City</field>
+    </record>
+    <record id="demo_partner_bayview" model="res.partner">
+        <field name="name">Bayview Grand Hotel</field>
+        <field name="is_company">True</field>
+        <field name="city">Pasay City</field>
+    </record>
+
+    <!-- Sublocations: one specific spot per unit, per the 1:1 rule.
+         Reused-looking labels (e.g. "Server Room") still get their own
+         record per client since two different clients each having their
+         own "Server Room" spot is normal; what's not allowed is the SAME
+         client reusing a sublocation across two units. -->
+    <record id="demo_sub_meridian_lobby" model="airlogic.sublocation">
+        <field name="name">Reception Lobby</field>
+    </record>
+    <record id="demo_sub_meridian_conf_a" model="airlogic.sublocation">
+        <field name="name">Conference Room A</field>
+    </record>
+    <record id="demo_sub_meridian_server" model="airlogic.sublocation">
+        <field name="name">Server Room</field>
+    </record>
+    <record id="demo_sub_meridian_exec" model="airlogic.sublocation">
+        <field name="name">Executive Office</field>
+    </record>
+    <record id="demo_sub_cornerstone_living" model="airlogic.sublocation">
+        <field name="name">Unit 501 - Living Room</field>
+    </record>
+    <record id="demo_sub_cornerstone_bedroom" model="airlogic.sublocation">
+        <field name="name">Unit 501 - Master Bedroom</field>
+    </record>
+    <record id="demo_sub_cornerstone_clubhouse" model="airlogic.sublocation">
+        <field name="name">Clubhouse Lounge</field>
+    </record>
+    <record id="demo_sub_bayview_ballroom" model="airlogic.sublocation">
+        <field name="name">Ballroom - East Wing</field>
+    </record>
+    <record id="demo_sub_bayview_suite" model="airlogic.sublocation">
+        <field name="name">Presidential Suite</field>
+    </record>
+    <record id="demo_sub_bayview_kitchen" model="airlogic.sublocation">
+        <field name="name">Kitchen Exhaust Area</field>
+    </record>
+
+    <!-- Equipment: 4 @ Meridian, 3 @ Cornerstone, 3 @ Bayview -->
+    <record id="demo_equip_meridian_1" model="airlogic.equipment">
+        <field name="name">AC Unit 1 - Reception Lobby</field>
+        <field name="partner_id" ref="demo_partner_meridian"/>
+        <field name="sublocation_id" ref="demo_sub_meridian_lobby"/>
+        <field name="category_id" ref="cat_split_wall"/>
+        <field name="brand_id" ref="brand_carrier"/>
+        <field name="hp_id" ref="hp_1_5"/>
+        <field name="model">42QHF018</field>
+        <field name="serial_number">CAR-2023-00181</field>
+        <field name="install_year">2023</field>
+    </record>
+    <record id="demo_equip_meridian_2" model="airlogic.equipment">
+        <field name="name">AC Unit 2 - Conference Room A</field>
+        <field name="partner_id" ref="demo_partner_meridian"/>
+        <field name="sublocation_id" ref="demo_sub_meridian_conf_a"/>
+        <field name="category_id" ref="cat_split_wall"/>
+        <field name="brand_id" ref="brand_daikin"/>
+        <field name="hp_id" ref="hp_2"/>
+        <field name="model">FTKC50UV2</field>
+        <field name="serial_number">DAI-2022-00742</field>
+        <field name="install_year">2022</field>
+    </record>
+    <record id="demo_equip_meridian_3" model="airlogic.equipment">
+        <field name="name">AC Unit 3 - Server Room</field>
+        <field name="partner_id" ref="demo_partner_meridian"/>
+        <field name="sublocation_id" ref="demo_sub_meridian_server"/>
+        <field name="category_id" ref="cat_split_floor"/>
+        <field name="brand_id" ref="brand_panasonic"/>
+        <field name="hp_id" ref="hp_3"/>
+        <field name="model">CS-PU24WKQ</field>
+        <field name="serial_number">PAN-2024-00093</field>
+        <field name="install_year">2024</field>
+    </record>
+    <record id="demo_equip_meridian_4" model="airlogic.equipment">
+        <field name="name">AC Unit 4 - Executive Office</field>
+        <field name="partner_id" ref="demo_partner_meridian"/>
+        <field name="sublocation_id" ref="demo_sub_meridian_exec"/>
+        <field name="category_id" ref="cat_split_wall"/>
+        <field name="brand_id" ref="brand_koppel"/>
+        <field name="hp_id" ref="hp_1"/>
+        <field name="model">KSW-10C1</field>
+        <field name="serial_number">KOP-2021-00457</field>
+        <field name="install_year">2021</field>
+    </record>
+
+    <record id="demo_equip_cornerstone_1" model="airlogic.equipment">
+        <field name="name">AC Unit 1 - Unit 501 Living Room</field>
+        <field name="partner_id" ref="demo_partner_cornerstone"/>
+        <field name="sublocation_id" ref="demo_sub_cornerstone_living"/>
+        <field name="category_id" ref="cat_window"/>
+        <field name="brand_id" ref="brand_carrier"/>
+        <field name="hp_id" ref="hp_1"/>
+        <field name="model">51QSD010</field>
+        <field name="serial_number">CAR-2020-00219</field>
+        <field name="install_year">2020</field>
+    </record>
+    <record id="demo_equip_cornerstone_2" model="airlogic.equipment">
+        <field name="name">AC Unit 2 - Unit 501 Master Bedroom</field>
+        <field name="partner_id" ref="demo_partner_cornerstone"/>
+        <field name="sublocation_id" ref="demo_sub_cornerstone_bedroom"/>
+        <field name="category_id" ref="cat_split_wall"/>
+        <field name="brand_id" ref="brand_daikin"/>
+        <field name="hp_id" ref="hp_1_5"/>
+        <field name="model">FTKC35UV2</field>
+        <field name="serial_number">DAI-2020-00220</field>
+        <field name="install_year">2020</field>
+    </record>
+    <record id="demo_equip_cornerstone_3" model="airlogic.equipment">
+        <field name="name">AC Unit 3 - Clubhouse Lounge</field>
+        <field name="partner_id" ref="demo_partner_cornerstone"/>
+        <field name="sublocation_id" ref="demo_sub_cornerstone_clubhouse"/>
+        <field name="category_id" ref="cat_split_floor"/>
+        <field name="brand_id" ref="brand_panasonic"/>
+        <field name="hp_id" ref="hp_2_5"/>
+        <field name="model">CS-PU28WKQ</field>
+        <field name="serial_number">PAN-2023-00355</field>
+        <field name="install_year">2023</field>
+    </record>
+
+    <record id="demo_equip_bayview_1" model="airlogic.equipment">
+        <field name="name">AC Unit 1 - Ballroom East Wing</field>
+        <field name="partner_id" ref="demo_partner_bayview"/>
+        <field name="sublocation_id" ref="demo_sub_bayview_ballroom"/>
+        <field name="category_id" ref="cat_split_floor"/>
+        <field name="brand_id" ref="brand_carrier"/>
+        <field name="hp_id" ref="hp_4"/>
+        <field name="model">42QHF048</field>
+        <field name="serial_number">CAR-2019-00612</field>
+        <field name="install_year">2019</field>
+    </record>
+    <record id="demo_equip_bayview_2" model="airlogic.equipment">
+        <field name="name">AC Unit 2 - Presidential Suite</field>
+        <field name="partner_id" ref="demo_partner_bayview"/>
+        <field name="sublocation_id" ref="demo_sub_bayview_suite"/>
+        <field name="category_id" ref="cat_split_wall"/>
+        <field name="brand_id" ref="brand_daikin"/>
+        <field name="hp_id" ref="hp_2"/>
+        <field name="model">FTKC50UV2</field>
+        <field name="serial_number">DAI-2021-00488</field>
+        <field name="install_year">2021</field>
+    </record>
+    <record id="demo_equip_bayview_3" model="airlogic.equipment">
+        <field name="name">AC Unit 3 - Kitchen Exhaust Area</field>
+        <field name="partner_id" ref="demo_partner_bayview"/>
+        <field name="sublocation_id" ref="demo_sub_bayview_kitchen"/>
+        <field name="category_id" ref="cat_window"/>
+        <field name="brand_id" ref="brand_koppel"/>
+        <field name="hp_id" ref="hp_1_5"/>
+        <field name="model">KSW-15C1</field>
+        <field name="serial_number">KOP-2022-00311</field>
+        <field name="install_year">2022</field>
+    </record>
+
+</odoo>

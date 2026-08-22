@@ -26,6 +26,7 @@ module itself has no knowledge of airlogic.service.job.
         'data/airlogic_sequence_data.xml',
         'data/airlogic_equipment_category_data.xml',
         'data/airlogic_equipment_lookup_data.xml',
+        'data/airlogic_demo_seed_data.xml',
         'views/airlogic_equipment_category_views.xml',
         'views/airlogic_equipment_lookup_views.xml',
         'views/airlogic_service_visit_views.xml',
