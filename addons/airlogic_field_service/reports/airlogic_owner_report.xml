@@ -13,6 +13,13 @@
   Per-unit status (Good/Watch/Urgent) and Issues Found are derived from
   real checklist data (airlogic.service.visit._job_status/_job_issues),
   not fabricated, and site photos are the job's real media_ids.
+
+  Uses web.basic_layout, not web.external_layout: this template already
+  builds its own fixed header/footer (see below), so wrapping it in
+  Odoo's company letterhead template would add the company's
+  configurable Document Layout (style/colors/logo, set under Settings)
+  on top. The report is meant to print exactly the same regardless of
+  that setting.
 -->
 <odoo>
 
@@ -20,7 +27,7 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="visit">
                 <t t-set="vd" t-value="visit_data[visit.id]"/>
-                <t t-call="web.external_layout">
+                <t t-call="web.basic_layout">
                     <div class="page">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
