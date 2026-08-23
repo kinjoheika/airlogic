@@ -848,15 +848,46 @@ export class AirlogicMobileFieldEntry extends Component {
                 ["name", "technician_id", "date", "notes", "history_tag_ids"],
                 { order: "date desc", limit: 30 }
             );
+            const jobIds = jobs.map((j) => j.id);
             const allTagIds = [...new Set(jobs.flatMap((j) => j.history_tag_ids))];
             let tagsById = {};
             if (allTagIds.length) {
                 const tags = await this.orm.read("airlogic.history.tag", allTagIds, ["name"]);
                 tagsById = Object.fromEntries(tags.map((t) => [t.id, t.name]));
             }
+            // "Main parts": every flagged/alert item, plus a detected
+            // leak, each with its technician note if there is one --
+            // mirrors _job_issues in airlogic_service_visit_ext.py (same
+            // reasoning: History and the Owner Report should tell the
+            // same story). One batched query for all jobs, not one per
+            // job.
+            let partsByJob = {};
+            if (jobIds.length) {
+                const lines = await this.orm.searchRead(
+                    "airlogic.checklist.line",
+                    [["job_id", "in", jobIds]],
+                    ["job_id", "key", "label", "value", "note"]
+                );
+                for (const line of lines) {
+                    const isFlagged = line.value === "flagged" || line.value === "alert";
+                    const isLeak = line.key === "leak" && line.value && line.value !== "pass";
+                    if (!isFlagged && !isLeak) {
+                        continue;
+                    }
+                    const jid = line.job_id[0];
+                    if (!partsByJob[jid]) {
+                        partsByJob[jid] = [];
+                    }
+                    partsByJob[jid].push({
+                        label: isLeak ? "Leak Detected" : line.label,
+                        note: line.note || "",
+                    });
+                }
+            }
             this.state.history = jobs.map((j) => ({
                 ...j,
                 tagNames: j.history_tag_ids.map((id) => tagsById[id]).filter(Boolean),
+                parts: partsByJob[j.id] || [],
             }));
         } finally {
             this.state.loading = false;

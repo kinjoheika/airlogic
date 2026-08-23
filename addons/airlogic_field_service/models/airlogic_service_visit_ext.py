@@ -25,23 +25,49 @@ class AirlogicServiceVisitFieldServiceExt(models.Model):
 
     def _job_status(self, job):
         """Derived health status for one job's unit, from real checklist
-        data (no separate status field to keep in sync by hand):
-        a detected leak is urgent, any flagged item is watch, else good.
+        data (no separate status field to keep in sync by hand): a
+        detected leak is urgent, any flagged/alert item is watch, else
+        good.
+
+        The leak checklist item never actually stores the literal string
+        'leak' -- the mobile app writes 'pass' (no leak), '' (not yet
+        assessed), or a comma-separated list of spot indices like "0,3"
+        when a leak is marked (see mobile_app.js's leakDetected getter,
+        toggleLeakSpot). Comparing against l.value == 'leak' here never
+        matched anything, so leak detection silently never fired; fixed
+        to check for "has a value, and it isn't 'pass'" instead, same
+        test the mobile app itself uses. 'alert' items were also being
+        ignored entirely (only 'flagged' counted) -- both now count.
         """
         lines = job.checklist_line_ids
-        if any(l.key == 'leak' and l.value == 'leak' for l in lines):
+        leak_line = lines.filtered(lambda l: l.key == 'leak')
+        if leak_line.value and leak_line.value != 'pass':
             return 'urgent'
-        if any(l.value == 'flagged' for l in lines):
+        if any(l.value in ('flagged', 'alert') for l in lines):
             return 'watch'
         return 'good'
 
     def _job_issues(self, job):
+        """Every flagged/alert item, plus a detected leak, each carrying
+        its technician-written note if there is one -- not just the
+        item's label, so the Owner Report shows what was actually found,
+        not just that something was.
+        """
         issues = []
         for line in job.checklist_line_ids:
-            if line.value == 'flagged':
-                issues.append(line.label)
-            elif line.key == 'leak' and line.value == 'leak':
-                issues.append(_('%s — Leak detected') % line.label)
+            if line.value in ('flagged', 'alert'):
+                issues.append({
+                    'label': line.label,
+                    'severity': line.value,
+                    'note': line.note or '',
+                })
+        leak_line = job.checklist_line_ids.filtered(lambda l: l.key == 'leak')
+        if leak_line.value and leak_line.value != 'pass':
+            issues.append({
+                'label': _('Leak Detected'),
+                'severity': 'flagged',
+                'note': leak_line.note or '',
+            })
         return issues
 
     def action_print_owner_report(self):

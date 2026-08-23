@@ -18,6 +18,27 @@
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
     </record>
 
+    <!-- Broadens Technician read access to any SUBMITTED job, not just
+         their own. The Units/History tabs are a shared, client-facing
+         view of a unit's whole service record, not a personal log, so a
+         technician needs to see a unit's history even for visits another
+         technician handled. Draft/in_progress jobs stay own-only
+         (protecting active work-in-progress from being seen/tampered
+         with by someone else); write/create/unlink stay off this rule on
+         purpose (perm_write/create/unlink all 0) so it only ever widens
+         *reading*, same OR-combination reasoning as the "own" rule
+         above. -->
+    <record id="rule_service_job_technician_submitted_all" model="ir.rule">
+        <field name="name">Technician: all submitted jobs (shared history), read-only</field>
+        <field name="model_id" ref="model_airlogic_service_job"/>
+        <field name="domain_force">[('state', '=', 'submitted')]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">0</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
     <record id="rule_service_job_supervisor_all" model="ir.rule">
         <field name="name">Supervisor+: all jobs</field>
         <field name="model_id" ref="model_airlogic_service_job"/>
@@ -39,6 +60,19 @@
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
     </record>
 
+    <!-- Same read-only broadening as rule_service_job_technician_submitted_all
+         above, for the Units tab's Readings comparison. -->
+    <record id="rule_reading_line_technician_submitted_all" model="ir.rule">
+        <field name="name">Technician: reading lines on any submitted job, read-only</field>
+        <field name="model_id" ref="model_airlogic_reading_line"/>
+        <field name="domain_force">[('job_id.state', '=', 'submitted')]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">0</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
     <record id="rule_reading_line_supervisor_all" model="ir.rule">
         <field name="name">Supervisor+: all reading lines</field>
         <field name="model_id" ref="model_airlogic_reading_line"/>
@@ -51,6 +85,21 @@
         <field name="model_id" ref="model_airlogic_checklist_line"/>
         <field name="domain_force">[('job_id.technician_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+    </record>
+
+    <!-- Same read-only broadening as rule_service_job_technician_submitted_all
+         above, for the Units tab's Visual Checklist comparison and the
+         History tab's "main parts" (both need to read another
+         technician's flagged/alert items and notes for shared history). -->
+    <record id="rule_checklist_line_technician_submitted_all" model="ir.rule">
+        <field name="name">Technician: checklist lines on any submitted job, read-only</field>
+        <field name="model_id" ref="model_airlogic_checklist_line"/>
+        <field name="domain_force">[('job_id.state', '=', 'submitted')]</field>
+        <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">0</field>
+        <field name="perm_unlink">0</field>
     </record>
 
     <record id="rule_checklist_line_supervisor_all" model="ir.rule">

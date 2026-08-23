@@ -210,10 +210,12 @@ class AirlogicEquipmentFieldServiceExt(models.Model):
                 phases.append({'phase': phase, 'items': phase_items})
                 last_phase = phase
             values = []
+            notes = []
             for job in jobs:
                 line = job.checklist_line_ids.filtered(lambda l, key=key: l.key == key)
                 values.append(line.value if line and line.value else '—')
-            phase_items.append({'label': label, 'values': values})
+                notes.append(line.note if line else '')
+            phase_items.append({'label': label, 'values': values, 'notes': notes})
         return {'job_headers': job_headers, 'phases': phases}
 
     # --- Senior Technician-gated Add/Delete (mobile app) ---------------

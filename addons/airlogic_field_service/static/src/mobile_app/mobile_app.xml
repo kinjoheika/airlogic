@@ -145,10 +145,13 @@
                         </p>
                         <div t-if="currentChecklistPhaseCompare" t-foreach="currentChecklistPhaseCompare.items" t-as="it" t-key="it.label" class="o_airlogic_compare_card">
                             <div class="o_airlogic_compare_hd" t-esc="it.label"/>
-                            <div t-foreach="it.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
-                                <span class="o_airlogic_compare_when"
-                                      t-esc="(state.unitEquipment.visualData.job_headers[v_index] || {}).when || '—'"/>
-                                <span class="o_airlogic_compare_val" t-esc="v"/>
+                            <div t-foreach="it.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row_wrap">
+                                <div class="o_airlogic_compare_row">
+                                    <span class="o_airlogic_compare_when"
+                                          t-esc="(state.unitEquipment.visualData.job_headers[v_index] || {}).when || '—'"/>
+                                    <span class="o_airlogic_compare_val" t-esc="v"/>
+                                </div>
+                                <div t-if="it.notes[v_index]" class="o_airlogic_compare_note" t-esc="it.notes[v_index]"/>
                             </div>
                         </div>
                     </t>
@@ -180,6 +183,12 @@
                         </div>
                         <div class="o_airlogic_history_ref" t-esc="h.name"/>
                         <div class="o_airlogic_history_meta" t-esc="formatHistoryTimestamp(h.date)"/>
+                        <div t-if="h.parts.length" class="o_airlogic_history_parts">
+                            <div class="o_airlogic_history_part_row" t-foreach="h.parts" t-as="part" t-key="part_index">
+                                <span class="o_airlogic_history_part_label" t-esc="part.label"/>
+                                <span t-if="part.note" class="o_airlogic_history_part_note" t-esc="part.note"/>
+                            </div>
+                        </div>
                         <div t-if="h.notes" class="o_airlogic_history_notes" t-esc="h.notes"/>
                         <div class="o_airlogic_history_tech">— <t t-esc="h.technician_id[1]"/></div>
                     </div>

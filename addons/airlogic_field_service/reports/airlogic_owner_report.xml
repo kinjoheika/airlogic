@@ -12,7 +12,10 @@
       or scheduling model exists yet)
   Per-unit status (Good/Watch/Urgent) and Issues Found are derived from
   real checklist data (airlogic.service.visit._job_status/_job_issues),
-  not fabricated, and site photos are the job's real media_ids.
+  not fabricated, and site photos are the job's real media_ids. Each
+  Issue Found now carries the technician's actual note text (not just
+  the item label), and each unit card shows the job's general
+  Technician Notes too, if any were written (AIR-T45).
 
   Uses web.basic_layout, not web.external_layout: this template already
   builds its own fixed header/footer (see below), so wrapping it in
@@ -100,12 +103,20 @@
                                     </div>
                                     <div t-if="ji['issues']">
                                         <div class="text-muted text-uppercase" style="font-size:9px;">Issues Found</div>
-                                        <ul style="font-size:11px;margin-bottom:0;">
-                                            <li t-foreach="ji['issues']" t-as="issue" t-esc="issue"/>
+                                        <ul style="font-size:11px;margin-bottom:0;padding-left:16px;">
+                                            <li t-foreach="ji['issues']" t-as="issue">
+                                                <span t-attf-class="fw-bold {{issue['severity'] == 'flagged' and 'text-danger' or 'text-warning'}}"
+                                                      t-esc="issue['label']"/>
+                                                <div t-if="issue['note']" class="text-muted" style="font-size:10px;" t-esc="issue['note']"/>
+                                            </li>
                                         </ul>
                                     </div>
                                     <div t-else="" class="text-success" style="font-size:11px;">
                                         ✓ All checklist items clear — no repairs needed this visit.
+                                    </div>
+                                    <div t-if="ji['job'].notes" class="mt-2 pt-2" style="border-top:1px dashed #E7E9EB;">
+                                        <div class="text-muted text-uppercase" style="font-size:9px;">Technician Notes</div>
+                                        <div style="font-size:11px;" t-esc="ji['job'].notes"/>
                                     </div>
                                 </div>
                             </div>

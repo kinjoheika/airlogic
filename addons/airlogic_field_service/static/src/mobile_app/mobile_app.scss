@@ -593,6 +593,33 @@
     }
 }
 
+// Visual Checklist rows wrap a row + its (optional) note together, so
+// the divider belongs on the wrapper, not the bare row inside it (which
+// is always alone in its own wrapper, so its own :not(:last-child)
+// above never fires there).
+.o_airlogic_compare_row_wrap {
+    &:not(:last-child) {
+        border-bottom: 1px solid #F1F3F4;
+    }
+
+    .o_airlogic_compare_row {
+        padding-bottom: 2px;
+
+        &:not(:last-child) {
+            border-bottom: none;
+        }
+    }
+}
+
+.o_airlogic_compare_note {
+    font-size: 12px;
+    color: #7A1F2B;
+    background: #FBEAEC;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 0 0 6px;
+}
+
 .o_airlogic_compare_when {
     color: #8B92A0;
 }
@@ -623,6 +650,36 @@
     font-size: 13px;
     color: #8B92A0;
     margin-top: 2px;
+}
+
+// "Main parts": the flagged/alert items (+ a detected leak) behind this
+// visit's History Tag match, each with its technician note if there is
+// one -- same data the Owner Report's Issues Found shows.
+.o_airlogic_history_parts {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: #FBEAEC;
+    border-radius: 6px;
+}
+
+.o_airlogic_history_part_row {
+    &:not(:last-child) {
+        margin-bottom: 6px;
+    }
+}
+
+.o_airlogic_history_part_label {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    color: #7A1F2B;
+}
+
+.o_airlogic_history_part_note {
+    display: block;
+    font-size: 12.5px;
+    color: #5B6470;
+    margin-top: 1px;
 }
 
 .o_airlogic_history_notes {
