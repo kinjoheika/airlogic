@@ -36,9 +36,18 @@
                         invisible="not invoice_id"/>
             </button>
             <notebook position="inside">
+                <!-- Sub-line of Service Jobs, not equipment: the Job's own
+                     reference (SVJ-...) leads each row, since that's the
+                     record this line actually represents. Equipment is
+                     just one of its fields. Jobs are created exclusively
+                     from the Field Service mobile app (one per unit
+                     serviced during this visit), never here: create="0"
+                     delete="0" so a Visit's job list can only be reviewed
+                     from this form, not hand-edited. -->
                 <page string="Service Jobs" name="jobs">
                     <field name="job_ids">
-                        <list string="Service Jobs">
+                        <list string="Service Jobs" create="0" delete="0">
+                            <field name="name"/>
                             <field name="equipment_id"/>
                             <field name="technician_id"/>
                             <field name="date"/>

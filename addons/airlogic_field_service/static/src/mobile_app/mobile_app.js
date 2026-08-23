@@ -105,6 +105,8 @@ export class AirlogicMobileFieldEntry extends Component {
             selectedPartner: null,
             devices: [],
             selectedEquipment: null,
+            currentVisitId: null, // this client-session's Service Visit; every
+                                   // unit's Job during this session attaches to it
 
             job: null,
             readingLines: [],
@@ -243,6 +245,7 @@ export class AirlogicMobileFieldEntry extends Component {
 
     async selectClient(client) {
         this.state.selectedPartner = client;
+        this.state.currentVisitId = null; // fresh Visit for this client session
         await this.loadDevices();
         this.state.tab = "visit";
         this.state.screen = "main";
@@ -291,6 +294,7 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.screen = "clients";
         this.state.selectedPartner = null;
         this.state.equipmentUnlocked = false;
+        this.state.currentVisitId = null;
     }
 
     // --- Device tap -> PIN2 -> DSR ---------------------------------------
@@ -314,10 +318,33 @@ export class AirlogicMobileFieldEntry extends Component {
             let jobId;
             if (jobIds.length) {
                 jobId = jobIds[0];
+                // Resuming a job that already belongs to a Visit (e.g. the
+                // app was closed and reopened mid-session): adopt that
+                // Visit so any further NEW units this session attach to
+                // the same one, instead of starting a second Visit.
+                if (!this.state.currentVisitId) {
+                    const [existing] = await this.orm.read(
+                        "airlogic.service.job", [jobId], ["visit_id"]
+                    );
+                    if (existing.visit_id) {
+                        this.state.currentVisitId = existing.visit_id[0];
+                    }
+                }
             } else {
-                const created = await this.orm.create("airlogic.service.job", [
-                    { equipment_id: device.id },
-                ]);
+                // One Service Visit per client session (see selectClient/
+                // backToClients, which reset currentVisitId): the first
+                // new unit in a session opens the Visit, every further
+                // unit's Job attaches to that same one.
+                if (!this.state.currentVisitId) {
+                    const [visitId] = await this.orm.create("airlogic.service.visit", [{
+                        partner_id: this.state.selectedPartner.id,
+                    }]);
+                    this.state.currentVisitId = visitId;
+                }
+                const created = await this.orm.create("airlogic.service.job", [{
+                    equipment_id: device.id,
+                    visit_id: this.state.currentVisitId,
+                }]);
                 jobId = created[0];
             }
             // Flips draft -> in_progress with an honest start timestamp,

@@ -16,20 +16,27 @@
               action="action_airlogic_mobile_field_entry"
               groups="airlogic_core.group_airlogic_technician"/>
 
+    <!-- Both nested under Service Visit, not top-level under Inventory:
+         a Job only exists as part of some Visit, and a Revision only
+         exists to correct a Job. Reviewing either is a drill-down from
+         Service Visit, not a peer of it. -->
     <menuitem id="menu_airlogic_service_job" name="Service Jobs"
-              parent="airlogic_core.menu_airlogic_root" action="action_airlogic_service_job"
-              sequence="15"/>
+              parent="airlogic_core.menu_airlogic_service_visit" action="action_airlogic_service_job"
+              sequence="10"/>
 
     <!-- Supervisor+ (not Configuration, which is Manager-only):
          reviewing requests/corrections is a day-to-day Supervisor task,
          not admin configuration. -->
-    <menuitem id="menu_airlogic_part_request" name="Part Requests"
-              parent="airlogic_core.menu_airlogic_root" action="action_airlogic_part_request"
-              groups="airlogic_core.group_airlogic_supervisor" sequence="17"/>
-
     <menuitem id="menu_airlogic_job_revision" name="Revision Requests"
-              parent="airlogic_core.menu_airlogic_root" action="action_airlogic_job_revision"
-              groups="airlogic_core.group_airlogic_supervisor" sequence="18"/>
+              parent="airlogic_core.menu_airlogic_service_visit" action="action_airlogic_job_revision"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="20"/>
+
+    <!-- Nested under Equipment: a part request only exists in the
+         context of some unit needing a part, same drill-down reasoning
+         as Service Job/Revision Requests under Service Visit above. -->
+    <menuitem id="menu_airlogic_part_request" name="Part Requests"
+              parent="airlogic_core.menu_airlogic_equipment" action="action_airlogic_part_request"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="10"/>
 
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_measurement_field"
