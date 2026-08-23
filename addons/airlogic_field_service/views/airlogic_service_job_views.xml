@@ -13,6 +13,8 @@
                 <field name="equipment_id"/>
                 <field name="technician_id"/>
                 <field name="state" widget="badge" class="airlogic-badge" decoration-success="state == 'submitted'"/>
+                <field name="visit_state" string="Visit Stage" widget="badge" class="airlogic-badge"
+                       decoration-info="visit_state == 'review'" decoration-success="visit_state == 'approved'"/>
             </list>
         </field>
     </record>
@@ -30,6 +32,9 @@
                     <button name="action_request_revision" string="Request Correction" type="object"
                             invisible="state != 'submitted'"/>
                     <field name="state" widget="statusbar"/>
+                    <field name="visit_state" widget="badge" class="airlogic-badge ms-2"
+                           decoration-info="visit_state == 'review'" decoration-success="visit_state == 'approved'"
+                           invisible="not visit_state or visit_state == 'draft'"/>
                 </header>
                 <sheet>
                     <div class="oe_title">

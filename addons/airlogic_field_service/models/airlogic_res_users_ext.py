@@ -77,6 +77,17 @@ class ResUsersFieldServiceExt(models.Model):
         return pin == user.airlogic_field_pin
 
     @api.model
+    def get_current_technician_info(self):
+        """Called once right after the initial (clients-list) PIN check
+        passes. Lets the mobile app show "who's logged in" and decide
+        whether to show the Add/Delete Equipment tab at all (Senior
+        Technician only, AIR-T48) rather than showing it to everyone and
+        gating just the PIN entry on tap.
+        """
+        user = self.env.user
+        return {'name': user.name, 'isSenior': bool(user.airlogic_is_senior_technician)}
+
+    @api.model
     def action_verify_senior_tech_pin(self, *args, **kwargs):
         """Gate for the mobile app's Add/Delete Equipment tab: passes only
         if the calling user is flagged Senior Technician AND their Field

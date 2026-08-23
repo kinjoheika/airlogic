@@ -29,11 +29,24 @@
   several issues.
 
   Uses web.basic_layout, not web.external_layout: this template already
-  builds its own fixed header/footer (see below), so wrapping it in
-  Odoo's company letterhead template would add the company's
-  configurable Document Layout (style/colors/logo, set under Settings)
-  on top. The report is meant to print exactly the same regardless of
-  that setting.
+  builds its own header/footer (see below), so wrapping it in Odoo's
+  company letterhead template would add the company's configurable
+  Document Layout (style/colors/logo, set under Settings) on top. The
+  report is meant to print exactly the same regardless of that setting.
+
+  Multi-page visits (AIR-T48): "page-break-inside:avoid" on the header
+  block, the Section 1 box, and every unit card keeps each of those from
+  being awkwardly split mid-block if a visit's unit list runs onto a
+  second printed page, a plain CSS property wkhtmltopdf honors
+  natively. True *repeating* header/footer content on every physical
+  page (not just protecting these blocks from splitting) needs a
+  dedicated report.paperformat with header/footer margins and either
+  web.external_layout or position:fixed content sized to fit inside
+  those margins; that is a bigger, harder-to-verify change than this
+  pass makes, since it can't be checked without a live render.
+
+  Unit cards are laid out image-left/notes-right (not stacked) and
+  capped at 2 thumbnails, so more units fit per printed page.
 -->
 <odoo>
 
@@ -43,19 +56,21 @@
                 <t t-set="vd" t-value="visit_data[visit.id]"/>
                 <t t-call="web.basic_layout">
                     <div class="page">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <h3 style="font-weight:800;">Standard Airlogic <small class="text-muted">Service Co.</small></h3>
-                                <div class="text-muted" style="font-size:11px;">Air Handling Unit — Owner Service Report</div>
+                        <div style="page-break-inside:avoid;">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h3 style="font-weight:800;">Standard Airlogic <small class="text-muted">Service Co.</small></h3>
+                                    <div class="text-muted" style="font-size:11px;">Air Handling Unit — Owner Service Report</div>
+                                </div>
+                                <div class="text-end" style="font-size:11px;">
+                                    Report No. <span t-esc="visit.name"/><br/>
+                                    Service Visit Date: <span t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/><br/>
+                                    Technician: <span t-esc="visit.technician_id.name"/><br/>
+                                    Reviewer: <span t-esc="visit.reviewed_by_id.name or '—'"/>
+                                </div>
                             </div>
-                            <div class="text-end" style="font-size:11px;">
-                                Report No. <span t-esc="visit.name"/><br/>
-                                Service Visit Date: <span t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/><br/>
-                                Technician: <span t-esc="visit.technician_id.name"/><br/>
-                                Reviewer: <span t-esc="visit.reviewed_by_id.name or '—'"/>
-                            </div>
+                            <hr/>
                         </div>
-                        <hr/>
 
                         <div class="row mb-3" style="font-size:11px;">
                             <div class="col-4">
@@ -68,7 +83,7 @@
                             </div>
                         </div>
 
-                        <div style="border:2px solid #212529;border-radius:6px;padding:14px 16px 4px;margin-bottom:22px;">
+                        <div style="border:2px solid #212529;border-radius:6px;padding:14px 16px 4px;margin-bottom:22px;page-break-inside:avoid;">
                             <h5 style="font-weight:800;margin-bottom:14px;"><span class="badge bg-dark">1</span> Assets Status — This Visit</h5>
                             <div class="row text-center mb-2">
                                 <div class="col-4">
@@ -97,7 +112,7 @@
                             <t t-set="border_class" t-value="{'good': 'border-success', 'watch': 'border-warning', 'urgent': 'border-danger'}[ji['status']]"/>
                             <t t-set="text_class" t-value="{'good': 'text-success', 'watch': 'text-warning', 'urgent': 'text-danger'}[ji['status']]"/>
                             <t t-set="status_label" t-value="{'good': 'GOOD', 'watch': 'WATCH', 'urgent': 'URGENT'}[ji['status']]"/>
-                            <div t-attf-class="card mb-2 {{border_class}}" style="border-width:1.5px;">
+                            <div t-attf-class="card mb-2 {{border_class}}" style="border-width:2px;page-break-inside:avoid;">
                                 <div class="card-header d-flex justify-content-between align-items-center py-1">
                                     <div>
                                         <strong t-esc="ji['job'].equipment_id.name"/>
@@ -105,35 +120,43 @@
                                     </div>
                                     <span t-attf-class="fw-bold {{text_class}}" t-esc="status_label"/>
                                 </div>
-                                <div class="card-body py-2">
-                                    <div t-if="ji['photos']" class="d-flex gap-2 mb-2">
-                                        <img t-foreach="ji['photos']" t-as="photo"
+                                <!-- Image-left / notes-right, not stacked, and the
+                                     notes column is height-capped: keeps each card
+                                     compact enough to fit ~4-5 per printed page
+                                     even on units with a long note. -->
+                                <div class="card-body py-2" style="display:flex;gap:10px;">
+                                    <div t-if="ji['photos']" style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;">
+                                        <img t-foreach="ji['photos'][:2]" t-as="photo"
                                              t-attf-src="data:{{photo.mimetype}};base64,{{photo.datas.decode()}}"
-                                             style="max-height:70px;max-width:100px;object-fit:cover;border:1px solid #ddd;"/>
+                                             style="width:60px;height:60px;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
+                                        <div t-if="len(ji['photos']) > 2" class="text-muted text-center" style="font-size:8px;">
+                                            +<t t-esc="len(ji['photos']) - 2"/> more
+                                        </div>
                                     </div>
-                                    <div t-if="ji['issues']">
-                                        <div class="text-muted text-uppercase" style="font-size:9px;">Issues Found</div>
-                                        <ul style="font-size:11px;margin-bottom:0;padding-left:16px;">
-                                            <li t-foreach="ji['issues']" t-as="issue">
-                                                <span t-attf-class="fw-bold {{issue['severity'] == 'flagged' and 'text-danger' or 'text-warning'}}"
-                                                      t-esc="issue['label']"/>
-                                                <span t-if="issue['note']" class="text-muted" style="font-size:10px;"> — <t t-esc="issue['note']"/></span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div t-else="" class="text-success" style="font-size:11px;">
-                                        ✓ All checklist items clear — no repairs needed this visit.
-                                    </div>
-                                    <div t-if="ji['job'].notes" class="mt-2 pt-2" style="border-top:1px dashed #E7E9EB;">
-                                        <div class="text-muted text-uppercase" style="font-size:9px;">Technician Notes</div>
-                                        <div style="font-size:11px;" t-esc="ji['job'].notes"/>
+                                    <div style="flex:1 1 auto;min-width:0;max-height:92px;overflow:hidden;">
+                                        <div t-if="ji['issues']">
+                                            <div class="text-muted text-uppercase" style="font-size:8.5px;">Issues Found</div>
+                                            <ul style="font-size:10px;margin-bottom:0;padding-left:14px;">
+                                                <li t-foreach="ji['issues']" t-as="issue">
+                                                    <span t-attf-class="fw-bold {{issue['severity'] == 'flagged' and 'text-danger' or 'text-warning'}}"
+                                                          t-esc="issue['label']"/>
+                                                    <span t-if="issue['note']" class="text-muted" style="font-size:9px;"> — <t t-esc="issue['note']"/></span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div t-else="" class="text-success" style="font-size:10px;">
+                                            ✓ All checklist items clear — no repairs needed.
+                                        </div>
+                                        <div t-if="ji['job'].notes" style="font-size:9px;color:#6c757d;margin-top:3px;">
+                                            <b>Notes:</b> <t t-esc="ji['job'].notes"/>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </t>
 
                         <div class="text-center mt-4 pt-2"
-                             style="border-top:1px solid #E7E9EB;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6c757d;">
+                             style="border-top:1px solid #E7E9EB;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6c757d;page-break-inside:avoid;">
                             — End Report —
                         </div>
                     </div>

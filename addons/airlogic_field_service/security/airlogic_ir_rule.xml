@@ -127,10 +127,17 @@
          checklist/reading list and the Equipment comparison tabs go
          blank for every submitted job). Only write/create are locked;
          read is always unrestricted by this rule. -->
+    <!-- Manager gets an unconditional pass around the lock (AIR-T48):
+         "user" is bound to the acting res.users record in domain_force's
+         eval context, same as elsewhere in this file, so has_group() is
+         safe to call here. Every write a Manager makes this way is
+         logged to the job's chatter instead (see write() on
+         airlogic.reading.line/airlogic.checklist.line), since there's
+         no structured Revision record for this path. -->
     <record id="rule_reading_line_lock_submitted" model="ir.rule">
-        <field name="name">Lock reading lines once Submitted (unless revision open)</field>
+        <field name="name">Lock reading lines once Submitted (unless revision open or Manager)</field>
         <field name="model_id" ref="model_airlogic_reading_line"/>
-        <field name="domain_force">['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('airlogic_core.group_airlogic_manager') else ['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
         <field name="perm_read">0</field>
         <field name="perm_write">1</field>
         <field name="perm_create">1</field>
@@ -138,9 +145,9 @@
     </record>
 
     <record id="rule_checklist_line_lock_submitted" model="ir.rule">
-        <field name="name">Lock checklist lines once Submitted (unless revision open)</field>
+        <field name="name">Lock checklist lines once Submitted (unless revision open or Manager)</field>
         <field name="model_id" ref="model_airlogic_checklist_line"/>
-        <field name="domain_force">['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('airlogic_core.group_airlogic_manager') else ['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
         <field name="perm_read">0</field>
         <field name="perm_write">1</field>
         <field name="perm_create">1</field>

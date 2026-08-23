@@ -130,6 +130,8 @@ export class AirlogicMobileFieldEntry extends Component {
 
             toast: null, // {message, type}
             wallpaperUrl: null, // Configuration > App Wallpaper, applied behind every screen
+            currentTechnician: null, // {name, isSenior}, set once the clients-list PIN passes
+            clockText: "", // small digital clock in the header, ticks every second
 
             partsCatalog: [], // [{id, name, zone}], loaded once and cached
             partRequests: [], // this job's airlogic.part.request rows
@@ -147,11 +149,14 @@ export class AirlogicMobileFieldEntry extends Component {
             window.addEventListener("online", this._onlineHandler);
             window.addEventListener("offline", this._offlineHandler);
             this.loadWallpaper();
+            this.updateClock();
+            this._clockTimer = setInterval(() => this.updateClock(), 1000);
         });
         onWillUnmount(() => {
             window.removeEventListener("online", this._onlineHandler);
             window.removeEventListener("offline", this._offlineHandler);
             clearTimeout(this._toastTimer);
+            clearInterval(this._clockTimer);
         });
     }
 
@@ -174,12 +179,34 @@ export class AirlogicMobileFieldEntry extends Component {
         window.location.href = "/odoo";
     }
 
-    // Real session logout (clears the Odoo session), distinct from
-    // exitApp() above which just navigates back to the backend while
-    // staying logged in. This app is often handed off between
-    // technicians on a shared device, so a real logout matters here.
+    // "Logout" here means back to this app's own PIN entry screen, NOT
+    // Odoo's real session logout -- the phone/tablet commonly gets
+    // handed off between technicians without anyone signing out of
+    // Odoo itself, so this just clears the app's own unlocked state
+    // (selected client, current technician, equipment-edit access) and
+    // sends the next person back to square one.
     onLogout() {
-        window.location.href = "/web/session/logout";
+        this.state.screen = "pin1";
+        this.state.tab = "visit";
+        this.state.pinInput = "";
+        this.state.pinError = false;
+        this.state.pinPurpose = null;
+        this.state.equipmentUnlocked = false;
+        this.state.currentTechnician = null;
+        this.state.selectedPartner = null;
+        this.state.devices = [];
+        this.state.selectedEquipment = null;
+        this.state.currentVisitId = null;
+        this.state.job = null;
+        this.state.unitEquipment = null;
+        this.state.historyEquipment = null;
+        this.state.equipmentEdit = null;
+    }
+
+    updateClock() {
+        this.state.clockText = new Date().toLocaleTimeString([], {
+            hour: "2-digit", minute: "2-digit", second: "2-digit",
+        });
     }
 
     // Configuration > App Wallpaper -- purely decorative, so a missing
@@ -247,6 +274,9 @@ export class AirlogicMobileFieldEntry extends Component {
             return;
         }
         if (this.state.pinPurpose === "clients") {
+            this.state.currentTechnician = await this.orm.call(
+                "res.users", "get_current_technician_info", []
+            );
             this.state.screen = "clients";
             await this.loadClients();
         } else if (this.state.pinPurpose === "device") {

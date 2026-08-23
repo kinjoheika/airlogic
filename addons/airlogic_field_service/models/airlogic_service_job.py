@@ -29,6 +29,17 @@ class AirlogicServiceJob(models.Model):
         ('in_progress', 'In Progress'),
         ('submitted', 'Submitted'),
     ], string='Status', default='draft', tracking=True)
+    visit_state = fields.Selection(
+        related='visit_id.state', string='Visit Stage', store=True, readonly=True,
+        help="Mirrors the parent Service Visit's own Draft/For Review/"
+             "Approved progress as a badge on the job, so that stage is "
+             "visible without opening the Visit. Deliberately a separate "
+             "field from `state` above (the technician's own Draft/In "
+             "Progress/Submitted DSR workflow): the various submission-"
+             "lock checks throughout this addon compare state == "
+             "'submitted', and a Visit moving on to For Review/Approved "
+             "must never make that comparison go False and silently "
+             "reopen editing on an already-submitted job.")
     started_at = fields.Datetime(
         string='Started At', tracking=True,
         help='Set once, the first time the technician actually opens the '

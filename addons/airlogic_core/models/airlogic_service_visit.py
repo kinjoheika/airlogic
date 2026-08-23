@@ -21,7 +21,7 @@ class AirlogicServiceVisit(models.Model):
     date = fields.Datetime(string='Visit Date', default=fields.Datetime.now, tracking=True)
     state = fields.Selection([
         ('draft', 'Draft'),
-        ('review', 'Review'),
+        ('review', 'For Review'),
         ('approved', 'Approved'),
     ], string='Status', default='draft', tracking=True)
     invoice_id = fields.Many2one(

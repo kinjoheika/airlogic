@@ -63,7 +63,7 @@
                 <field name="partner_id"/>
                 <field name="technician_id"/>
                 <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
-                <filter name="review" string="Review" domain="[('state','=','review')]"/>
+                <filter name="review" string="For Review" domain="[('state','=','review')]"/>
                 <filter name="approved" string="Approved" domain="[('state','=','approved')]"/>
                 <separator/>
                 <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>

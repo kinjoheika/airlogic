@@ -10,7 +10,7 @@
          (see airlogic_field_service/views/airlogic_menus.xml): that
          drill-down relationship is unchanged, only its parent moved. -->
     <menuitem id="menu_airlogic_client_services" name="Client Services"
-              parent="menu_airlogic_root" sequence="5"/>
+              parent="menu_airlogic_root" action="action_airlogic_service_visit" sequence="5"/>
 
     <menuitem id="menu_airlogic_service_visit" name="Service Visits"
               parent="menu_airlogic_client_services" action="action_airlogic_service_visit"

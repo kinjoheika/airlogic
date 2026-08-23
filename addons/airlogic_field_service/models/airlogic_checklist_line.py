@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import _, fields, models
 
 # Mirrors the PHASES constant in static/src/field_entry/field_entry.js --
 # keep both in sync by hand. Not exposed as Configuration data (unlike
@@ -75,3 +75,26 @@ class AirlogicChecklistLine(models.Model):
              "items, comma-separated spot indices (or 'pass') for the leak "
              "check, free text for the notes item.")
     note = fields.Char(string='Note', help='Optional note, mainly for alert/flagged check items.')
+
+    def write(self, vals):
+        """Same Manager-bypass logging as airlogic.reading.line.write() --
+        see that method's docstring for why this logs to the job's
+        chatter instead of a Revision record.
+        """
+        is_manager = self.env.user.has_group('airlogic_core.group_airlogic_manager')
+        if is_manager and ('value' in vals or 'note' in vals):
+            for line in self:
+                if line.job_id.state != 'submitted' or line.job_id.revision_open:
+                    continue
+                changed = []
+                if 'value' in vals and vals['value'] != line.value:
+                    changed.append(_('value "%(old)s" to "%(new)s"') % {
+                        'old': line.value or '—', 'new': vals['value'] or '—'})
+                if 'note' in vals and vals['note'] != line.note:
+                    changed.append(_('note "%(old)s" to "%(new)s"') % {
+                        'old': line.note or '—', 'new': vals['note'] or '—'})
+                if changed:
+                    line.job_id.message_post(body=_(
+                        'Manager edit on submitted job: <b>%(item)s</b> %(changes)s.') % {
+                        'item': line.label, 'changes': ', '.join(changed)})
+        return super().write(vals)
