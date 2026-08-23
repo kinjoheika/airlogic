@@ -574,6 +574,46 @@
     font-weight: 600;
 }
 
+// --- History cards (bottom of History > a unit) -------------------
+// Deliberately NOT .o_airlogic_card: these aren't tappable (everything
+// is already shown on the card), so no pointer cursor / active-state
+// darkening that would visually promise an interaction that isn't there.
+.o_airlogic_history_card {
+    background: #fff;
+    border: 1px solid #D8DBDE;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+
+.o_airlogic_history_ref {
+    font-weight: 700;
+    font-size: 16px;
+    margin-top: 6px;
+}
+
+.o_airlogic_history_meta {
+    font-size: 13px;
+    color: #8B92A0;
+    margin-top: 2px;
+}
+
+.o_airlogic_history_notes {
+    font-size: 14px;
+    color: #14202c;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #F1F3F4;
+}
+
+.o_airlogic_history_tech {
+    font-size: 13px;
+    color: #5B6470;
+    font-style: italic;
+    margin-top: 8px;
+    text-align: right;
+}
+
 // --- Sync warning (open a long time, still unsynced) --------------------
 .o_airlogic_sync_warning {
     background: #FEF3CD;

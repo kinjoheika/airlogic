@@ -119,6 +119,7 @@ export class AirlogicMobileFieldEntry extends Component {
             unitComparisonTab: "reading",
 
             history: [],
+            historyEquipment: null, // which unit's history is showing (null = unit list)
 
             equipmentEdit: null,
             deleteConfirmDevice: null,
@@ -279,7 +280,8 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.unitEquipment = null;
         this.state.equipmentEdit = null;
         if (tab === "history") {
-            this.loadHistory();
+            this.state.historyEquipment = null; // land on the unit picker, not a stale unit's feed
+            this.state.history = [];
         }
     }
 
@@ -797,19 +799,21 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.unitEquipment = null;
     }
 
-    // --- History tab (major-events feed, filtered by History Tags) -------
+    // --- History tab (unit picker -> that unit's major-events feed,
+    // filtered by History Tags) -----------------------------------------
 
-    async loadHistory() {
+    async openHistoryUnit(device) {
         this.state.loading = true;
         try {
+            this.state.historyEquipment = device;
             const jobs = await this.orm.searchRead(
                 "airlogic.service.job",
                 [
-                    ["partner_id", "=", this.state.selectedPartner.id],
+                    ["equipment_id", "=", device.id],
                     ["state", "=", "submitted"],
                     ["history_tag_ids", "!=", false],
                 ],
-                ["name", "equipment_id", "technician_id", "date", "notes", "history_tag_ids"],
+                ["name", "technician_id", "date", "notes", "history_tag_ids"],
                 { order: "date desc", limit: 30 }
             );
             const allTagIds = [...new Set(jobs.flatMap((j) => j.history_tag_ids))];
@@ -825,6 +829,22 @@ export class AirlogicMobileFieldEntry extends Component {
         } finally {
             this.state.loading = false;
         }
+    }
+
+    closeHistoryUnit() {
+        this.state.historyEquipment = null;
+        this.state.history = [];
+    }
+
+    formatHistoryTimestamp(dateStr) {
+        if (!dateStr) {
+            return "";
+        }
+        const d = new Date(dateStr.replace(" ", "T") + "Z");
+        return d.toLocaleString(undefined, {
+            weekday: "short", year: "numeric", month: "short", day: "numeric",
+            hour: "2-digit", minute: "2-digit",
+        });
     }
 
     // --- Equipment tab (Add/Delete) ----------------------------------

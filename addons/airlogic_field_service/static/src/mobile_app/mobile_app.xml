@@ -144,20 +144,37 @@
                     </t>
                 </t>
 
-                <!-- HISTORY TAB: major-events feed, filtered by History Tags -->
-                <t t-if="state.tab === 'history'">
-                    <div t-foreach="state.history" t-as="h" t-key="h.id" class="o_airlogic_card">
-                        <div class="o_airlogic_card_title" t-esc="h.equipment_id[1]"/>
-                        <div class="o_airlogic_card_sub">
-                            <t t-esc="h.name"/> · <t t-esc="h.technician_id[1]"/>
+                <!-- HISTORY TAB: same unit-per-sublocation picker as
+                     Visit/Units, then that one unit's major-events feed -->
+                <t t-if="state.tab === 'history' and !state.historyEquipment">
+                    <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
+                        <div class="o_airlogic_group_hd" t-esc="grp.sublocation"/>
+                        <div t-foreach="grp.items" t-as="device" t-key="device.id"
+                             class="o_airlogic_card" t-on-click="() => this.openHistoryUnit(device)">
+                            <div class="o_airlogic_card_title" t-esc="device.name"/>
                         </div>
-                        <div class="o_airlogic_tag_row">
+                    </t>
+                </t>
+                <t t-if="state.tab === 'history' and state.historyEquipment">
+                    <div class="o_airlogic_sticky_header">
+                        <div class="o_airlogic_title_row">
+                            <span class="o_airlogic_back_arrow" t-on-click="closeHistoryUnit" title="Back to History">‹</span>
+                            <h5 t-esc="state.historyEquipment.name"/>
+                        </div>
+                    </div>
+                    <!-- Not clickable: every detail is already on the
+                         card, there's nothing to open. -->
+                    <div t-foreach="state.history" t-as="h" t-key="h.id" class="o_airlogic_history_card">
+                        <div t-if="h.tagNames.length" class="o_airlogic_tag_row">
                             <span t-foreach="h.tagNames" t-as="tag" t-key="tag" class="o_airlogic_tag_badge" t-esc="tag"/>
                         </div>
-                        <div t-if="h.notes" class="o_airlogic_card_sub" t-esc="h.notes"/>
+                        <div class="o_airlogic_history_ref" t-esc="h.name"/>
+                        <div class="o_airlogic_history_meta" t-esc="formatHistoryTimestamp(h.date)"/>
+                        <div t-if="h.notes" class="o_airlogic_history_notes" t-esc="h.notes"/>
+                        <div class="o_airlogic_history_tech">— <t t-esc="h.technician_id[1]"/></div>
                     </div>
                     <p t-if="!state.history.length" class="text-muted">
-                        No major events yet for this client -- jobs only show up here when their
+                        No major events yet for this unit -- jobs only show up here when their
                         notes match a History Tag (Configuration &gt; History Tags).
                     </p>
                 </t>
