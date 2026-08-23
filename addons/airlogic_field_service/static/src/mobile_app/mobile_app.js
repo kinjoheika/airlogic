@@ -117,6 +117,8 @@ export class AirlogicMobileFieldEntry extends Component {
 
             unitEquipment: null,
             unitComparisonTab: "reading",
+            unitReadingSection: "Air Side", // sub-badge under Readings
+            unitChecklistPhase: 1, // sub-badge under Visual Checklist
 
             history: [],
             historyEquipment: null, // which unit's history is showing (null = unit list)
@@ -430,8 +432,13 @@ export class AirlogicMobileFieldEntry extends Component {
             // Only "number" items gate progress -- "check" items default
             // to Normal and are only touched to flag an exception, so
             // they stay blank by design and must not block the phase.
+            // No `required.length > 0 &&` guard: [].every() is true, so
+            // a phase with zero number items (Phase 3, "Indoor OFF", now
+            // that Anemometer (Indoor) moved to Phase 1) is trivially
+            // complete instead of stuck forever -- that guard is exactly
+            // the bug AIR-T35 fixed for Phase 2, just re-triggered here.
             const required = phase.items.filter((it) => it.type === "number");
-            const complete = required.length > 0 && required.every((it) => {
+            const complete = required.every((it) => {
                 const line = this.checklistLine(it.key);
                 return line && line.value;
             });
@@ -790,6 +797,8 @@ export class AirlogicMobileFieldEntry extends Component {
             ]);
             this.state.unitEquipment = { ...device, readingData, visualData };
             this.state.unitComparisonTab = "reading";
+            this.state.unitReadingSection = "Air Side";
+            this.state.unitChecklistPhase = 1;
         } finally {
             this.state.loading = false;
         }
@@ -797,6 +806,29 @@ export class AirlogicMobileFieldEntry extends Component {
 
     closeUnit() {
         this.state.unitEquipment = null;
+    }
+
+    // Sub-badge selection under Readings/Visual Checklist -- only the
+    // selected section/phase renders, everything else in
+    // readingData.sections / visualData.phases just isn't shown right
+    // now (still fetched once up front in openUnit, no re-fetch on tap).
+
+    get currentReadingSection() {
+        if (!this.state.unitEquipment) {
+            return null;
+        }
+        return this.state.unitEquipment.readingData.sections.find(
+            (s) => s.section === this.state.unitReadingSection
+        );
+    }
+
+    get currentChecklistPhaseCompare() {
+        if (!this.state.unitEquipment) {
+            return null;
+        }
+        return this.state.unitEquipment.visualData.phases.find(
+            (p) => p.phase === this.state.unitChecklistPhase
+        );
     }
 
     // --- History tab (unit picker -> that unit's major-events feed,

@@ -101,46 +101,56 @@
                             <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'reading' ? 'active' : ''}}"
                                  t-on-click="() => this.state.unitComparisonTab = 'reading'">Readings</div>
                             <div t-attf-class="o_airlogic_phase_tab {{state.unitComparisonTab === 'visual' ? 'active' : ''}}"
-                                 t-on-click="() => this.state.unitComparisonTab = 'visual'">Checklist</div>
+                                 t-on-click="() => this.state.unitComparisonTab = 'visual'">Visual Checklist</div>
+                        </div>
+                        <!-- Sub-badges: tapping one shows only that
+                             section/phase below, nothing else stacked. -->
+                        <div t-if="state.unitComparisonTab === 'reading'" class="o_airlogic_subphase_bar">
+                            <div t-foreach="['Air Side', 'Refrigerant Side', 'Manometer Pressure']" t-as="sec" t-key="sec"
+                                 t-attf-class="o_airlogic_subphase_tab {{state.unitReadingSection === sec ? 'active' : ''}}"
+                                 t-on-click="() => this.state.unitReadingSection = sec">
+                                <t t-esc="sec"/>
+                            </div>
+                        </div>
+                        <div t-if="state.unitComparisonTab === 'visual'" class="o_airlogic_subphase_bar">
+                            <div t-foreach="[1, 2, 3, 4]" t-as="ph" t-key="ph"
+                                 t-attf-class="o_airlogic_subphase_tab {{state.unitChecklistPhase === ph ? 'active' : ''}}"
+                                 t-on-click="() => this.state.unitChecklistPhase = ph">
+                                Ph<t t-esc="ph"/>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Stacked cards, not a wide table: up to 3 past
                          visits per field/item, most recent first. -->
                     <t t-if="state.unitComparisonTab === 'reading'">
-                        <p t-if="!state.unitEquipment.readingData.sections.length" class="text-muted">
+                        <p t-if="!currentReadingSection or !currentReadingSection.fields.length" class="text-muted">
                             No readings yet for this unit.
                         </p>
-                        <t t-foreach="state.unitEquipment.readingData.sections" t-as="section" t-key="section.section">
-                            <div class="o_airlogic_group_hd" t-esc="section.section"/>
-                            <div t-foreach="section.fields" t-as="f" t-key="f.name" class="o_airlogic_compare_card">
-                                <div class="o_airlogic_compare_hd">
-                                    <span t-esc="f.name"/>
-                                    <span t-if="f.standard" class="o_airlogic_item_std"> (<t t-esc="f.standard"/>)</span>
-                                </div>
-                                <div t-foreach="f.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
-                                    <span class="o_airlogic_compare_when"
-                                          t-esc="(state.unitEquipment.readingData.job_headers[v_index] || {}).when || '—'"/>
-                                    <span class="o_airlogic_compare_val" t-esc="v"/>
-                                </div>
+                        <div t-if="currentReadingSection" t-foreach="currentReadingSection.fields" t-as="f" t-key="f.name" class="o_airlogic_compare_card">
+                            <div class="o_airlogic_compare_hd">
+                                <span t-esc="f.name"/>
+                                <span t-if="f.standard" class="o_airlogic_item_std"> (<t t-esc="f.standard"/>)</span>
                             </div>
-                        </t>
+                            <div t-foreach="f.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
+                                <span class="o_airlogic_compare_when"
+                                      t-esc="(state.unitEquipment.readingData.job_headers[v_index] || {}).when || '—'"/>
+                                <span class="o_airlogic_compare_val" t-esc="v"/>
+                            </div>
+                        </div>
                     </t>
                     <t t-if="state.unitComparisonTab === 'visual'">
-                        <p t-if="!state.unitEquipment.visualData.phases.length" class="text-muted">
+                        <p t-if="!currentChecklistPhaseCompare or !currentChecklistPhaseCompare.items.length" class="text-muted">
                             No visual checklist entries yet for this unit.
                         </p>
-                        <t t-foreach="state.unitEquipment.visualData.phases" t-as="ph" t-key="ph.phase">
-                            <div class="o_airlogic_group_hd">Phase <t t-esc="ph.phase"/></div>
-                            <div t-foreach="ph.items" t-as="it" t-key="it.label" class="o_airlogic_compare_card">
-                                <div class="o_airlogic_compare_hd" t-esc="it.label"/>
-                                <div t-foreach="it.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
-                                    <span class="o_airlogic_compare_when"
-                                          t-esc="(state.unitEquipment.visualData.job_headers[v_index] || {}).when || '—'"/>
-                                    <span class="o_airlogic_compare_val" t-esc="v"/>
-                                </div>
+                        <div t-if="currentChecklistPhaseCompare" t-foreach="currentChecklistPhaseCompare.items" t-as="it" t-key="it.label" class="o_airlogic_compare_card">
+                            <div class="o_airlogic_compare_hd" t-esc="it.label"/>
+                            <div t-foreach="it.values" t-as="v" t-key="v_index" class="o_airlogic_compare_row">
+                                <span class="o_airlogic_compare_when"
+                                      t-esc="(state.unitEquipment.visualData.job_headers[v_index] || {}).when || '—'"/>
+                                <span class="o_airlogic_compare_val" t-esc="v"/>
                             </div>
-                        </t>
+                        </div>
                     </t>
                 </t>
 

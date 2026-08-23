@@ -125,11 +125,21 @@
     </record>
 
     <!-- Refrigerant Side -->
+    <!-- Removed from the Readings grid/comparison. Kept as an inactive
+         record (not deleted) rather than dropping it from the file: this
+         data is noupdate="1", so removing the XML record wouldn't clean
+         up an already-created row on a database that's persisted rather
+         than reset, and any reading_line rows already pointing at it
+         would be orphaned by field_id's ondelete='restrict' anyway.
+         search([]) already excludes inactive records by default, so this
+         alone keeps it out of new jobs, Configuration lists, and every
+         comparison view. -->
     <record id="mf_ref_type" model="airlogic.measurement.field">
         <field name="code">ref_type</field>
         <field name="name">Refrigerant Type</field>
         <field name="section">Refrigerant Side</field>
         <field name="sequence">170</field>
+        <field name="active">False</field>
     </record>
     <record id="mf_outdoor_db" model="airlogic.measurement.field">
         <field name="code">outdoor_db</field>

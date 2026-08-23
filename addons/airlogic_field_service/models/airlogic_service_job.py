@@ -195,13 +195,21 @@ class AirlogicServiceJob(models.Model):
         data into: phase N+1 unlocks only once every required item in
         phase N has a value. Phase 4 has nothing after it to unlock, so
         the loop only walks phases 1-3.
+
+        Deliberately `all(...)` with no `required and` guard: all([]) is
+        True, so a phase with zero 'number' items (Phase 3, "Indoor OFF",
+        now that Anemometer (Indoor) moved to Phase 1) is trivially
+        complete rather than stuck forever. An earlier version guarded
+        on `required and ...`, which made a check-only phase never
+        register as complete -- the same bug AIR-T35 fixed for Phase 2
+        before Anemometer (Indoor) existed here to mask it for Phase 3.
         """
         self.ensure_one()
         values_by_key = {line.key: line.value for line in self.checklist_line_ids}
         unlocked = 1
         for phase in (1, 2, 3):
             required = self._phase_required_keys(phase)
-            if required and all(values_by_key.get(key) for key in required):
+            if all(values_by_key.get(key) for key in required):
                 unlocked = phase + 1
             else:
                 break

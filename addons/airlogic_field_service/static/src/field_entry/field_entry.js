@@ -19,16 +19,20 @@
 export const PHASES = [
     {
         id: 1,
-        title: "Outdoor — Power ON",
+        title: "Outdoor/Indoor ON",
         items: [
             { key: "amp_draw", label: "Amp Draw", type: "number", unit: "A" },
             { key: "cfm_outdoor", label: "Anemometer (Outdoor)", type: "number", unit: "CFM" },
+            { key: "cfm_indoor", label: "Anemometer (Indoor)", type: "number", unit: "CFM" },
         ],
     },
     {
         id: 2,
-        title: "Outdoor — Power OFF",
+        title: "Outdoor OFF",
         items: [
+            { key: "meg_u", label: "Megger U Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
+            { key: "meg_v", label: "Megger V Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
+            { key: "meg_w", label: "Megger W Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
             { key: "brk", label: "Breaker Wires & Terminals", type: "check" },
             { key: "comp", label: "Compressor Body", type: "check" },
             { key: "coils", label: "Coils & Fins", type: "check" },
@@ -37,16 +41,12 @@ export const PHASES = [
             { key: "ipm", label: "IPM", type: "check" },
             { key: "wires", label: "Wires & Terminals", type: "check" },
             { key: "cables", label: "Cable Ties / Paste / Grommets", type: "check" },
-            { key: "meg_u", label: "Megger U Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
-            { key: "meg_v", label: "Megger V Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
-            { key: "meg_w", label: "Megger W Phase", type: "number", unit: "MΩ", standard: "≥ 1.0 MΩ" },
         ],
     },
     {
         id: 3,
-        title: "Indoor Unit",
+        title: "Indoor OFF",
         items: [
-            { key: "cfm_indoor", label: "Anemometer (Indoor)", type: "number", unit: "CFM" },
             { key: "coil", label: "Coil & Fins", type: "check" },
             { key: "drain", label: "Drain Pan", type: "check" },
             { key: "drainline", label: "Drain Line", type: "check" },
@@ -56,7 +56,7 @@ export const PHASES = [
     },
     {
         id: 4,
-        title: "Line Set + Submit",
+        title: "Lines",
         items: [
             { key: "ins", label: "Insulation Tape", type: "check" },
             { key: "wire_cond", label: "Wire Condition", type: "check" },

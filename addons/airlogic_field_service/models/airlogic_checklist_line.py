@@ -14,10 +14,17 @@ from odoo import fields, models
 # visual checks, and there's a Megger insulation test (Ph2) that wasn't
 # modeled before.
 CHECKLIST_ITEMS = [
-    # Phase 1 -- Outdoor, Power ON
+    # Phase 1 -- Outdoor/Indoor ON: both anemometer readings taken here
+    # (cfm_indoor moved from Phase 3, which is now OFF-only visual checks).
     (1, 'amp_draw', 'Amp Draw', 'number', 'A'),
     (1, 'cfm_outdoor', 'Anemometer (Outdoor)', 'number', 'CFM'),
-    # Phase 2 -- Outdoor, Power OFF (visual) + Megger insulation test
+    (1, 'cfm_indoor', 'Anemometer (Indoor)', 'number', 'CFM'),
+    # Phase 2 -- Outdoor OFF: Megger insulation test first, then the
+    # visual checks (reordered so the numbers get entered before the
+    # power-off inspection, not buried after it).
+    (2, 'meg_u', 'Megger U Phase', 'number', 'MΩ'),
+    (2, 'meg_v', 'Megger V Phase', 'number', 'MΩ'),
+    (2, 'meg_w', 'Megger W Phase', 'number', 'MΩ'),
     (2, 'brk', 'Breaker Wires & Terminals', 'check', None),
     (2, 'comp', 'Compressor Body', 'check', None),
     (2, 'coils', 'Coils & Fins', 'check', None),
@@ -26,17 +33,13 @@ CHECKLIST_ITEMS = [
     (2, 'ipm', 'IPM', 'check', None),
     (2, 'wires', 'Wires & Terminals', 'check', None),
     (2, 'cables', 'Cable Ties / Paste / Grommets', 'check', None),
-    (2, 'meg_u', 'Megger U Phase', 'number', 'MΩ'),
-    (2, 'meg_v', 'Megger V Phase', 'number', 'MΩ'),
-    (2, 'meg_w', 'Megger W Phase', 'number', 'MΩ'),
-    # Phase 3 -- Indoor Unit (combined ON/OFF)
-    (3, 'cfm_indoor', 'Anemometer (Indoor)', 'number', 'CFM'),
+    # Phase 3 -- Indoor OFF
     (3, 'coil', 'Coil & Fins', 'check', None),
     (3, 'drain', 'Drain Pan', 'check', None),
     (3, 'drainline', 'Drain Line', 'check', None),
     (3, 'motor_fan', 'Motor & Fan', 'check', None),
     (3, 'wires_in', 'Wires & Sensors', 'check', None),
-    # Phase 4 -- Line Set + Submit
+    # Phase 4 -- Lines
     (4, 'ins', 'Insulation Tape', 'check', None),
     (4, 'wire_cond', 'Wire Condition', 'check', None),
     (4, 'cond', 'Condensation', 'check', None),
