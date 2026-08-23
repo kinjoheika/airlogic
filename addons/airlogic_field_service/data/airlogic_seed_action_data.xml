@@ -12,12 +12,17 @@
 
     <record id="action_seed_demo_service_history" model="ir.actions.server">
         <field name="name">Re-seed Demo Service History</field>
-        <field name="model_id" ref="base.model_res_users"/>
+        <field name="model_id" ref="model_airlogic_service_job"/>
         <field name="state">code</field>
-        <field name="code">
-from odoo.addons.airlogic_field_service.hooks import seed_demo_service_history
-seed_demo_service_history(env)
-        </field>
+        <!-- No `import` here on purpose: ir.actions.server's state='code'
+             runs in a safe_eval sandbox that forbids IMPORT_NAME/
+             IMPORT_FROM entirely, and a forbidden opcode fails to even
+             PARSE, which took the whole registry down on install, not
+             just this action. The import lives inside
+             action_seed_demo_service_history itself (a plain model
+             method, unrestricted), called here via the sandbox's own
+             `model` variable instead. -->
+        <field name="code">model.action_seed_demo_service_history()</field>
     </record>
 
 </odoo>

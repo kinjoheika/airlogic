@@ -386,3 +386,18 @@ class AirlogicServiceJob(models.Model):
                 'type': 'success' if filled else 'warning',
             },
         }
+
+    @api.model
+    def action_seed_demo_service_history(self):
+        """Thin wrapper so the "Re-seed Demo Service History" server
+        action (data/airlogic_seed_action_data.xml) doesn't need an
+        `import` statement in its own code -- ir.actions.server's
+        state='code' runs in a safe_eval sandbox that forbids
+        IMPORT_NAME/IMPORT_FROM outright (a bad import there doesn't
+        just fail the action, it fails to even PARSE and takes the whole
+        registry down). A plain import inside a regular model method
+        like this one is unrestricted, same as the lazy `import pypdf`
+        above -- the server action just calls this method instead.
+        """
+        from ..hooks import seed_demo_service_history
+        seed_demo_service_history(self.env)
