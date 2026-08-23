@@ -182,22 +182,29 @@
                             <h5 t-esc="state.historyEquipment.name"/>
                         </div>
                     </div>
-                    <!-- Not clickable: every detail is already on the
-                         card, there's nothing to open. -->
-                    <div t-foreach="state.history" t-as="h" t-key="h.id" class="o_airlogic_history_card">
-                        <div t-if="h.tagNames.length" class="o_airlogic_tag_row">
-                            <span t-foreach="h.tagNames" t-as="tag" t-key="tag" class="o_airlogic_tag_badge" t-esc="tag"/>
-                        </div>
-                        <div class="o_airlogic_history_ref" t-esc="h.name"/>
-                        <div class="o_airlogic_history_meta" t-esc="formatHistoryTimestamp(h.date)"/>
-                        <div t-if="h.parts.length" class="o_airlogic_history_parts">
-                            <div class="o_airlogic_history_part_row" t-foreach="h.parts" t-as="part" t-key="part_index">
-                                <span class="o_airlogic_history_part_label" t-esc="part.label"/>
-                                <span t-if="part.note" class="o_airlogic_history_part_note" t-esc="part.note"/>
+                    <!-- Timeline layout (AIR-T48, chosen from 3 options):
+                         a connecting rail + one colored dot per visit
+                         (red/gold/teal for urgent/watch/routine, same
+                         palette as Units and the Owner Report) reads as a
+                         history at a glance and is the most compact of the
+                         3 options shown. Not clickable: every detail is
+                         already inline, there's nothing to open. -->
+                    <div class="o_airlogic_timeline">
+                        <div t-foreach="state.history" t-as="h" t-key="h.id" t-attf-class="o_airlogic_timeline_card {{h.severity}}">
+                            <div class="o_airlogic_timeline_dot"/>
+                            <div class="o_airlogic_timeline_head">
+                                <span class="o_airlogic_timeline_ref" t-esc="h.name"/>
+                                <span class="o_airlogic_timeline_when" t-esc="formatHistoryTimestamp(h.date)"/>
                             </div>
+                            <div t-if="h.tagNames.length" class="o_airlogic_tag_row">
+                                <span t-foreach="h.tagNames" t-as="tag" t-key="tag" class="o_airlogic_tag_badge" t-esc="tag"/>
+                            </div>
+                            <div t-foreach="h.parts" t-as="part" t-key="part_index" class="o_airlogic_timeline_line">
+                                <b t-esc="part.label"/><t t-if="part.note"> — <t t-esc="part.note"/></t>
+                            </div>
+                            <div t-if="h.notes" class="o_airlogic_timeline_line" t-esc="h.notes"/>
+                            <div class="o_airlogic_timeline_tech" t-esc="h.technician_id[1]"/>
                         </div>
-                        <div t-if="h.notes" class="o_airlogic_history_notes" t-esc="h.notes"/>
-                        <div class="o_airlogic_history_tech">— <t t-esc="h.technician_id[1]"/></div>
                     </div>
                     <p t-if="!state.history.length" class="text-muted">
                         No major events yet for this unit -- jobs only show up here once their

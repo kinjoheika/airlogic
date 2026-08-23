@@ -674,74 +674,91 @@
     font-weight: 600;
 }
 
-// --- History cards (bottom of History > a unit) -------------------
+// --- History timeline (bottom of History > a unit) -----------------
 // Deliberately NOT .o_airlogic_card: these aren't tappable (everything
-// is already shown on the card), so no pointer cursor / active-state
+// is already shown inline), so no pointer cursor / active-state
 // darkening that would visually promise an interaction that isn't there.
-.o_airlogic_history_card {
-    background: #fff;
-    border: 1px solid #D8DBDE;
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-}
+// Chosen (AIR-T48) from 3 layout options shown to the user as mockups --
+// the most compact of the 3: no per-entry borders/background, just a
+// connecting rail with one colored dot per visit (severity-coded, same
+// red/gold/teal used in Units and the Owner Report).
+.o_airlogic_timeline {
+    position: relative;
+    padding-left: 16px;
 
-.o_airlogic_history_ref {
-    font-weight: 700;
-    font-size: 16px;
-    margin-top: 6px;
-}
-
-.o_airlogic_history_meta {
-    font-size: 13px;
-    color: #8B92A0;
-    margin-top: 2px;
-}
-
-// "Main parts": the flagged/alert items (+ a detected leak) behind this
-// visit's History Tag match, each with its technician note if there is
-// one -- same data the Owner Report's Issues Found shows.
-.o_airlogic_history_parts {
-    margin-top: 8px;
-    padding: 8px 10px;
-    background: #FBEAEC;
-    border-radius: 6px;
-}
-
-.o_airlogic_history_part_row {
-    &:not(:last-child) {
-        margin-bottom: 6px;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 4px;
+        bottom: 4px;
+        width: 1.5px;
+        background: #E2E5E8;
     }
 }
 
-.o_airlogic_history_part_label {
-    display: block;
-    font-weight: 700;
-    font-size: 13px;
-    color: #7A1F2B;
+.o_airlogic_timeline_card {
+    position: relative;
+    padding-bottom: 14px;
+
+    &:last-child {
+        padding-bottom: 0;
+    }
 }
 
-.o_airlogic_history_part_note {
-    display: block;
-    font-size: 12.5px;
-    color: #5B6470;
-    margin-top: 1px;
+.o_airlogic_timeline_dot {
+    position: absolute;
+    left: -16px;
+    top: 2px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1.5px #0ABFB8;
+    background: #0ABFB8;
+
+    .urgent > & {
+        background: #7A1F2B;
+        box-shadow: 0 0 0 1.5px #7A1F2B;
+    }
+
+    .watch > & {
+        background: #C9A227;
+        box-shadow: 0 0 0 1.5px #C9A227;
+    }
 }
 
-.o_airlogic_history_notes {
+.o_airlogic_timeline_head {
+    display: flex;
+    justify-content: space-between;
     font-size: 14px;
-    color: #14202c;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #F1F3F4;
 }
 
-.o_airlogic_history_tech {
+.o_airlogic_timeline_ref {
+    font-weight: 700;
+    color: #0D1B2A;
+}
+
+.o_airlogic_timeline_when {
+    color: #8B92A0;
+    font-size: 12.5px;
+}
+
+.o_airlogic_timeline_line {
     font-size: 13px;
     color: #5B6470;
-    font-style: italic;
-    margin-top: 8px;
-    text-align: right;
+    margin-top: 2px;
+    line-height: 1.4;
+
+    b {
+        color: #14202c;
+    }
+}
+
+.o_airlogic_timeline_tech {
+    font-size: 12px;
+    color: #8B92A0;
+    margin-top: 2px;
 }
 
 // --- Sync warning (open a long time, still unsynced) --------------------

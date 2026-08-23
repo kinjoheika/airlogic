@@ -985,11 +985,20 @@ export class AirlogicMobileFieldEntry extends Component {
                     });
                 }
             }
-            this.state.history = jobs.map((j) => ({
-                ...j,
-                tagNames: j.history_tag_ids.map((id) => tagsById[id]).filter(Boolean),
-                parts: partsByJob[j.id] || [],
-            }));
+            this.state.history = jobs.map((j) => {
+                const parts = partsByJob[j.id] || [];
+                return {
+                    ...j,
+                    tagNames: j.history_tag_ids.map((id) => tagsById[id]).filter(Boolean),
+                    parts,
+                    // Timeline dot color (AIR-T48): urgent if a leak was
+                    // ever recorded on this visit, watch if any other
+                    // flagged/alert part was, otherwise a routine entry
+                    // (e.g. a plain "Cleaned"-tagged visit with no issues).
+                    severity: parts.some((p) => p.label === "Leak Detected")
+                        ? "urgent" : parts.length ? "watch" : "",
+                };
+            });
         } finally {
             this.state.loading = false;
         }
