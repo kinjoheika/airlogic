@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Compact paperformat for the Owner Report (AIR-T51). Without this, the
+  report action fell back to the company's default paperformat, which
+  is sized for web.external_layout's big top margin (room for a logo/
+  letterhead bar). This report deliberately uses web.basic_layout and
+  builds its own compact header instead, so it needs much smaller
+  margins, not the large ones meant for a completely different
+  template. That mismatch is what showed up as a big blank gap above
+  the header and below "End Report" once the earlier centering bug
+  (AIR-T50) was fixed and it became visible.
+-->
+<odoo>
+    <record id="paperformat_airlogic_owner_report" model="report.paperformat">
+        <field name="name">Airlogic Owner Report</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+</odoo>

@@ -39,6 +39,7 @@ airlogic.service.job.
         'data/airlogic_part_data.xml',
         'data/airlogic_seed_action_data.xml',
         'data/airlogic_app_config_data.xml',
+        'data/airlogic_report_paperformat_data.xml',
         'views/airlogic_measurement_field_views.xml',
         'views/airlogic_history_tag_views.xml',
         'views/airlogic_part_views.xml',
