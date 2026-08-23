@@ -52,9 +52,13 @@ airlogic.service.job.
     ],
     'assets': {
         'web.assets_backend': [
+            # field_entry.js only exports PHASES/LEAK_SPOTS now (see the
+            # file's own header comment) -- mobile_app.js imports them
+            # via the @airlogic_field_service/field_entry/field_entry
+            # module path, so this still has to stay registered even
+            # though its .xml/.scss companions (the desktop checklist
+            # component they belonged to) are gone.
             'airlogic_field_service/static/src/field_entry/field_entry.js',
-            'airlogic_field_service/static/src/field_entry/field_entry.xml',
-            'airlogic_field_service/static/src/field_entry/field_entry.scss',
             'airlogic_field_service/static/src/mobile_app/mobile_app.js',
             'airlogic_field_service/static/src/mobile_app/mobile_app.xml',
             'airlogic_field_service/static/src/mobile_app/mobile_app.scss',

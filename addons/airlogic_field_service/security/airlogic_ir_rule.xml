@@ -68,12 +68,21 @@
          momentarily True, which only airlogic.job.revision.action_approve
          sets (see that method). This is the actual "Completed visits
          lock" from the spec; a Supervisor fixing a value still has to go
-         through the same Revision Request door as anyone else. -->
+         through the same Revision Request door as anyone else.
+
+         perm_read is deliberately 0: this rule's domain excludes
+         submitted-and-not-revision-open rows, so if it applied to reads
+         too, those rows would go INVISIBLE the moment a job is
+         submitted, not just unwritable (that was a real bug: AIR-T40's
+         first cut had perm_read=1 here, and it made Inventory's
+         checklist/reading list and the Equipment comparison tabs go
+         blank for every submitted job). Only write/create are locked;
+         read is always unrestricted by this rule. -->
     <record id="rule_reading_line_lock_submitted" model="ir.rule">
         <field name="name">Lock reading lines once Submitted (unless revision open)</field>
         <field name="model_id" ref="model_airlogic_reading_line"/>
         <field name="domain_force">['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
-        <field name="perm_read">1</field>
+        <field name="perm_read">0</field>
         <field name="perm_write">1</field>
         <field name="perm_create">1</field>
         <field name="perm_unlink">0</field>
@@ -83,7 +92,7 @@
         <field name="name">Lock checklist lines once Submitted (unless revision open)</field>
         <field name="model_id" ref="model_airlogic_checklist_line"/>
         <field name="domain_force">['|', ('job_id.state', '!=', 'submitted'), ('job_id.revision_open', '=', True)]</field>
-        <field name="perm_read">1</field>
+        <field name="perm_read">0</field>
         <field name="perm_write">1</field>
         <field name="perm_create">1</field>
         <field name="perm_unlink">0</field>

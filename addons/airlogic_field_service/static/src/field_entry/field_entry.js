@@ -1,8 +1,12 @@
 /** @odoo-module **/
 
-import { Component, useState } from "@odoo/owl";
-import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
+// This file used to also define AirlogicVisualChecklist, a desktop-only
+// OWL client action for entering the checklist from Inventory. Removed:
+// checklist data is entered exclusively through the Field Service
+// mobile app now, and the desktop Job form shows it read-only (see
+// airlogic_service_job_views.xml's Visual Checklist page). PHASES/
+// LEAK_SPOTS stay here and stay exported -- mobile_app.js imports them
+// from this same module path, and moving them would just be churn.
 
 // Ph1-4 checklist, ported from the aircon-service-ui mockup's actual
 // mobile DSR flow (tab-mobile #pp-dsr / dsp-ph1..4) -- NOT the earlier
@@ -75,90 +79,3 @@ export const LEAK_SPOTS = [
     { index: 6, zone: "Condenser" },
 ];
 
-export class AirlogicVisualChecklist extends Component {
-    static template = "airlogic_field_service.VisualChecklist";
-    static props = ["*"];
-
-    setup() {
-        this.notification = useService("notification");
-        this.orm = useService("orm");
-        this.actionService = useService("action");
-        this.phases = PHASES;
-        this.state = useState({
-            phase: 1,
-            values: { ...(this.params.values || {}) },
-            saving: false,
-        });
-    }
-
-    get params() {
-        return this.props.action.params || {};
-    }
-
-    get currentPhase() {
-        return this.phases.find((p) => p.id === this.state.phase);
-    }
-
-    get progress() {
-        const total = this.phases.reduce((n, p) => n + p.items.length, 0);
-        const done = Object.values(this.state.values).filter(
-            (v) => v !== undefined && v !== ""
-        ).length;
-        return { done, total };
-    }
-
-    setPhase(id) {
-        this.state.phase = id;
-    }
-
-    prevPhase() {
-        if (this.state.phase > 1) {
-            this.state.phase -= 1;
-        }
-    }
-
-    nextPhase() {
-        if (this.state.phase < this.phases.length) {
-            this.state.phase += 1;
-        }
-    }
-
-    setValue(key, value) {
-        this.state.values[key] = value;
-    }
-
-    onNumberChange(key, ev) {
-        this.setValue(key, ev.target.value);
-    }
-
-    onTextChange(key, ev) {
-        this.setValue(key, ev.target.value);
-    }
-
-    async onDone() {
-        if (!this.params.job_id) {
-            this.notification.add("No job to save against.", { type: "danger" });
-            return;
-        }
-        this.state.saving = true;
-        try {
-            await this.orm.call(
-                "airlogic.service.job",
-                "action_save_visual_checklist",
-                [[this.params.job_id], this.state.values]
-            );
-            this.notification.add("Visual checklist saved.", { type: "success" });
-            await this.actionService.doAction({
-                type: "ir.actions.act_window",
-                res_model: "airlogic.service.job",
-                res_id: this.params.job_id,
-                views: [[false, "form"]],
-                target: "current",
-            });
-        } finally {
-            this.state.saving = false;
-        }
-    }
-}
-
-registry.category("actions").add("airlogic_visual_checklist", AirlogicVisualChecklist);

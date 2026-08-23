@@ -231,25 +231,6 @@ class AirlogicServiceJob(models.Model):
                     matched |= tag
             job.history_tag_ids = [(6, 0, matched.ids)]
 
-    def action_open_visual_checklist(self):
-        """Launch the Ph1-4 visual-checklist OWL client action, pre-filled
-        with any previously-saved values.
-        """
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'airlogic_visual_checklist',
-            'name': _('Visual Checklist'),
-            'target': 'current',
-            'params': {
-                'job_id': self.id,
-                'job_name': self.name,
-                'equipment_name': self.equipment_id.display_name,
-                'values': {l.key: l.value for l in self.checklist_line_ids if l.value},
-                'notes': {l.key: l.note for l in self.checklist_line_ids if l.note},
-            },
-        }
-
     def action_save_visual_checklist(self, values, notes=None):
         """Called by the OWL client actions' Done/flag-dialog Save via the
         ORM service. values: dict of item key -> entered value. notes:
