@@ -17,6 +17,17 @@
   the item label), and each unit card shows the job's general
   Technician Notes too, if any were written (AIR-T45).
 
+  Layout finalized against a stakeholder-reviewed preview (AIR-T47):
+  Section 1 is boxed as its own visual block; the Status fact was
+  dropped as redundant with the state already visible everywhere else
+  the report is opened from; "Reviewer" (visit.reviewed_by_id, set by
+  action_approve()) sits in the header next to Technician instead of a
+  blank signature line, since a Manager approval is what unlocks the
+  report/History visibility in the first place, and there is no
+  separate physical sign-off step; issue notes sit inline beside their
+  label instead of stacked, to save vertical space on units with
+  several issues.
+
   Uses web.basic_layout, not web.external_layout: this template already
   builds its own fixed header/footer (see below), so wrapping it in
   Odoo's company letterhead template would add the company's
@@ -39,46 +50,45 @@
                             </div>
                             <div class="text-end" style="font-size:11px;">
                                 Report No. <span t-esc="visit.name"/><br/>
-                                Date: <span t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/><br/>
-                                Technician: <span t-esc="visit.technician_id.name"/>
+                                Service Visit Date: <span t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/><br/>
+                                Technician: <span t-esc="visit.technician_id.name"/><br/>
+                                Reviewer: <span t-esc="visit.reviewed_by_id.name or '—'"/>
                             </div>
                         </div>
                         <hr/>
 
                         <div class="row mb-3" style="font-size:11px;">
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="text-muted text-uppercase" style="font-size:9px;">Client</div>
                                 <div class="fw-bold" t-esc="visit.partner_id.display_name"/>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="text-muted text-uppercase" style="font-size:9px;">Units Inspected</div>
                                 <div class="fw-bold"><t t-esc="vd['total']"/> unit(s)</div>
                             </div>
-                            <div class="col-3">
-                                <div class="text-muted text-uppercase" style="font-size:9px;">Status</div>
-                                <div class="fw-bold" t-esc="dict(visit._fields['state'].selection).get(visit.state)"/>
-                            </div>
                         </div>
 
-                        <h5 style="font-weight:800;"><span class="badge bg-dark">1</span> Assets Status — This Visit</h5>
-                        <div class="row text-center mb-3">
-                            <div class="col-4">
-                                <div class="text-success" style="font-size:20px;font-weight:800;">
-                                    <t t-esc="vd['counts']['good']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                        <div style="border:2px solid #212529;border-radius:6px;padding:14px 16px 4px;margin-bottom:22px;">
+                            <h5 style="font-weight:800;margin-bottom:14px;"><span class="badge bg-dark">1</span> Assets Status — This Visit</h5>
+                            <div class="row text-center mb-2">
+                                <div class="col-4">
+                                    <div class="text-success" style="font-size:20px;font-weight:800;">
+                                        <t t-esc="vd['counts']['good']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                    </div>
+                                    <div class="text-muted" style="font-size:10px;">Good Condition</div>
                                 </div>
-                                <div class="text-muted" style="font-size:10px;">Good Condition</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="text-warning" style="font-size:20px;font-weight:800;">
-                                    <t t-esc="vd['counts']['watch']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                <div class="col-4">
+                                    <div class="text-warning" style="font-size:20px;font-weight:800;">
+                                        <t t-esc="vd['counts']['watch']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                    </div>
+                                    <div class="text-muted" style="font-size:10px;">Requires Watch</div>
                                 </div>
-                                <div class="text-muted" style="font-size:10px;">Requires Watch</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="text-danger" style="font-size:20px;font-weight:800;">
-                                    <t t-esc="vd['counts']['urgent']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                <div class="col-4">
+                                    <div class="text-danger" style="font-size:20px;font-weight:800;">
+                                        <t t-esc="vd['counts']['urgent']"/> <small class="text-muted">/ <t t-esc="vd['total']"/></small>
+                                    </div>
+                                    <div class="text-muted" style="font-size:10px;">Urgent Action</div>
                                 </div>
-                                <div class="text-muted" style="font-size:10px;">Urgent Action</div>
                             </div>
                         </div>
 
@@ -107,7 +117,7 @@
                                             <li t-foreach="ji['issues']" t-as="issue">
                                                 <span t-attf-class="fw-bold {{issue['severity'] == 'flagged' and 'text-danger' or 'text-warning'}}"
                                                       t-esc="issue['label']"/>
-                                                <div t-if="issue['note']" class="text-muted" style="font-size:10px;" t-esc="issue['note']"/>
+                                                <span t-if="issue['note']" class="text-muted" style="font-size:10px;"> — <t t-esc="issue['note']"/></span>
                                             </li>
                                         </ul>
                                     </div>
@@ -122,23 +132,9 @@
                             </div>
                         </t>
 
-                        <div class="d-flex mt-4 pt-2" style="border-top:1px solid #E7E9EB;font-size:10px;">
-                            <div>
-                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Technician</div>
-                                <div class="fw-bold" t-esc="visit.technician_id.name"/>
-                            </div>
-                            <div class="ms-4">
-                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Reviewed By</div>
-                                <div style="min-width:130px;border-bottom:1px solid #C8CDD3;">&#160;</div>
-                            </div>
-                            <div class="ms-4">
-                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Owner / Manager</div>
-                                <div style="min-width:130px;border-bottom:1px solid #C8CDD3;">&#160;</div>
-                            </div>
-                            <div class="ms-auto text-end">
-                                <div class="text-muted text-uppercase" style="font-size:8.5px;">Date</div>
-                                <div class="fw-bold" t-esc="visit.date and visit.date.strftime('%B %d, %Y') or ''"/>
-                            </div>
+                        <div class="text-center mt-4 pt-2"
+                             style="border-top:1px solid #E7E9EB;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6c757d;">
+                            — End Report —
                         </div>
                     </div>
                 </t>

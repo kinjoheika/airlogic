@@ -27,7 +27,13 @@
     margin: 24px auto;
     display: flex;
     flex-direction: column;
+    // Configuration > App Wallpaper sets background-image inline (see
+    // mobile_app.xml's t-att-style) -- this base rule just makes sure it
+    // fills/centers correctly when one is set. .o_airlogic_mobile_body
+    // below is intentionally translucent, not opaque, so it shows through.
     background: #fff;
+    background-size: cover;
+    background-position: center;
     border: 10px solid #0D1B2A;
     border-radius: 34px;
     box-shadow: 0 16px 40px rgba(13, 27, 42, 0.28);
@@ -70,6 +76,19 @@
 
     span {
         color: #C9A227;
+    }
+}
+
+.o_airlogic_nav_logout {
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+    padding: 8px;
+    margin-right: -2px;
+
+    &:active {
+        opacity: 1;
     }
 }
 
@@ -130,6 +149,10 @@
     flex: 1 1 auto;
     overflow-y: auto;
     padding: 16px;
+    // Translucent, not solid, so a Configuration-set wallpaper (painted
+    // on .o_airlogic_mobile behind this) shows through faintly instead
+    // of being fully hidden.
+    background: rgba(255, 255, 255, 0.92);
 }
 
 // Sticky action bar pinned to the bottom of the phone frame -- every
@@ -186,6 +209,20 @@
     h4, h5 {
         margin: 0;
     }
+}
+
+.o_airlogic_title_block {
+    min-width: 0;
+}
+
+// Icon + label under the client name showing which of the 4 bottom-nav
+// tabs is open (Visit/Units/History/Add-Delete) -- same icons as the
+// bottom nav, so the two stay visually linked.
+.o_airlogic_tab_subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    color: #079D97;
+    margin-top: 1px;
 }
 
 .o_airlogic_back_arrow {

@@ -129,6 +129,7 @@ export class AirlogicMobileFieldEntry extends Component {
             deleteConfirmDevice: null,
 
             toast: null, // {message, type}
+            wallpaperUrl: null, // Configuration > App Wallpaper, applied behind every screen
 
             partsCatalog: [], // [{id, name, zone}], loaded once and cached
             partRequests: [], // this job's airlogic.part.request rows
@@ -145,6 +146,7 @@ export class AirlogicMobileFieldEntry extends Component {
         onMounted(() => {
             window.addEventListener("online", this._onlineHandler);
             window.addEventListener("offline", this._offlineHandler);
+            this.loadWallpaper();
         });
         onWillUnmount(() => {
             window.removeEventListener("online", this._onlineHandler);
@@ -170,6 +172,43 @@ export class AirlogicMobileFieldEntry extends Component {
 
     exitApp() {
         window.location.href = "/odoo";
+    }
+
+    // Real session logout (clears the Odoo session), distinct from
+    // exitApp() above which just navigates back to the backend while
+    // staying logged in. This app is often handed off between
+    // technicians on a shared device, so a real logout matters here.
+    onLogout() {
+        window.location.href = "/web/session/logout";
+    }
+
+    // Configuration > App Wallpaper -- purely decorative, so a missing
+    // record/image just leaves state.wallpaperUrl null and the app keeps
+    // its plain white background.
+    async loadWallpaper() {
+        try {
+            const url = await this.orm.call("airlogic.app.config", "get_wallpaper_url", []);
+            if (url) {
+                this.state.wallpaperUrl = url;
+            }
+        } catch {
+            // ignore -- wallpaper is optional
+        }
+    }
+
+    // Small icon+label shown under the client name in the main header so
+    // it's clear which of the 4 bottom-nav tabs is currently open, even
+    // once you've drilled into a specific unit (Units/History both push
+    // their own sticky sub-header below this one, but this outer title
+    // row stays visible the whole time).
+    get currentTabMeta() {
+        const map = {
+            visit: { icon: "📋", label: "Visit" },
+            units: { icon: "📊", label: "Units" },
+            history: { icon: "🕐", label: "History" },
+            equipment: { icon: "🔧", label: "Add/Delete" },
+        };
+        return map[this.state.tab] || null;
     }
 
     // --- PIN gates --------------------------------------------------------
@@ -871,6 +910,11 @@ export class AirlogicMobileFieldEntry extends Component {
                     ["equipment_id", "=", device.id],
                     ["state", "=", "submitted"],
                     ["history_tag_ids", "!=", false],
+                    // Only once a Manager has approved the whole Service
+                    // Visit this job belongs to, not just on submission --
+                    // History is client-facing shared record, submission
+                    // alone isn't a sign-off.
+                    ["visit_id.state", "=", "approved"],
                 ],
                 ["name", "technician_id", "date", "notes", "history_tag_ids"],
                 { order: "date desc", limit: 30 }

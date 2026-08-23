@@ -4,13 +4,28 @@
     <menuitem id="menu_airlogic_root" name="Inventory" sequence="25"
               groups="airlogic_core.group_airlogic_technician"/>
 
+    <!-- "Client Services": Service Visit is its first (and, unless a
+         future screen joins it, only) submenu. Service Job and Revision
+         Requests still nest a level deeper under Service Visit itself
+         (see airlogic_field_service/views/airlogic_menus.xml): that
+         drill-down relationship is unchanged, only its parent moved. -->
+    <menuitem id="menu_airlogic_client_services" name="Client Services"
+              parent="menu_airlogic_root" sequence="5"/>
+
     <menuitem id="menu_airlogic_service_visit" name="Service Visits"
-              parent="menu_airlogic_root" action="action_airlogic_service_visit"
+              parent="menu_airlogic_client_services" action="action_airlogic_service_visit"
               sequence="5"/>
 
+    <!-- "Units": Equipment first, then Part Requests as its sibling (see
+         airlogic_field_service/views/airlogic_menus.xml): both are
+         peer views over the same fleet of equipment, not one nested
+         inside the other. -->
+    <menuitem id="menu_airlogic_units" name="Units"
+              parent="menu_airlogic_root" sequence="20"/>
+
     <menuitem id="menu_airlogic_equipment" name="Equipment"
-              parent="menu_airlogic_root" action="action_airlogic_equipment"
-              sequence="20"/>
+              parent="menu_airlogic_units" action="action_airlogic_equipment"
+              sequence="5"/>
 
     <menuitem id="menu_airlogic_configuration" name="Configuration"
               parent="menu_airlogic_root" sequence="90"

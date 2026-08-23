@@ -25,3 +25,5 @@ access_airlogic_part_manager,airlogic.part.manager,model_airlogic_part,airlogic_
 access_airlogic_part_request_technician,airlogic.part.request.technician,model_airlogic_part_request,airlogic_core.group_airlogic_technician,1,0,1,1
 access_airlogic_part_request_supervisor,airlogic.part.request.supervisor,model_airlogic_part_request,airlogic_core.group_airlogic_supervisor,1,1,1,1
 access_airlogic_part_request_manager,airlogic.part.request.manager,model_airlogic_part_request,airlogic_core.group_airlogic_manager,1,1,1,1
+access_airlogic_app_config_technician,airlogic.app.config.technician,model_airlogic_app_config,airlogic_core.group_airlogic_technician,1,0,0,0
+access_airlogic_app_config_manager,airlogic.app.config.manager,model_airlogic_app_config,airlogic_core.group_airlogic_manager,1,1,1,1

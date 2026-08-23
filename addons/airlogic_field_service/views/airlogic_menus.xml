@@ -31,11 +31,11 @@
               parent="airlogic_core.menu_airlogic_service_visit" action="action_airlogic_job_revision"
               groups="airlogic_core.group_airlogic_supervisor" sequence="20"/>
 
-    <!-- Nested under Equipment: a part request only exists in the
-         context of some unit needing a part, same drill-down reasoning
-         as Service Job/Revision Requests under Service Visit above. -->
+    <!-- Sibling of Equipment under "Units", not nested inside it: part
+         requests span every unit in a client's fleet, so this is a peer
+         menu to review them all at once, not a per-equipment drill-down. -->
     <menuitem id="menu_airlogic_part_request" name="Part Requests"
-              parent="airlogic_core.menu_airlogic_equipment" action="action_airlogic_part_request"
+              parent="airlogic_core.menu_airlogic_units" action="action_airlogic_part_request"
               groups="airlogic_core.group_airlogic_supervisor" sequence="10"/>
 
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
@@ -49,6 +49,10 @@
     <menuitem id="menu_airlogic_part" name="Requestable Parts"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_part"
               sequence="80"/>
+
+    <menuitem id="menu_airlogic_app_config" name="App Wallpaper"
+              parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_app_config"
+              sequence="85"/>
 
     <!-- Manual fallback for hooks.py:seed_demo_service_history. See
          data/airlogic_seed_action_data.xml for why this exists. -->

@@ -26,6 +26,11 @@ class AirlogicServiceVisit(models.Model):
     ], string='Status', default='draft', tracking=True)
     invoice_id = fields.Many2one(
         'account.move', string='Invoice', readonly=True, copy=False)
+    reviewed_by_id = fields.Many2one(
+        'res.users', string='Reviewed By', readonly=True, copy=False,
+        help='Set automatically when a Manager approves this visit -- '
+             'shown on the Owner Report and gates when the visit\'s jobs '
+             'become visible in the mobile app\'s History tab.')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -60,7 +65,7 @@ class AirlogicServiceVisit(models.Model):
         self.write({'state': 'review'})
 
     def action_approve(self):
-        self.write({'state': 'approved'})
+        self.write({'state': 'approved', 'reviewed_by_id': self.env.user.id})
 
     def action_reset_to_draft(self):
         self.write({'state': 'draft'})

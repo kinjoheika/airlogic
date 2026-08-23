@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Single-record settings screen, not a list: there's always exactly
+  one airlogic.app.config row (see data/airlogic_app_config_data.xml),
+  so the action opens straight to its form via a fixed res_id instead
+  of going through a list view first.
+-->
+<odoo>
+
+    <record id="view_airlogic_app_config_form" model="ir.ui.view">
+        <field name="name">airlogic.app.config.form</field>
+        <field name="model">airlogic.app.config</field>
+        <field name="arch" type="xml">
+            <form string="App Wallpaper">
+                <sheet>
+                    <group>
+                        <field name="wallpaper" widget="image" class="oe_avatar" options="{'size': [280, 280]}"/>
+                    </group>
+                    <p class="text-muted">
+                        Shown as a faint background behind every screen of the
+                        Field Service mobile app. Leave empty for the plain
+                        white background.
+                    </p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_airlogic_app_config" model="ir.actions.act_window">
+        <field name="name">App Wallpaper</field>
+        <field name="res_model">airlogic.app.config</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_airlogic_app_config_form"/>
+        <field name="res_id" eval="ref('airlogic_app_config_default')"/>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

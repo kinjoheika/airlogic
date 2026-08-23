@@ -2,10 +2,11 @@
 <templates xml:space="preserve">
 
     <t t-name="airlogic_field_service.MobileFieldEntry">
-        <div class="o_airlogic_mobile">
+        <div class="o_airlogic_mobile" t-att-style="state.wallpaperUrl ? 'background-image:url(' + state.wallpaperUrl + ')' : ''">
             <div class="o_airlogic_mobile_nav">
                 <div class="o_airlogic_nav_exit" t-on-click="exitApp" title="Exit to Odoo">⌂</div>
                 <div class="o_airlogic_mobile_brand">Standard <span>Airlogic</span></div>
+                <div class="o_airlogic_nav_logout" t-on-click="onLogout" title="Log Out">⏻</div>
                 <div t-attf-class="o_airlogic_conn_badge {{state.online ? 'online' : 'offline'}}">
                     <t t-if="state.online">Online</t>
                     <t t-else="">Offline</t>
@@ -63,7 +64,12 @@
             <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_mobile_body o_airlogic_main">
                 <div class="o_airlogic_title_row">
                     <span class="o_airlogic_back_arrow" t-on-click="backToClients" title="Back to Clients">‹</span>
-                    <h4><t t-esc="state.selectedPartner.name"/></h4>
+                    <div class="o_airlogic_title_block">
+                        <h4><t t-esc="state.selectedPartner.name"/></h4>
+                        <div t-if="currentTabMeta" class="o_airlogic_tab_subtitle">
+                            <t t-esc="currentTabMeta.icon"/> <t t-esc="currentTabMeta.label"/>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- VISIT TAB -->
@@ -193,8 +199,9 @@
                         <div class="o_airlogic_history_tech">— <t t-esc="h.technician_id[1]"/></div>
                     </div>
                     <p t-if="!state.history.length" class="text-muted">
-                        No major events yet for this unit -- jobs only show up here when their
-                        notes match a History Tag (Configuration &gt; History Tags).
+                        No major events yet for this unit -- jobs only show up here once their
+                        Service Visit is approved by a Manager, and their notes match a History
+                        Tag (Configuration &gt; History Tags).
                     </p>
                 </t>
 

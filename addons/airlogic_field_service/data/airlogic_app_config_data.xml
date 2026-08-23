@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Single settings record backing Configuration > App Wallpaper.
+  noupdate so an admin's uploaded image survives module upgrades.
+-->
+<odoo noupdate="1">
+    <record id="airlogic_app_config_default" model="airlogic.app.config">
+        <field name="name">Mobile App Settings</field>
+    </record>
+</odoo>
