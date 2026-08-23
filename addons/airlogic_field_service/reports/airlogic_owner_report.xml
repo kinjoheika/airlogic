@@ -47,6 +47,18 @@
 
   Unit cards are laid out image-left/notes-right (not stacked) and
   capped at 2 thumbnails, so more units fit per printed page.
+
+  Content floating in the center of the page (AIR-T50): web.basic_layout
+  (Odoo's own template, not ours) wraps everything in a body carrying
+  Bootstrap's .container class, and .container sets a max-width plus
+  margin:0 auto: exactly the "centered column with a fixed max width"
+  behavior a normal web page wants, and exactly wrong for a document
+  meant to fill the page edge-to-edge. web.external_layout doesn't have
+  this problem (it overrides .container's own styling), but this
+  template intentionally doesn't use it (see the note above about
+  Document Layout). The style block right below neutralizes just that
+  one Bootstrap rule so .page actually starts at the true top-left of
+  the page instead of floating in a centered box.
 -->
 <odoo>
 
@@ -55,6 +67,9 @@
             <t t-foreach="docs" t-as="visit">
                 <t t-set="vd" t-value="visit_data[visit.id]"/>
                 <t t-call="web.basic_layout">
+                    <style>
+                        body.container { max-width: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+                    </style>
                     <div class="page">
                         <div style="page-break-inside:avoid;">
                             <div class="d-flex justify-content-between align-items-start mb-2">
