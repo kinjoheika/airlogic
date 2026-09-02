@@ -58,7 +58,7 @@ class AirlogicServiceVisit(models.Model):
             tech_id = vals.get('technician_id')
             if tech_id and tech_id != self.env.user.id:
                 raise AccessError(_(
-                    "Only a Supervisor or Manager can assign or reassign "
+                    "Only an Operations Officer or Manager can assign or reassign "
                     "the technician on a Service Visit."))
 
     def action_submit_for_review(self):

@@ -107,14 +107,14 @@ class AirlogicServiceJob(models.Model):
         for cmd in commands:
             if cmd[0] in (2, 3):
                 raise AccessError(_(
-                    "Only a Supervisor or Manager can remove a photo/video "
+                    "Only an Operations Officer or Manager can remove a photo/video "
                     "once attached."))
             if cmd[0] == 6:
                 new_ids = set(cmd[2])
                 for job in self:
                     if not set(job.media_ids.ids) <= new_ids:
                         raise AccessError(_(
-                            "Only a Supervisor or Manager can remove a photo/video "
+                            "Only an Operations Officer or Manager can remove a photo/video "
                             "once attached."))
 
     def action_request_revision(self):
@@ -147,7 +147,7 @@ class AirlogicServiceJob(models.Model):
             tech_id = vals.get('technician_id')
             if tech_id and tech_id != self.env.user.id:
                 raise AccessError(_(
-                    "Only a Supervisor or Manager can assign or reassign "
+                    "Only an Operations Officer or Manager can assign or reassign "
                     "the technician on a Service Job."))
 
     def _populate_reading_lines(self):

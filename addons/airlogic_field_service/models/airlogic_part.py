@@ -57,21 +57,21 @@ class AirlogicPartRequest(models.Model):
             for req in self:
                 if req.state != 'requested':
                     raise AccessError(_(
-                        "Only a Supervisor or Manager can remove a part request "
+                        "Only an Operations Officer or Manager can remove a part request "
                         "that's already been reviewed."))
         return super().unlink()
 
     def action_approve(self):
         if not self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
-            raise AccessError(_("Only a Supervisor or Manager can approve a part request."))
+            raise AccessError(_("Only an Operations Officer or Manager can approve a part request."))
         self.write({'state': 'approved'})
 
     def action_reject(self):
         if not self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
-            raise AccessError(_("Only a Supervisor or Manager can reject a part request."))
+            raise AccessError(_("Only an Operations Officer or Manager can reject a part request."))
         self.write({'state': 'rejected'})
 
     def action_fulfill(self):
         if not self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
-            raise AccessError(_("Only a Supervisor or Manager can mark a part request fulfilled."))
+            raise AccessError(_("Only an Operations Officer or Manager can mark a part request fulfilled."))
         self.write({'state': 'fulfilled'})

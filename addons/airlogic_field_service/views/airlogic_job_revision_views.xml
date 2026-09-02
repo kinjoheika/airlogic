@@ -80,8 +80,8 @@
             <p class="o_view_nocontent_smiling_face">No revision requests yet</p>
             <p>Once a job is Submitted its readings/checklist lock -- a
                correction has to come through here, with a reason,
-               approved by a Supervisor or Manager who isn't the one who
-               requested it.</p>
+               approved by an Operations Officer or Manager who isn't the
+               one who requested it.</p>
         </field>
     </record>
 

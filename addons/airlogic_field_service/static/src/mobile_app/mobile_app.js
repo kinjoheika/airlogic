@@ -604,7 +604,7 @@ export class AirlogicMobileFieldEntry extends Component {
         if (existing) {
             if (existing.state !== "requested") {
                 this.showToast(
-                    "Already reviewed -- ask a Supervisor to change it.", "warning"
+                    "Already reviewed -- ask an Operations Officer to change it.", "warning"
                 );
                 return;
             }

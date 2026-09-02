@@ -40,7 +40,7 @@
     </record>
 
     <record id="rule_service_job_supervisor_all" model="ir.rule">
-        <field name="name">Supervisor+: all jobs</field>
+        <field name="name">Operations Officer+: all jobs</field>
         <field name="model_id" ref="model_airlogic_service_job"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
@@ -74,7 +74,7 @@
     </record>
 
     <record id="rule_reading_line_supervisor_all" model="ir.rule">
-        <field name="name">Supervisor+: all reading lines</field>
+        <field name="name">Operations Officer+: all reading lines</field>
         <field name="model_id" ref="model_airlogic_reading_line"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
@@ -103,7 +103,7 @@
     </record>
 
     <record id="rule_checklist_line_supervisor_all" model="ir.rule">
-        <field name="name">Supervisor+: all checklist lines</field>
+        <field name="name">Operations Officer+: all checklist lines</field>
         <field name="model_id" ref="model_airlogic_checklist_line"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
@@ -162,7 +162,7 @@
     </record>
 
     <record id="rule_job_revision_supervisor_all" model="ir.rule">
-        <field name="name">Supervisor+: all revision requests</field>
+        <field name="name">Operations Officer+: all revision requests</field>
         <field name="model_id" ref="model_airlogic_job_revision"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
@@ -176,7 +176,7 @@
     </record>
 
     <record id="rule_part_request_supervisor_all" model="ir.rule">
-        <field name="name">Supervisor+: all part requests</field>
+        <field name="name">Operations Officer+: all part requests</field>
         <field name="model_id" ref="model_airlogic_part_request"/>
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>

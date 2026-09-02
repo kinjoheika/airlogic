@@ -53,7 +53,7 @@ class AirlogicJobRevision(models.Model):
 
     def action_approve(self):
         if not self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
-            raise AccessError(_("Only a Supervisor or Manager can approve a revision."))
+            raise AccessError(_("Only an Operations Officer or Manager can approve a revision."))
         for rev in self:
             if rev.state != 'requested':
                 continue
@@ -77,7 +77,7 @@ class AirlogicJobRevision(models.Model):
 
     def action_reject(self):
         if not self.env.user.has_group('airlogic_core.group_airlogic_supervisor'):
-            raise AccessError(_("Only a Supervisor or Manager can reject a revision."))
+            raise AccessError(_("Only an Operations Officer or Manager can reject a revision."))
         for rev in self:
             if rev.state == 'requested':
                 rev.write({'state': 'rejected', 'approved_by': self.env.user.id})
