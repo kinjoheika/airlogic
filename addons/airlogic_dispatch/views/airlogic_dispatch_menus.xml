@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sibling of Service Visits/Subscription Contracts under Client
+         Services: a dispatch request is what eventually BECOMES a
+         Visit, same drill-down relationship. -->
+    <menuitem id="menu_airlogic_dispatch_request" name="Dispatch Queue"
+              parent="airlogic_core.menu_airlogic_client_services" action="action_airlogic_dispatch_request"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="8"/>
+
+    <menuitem id="menu_airlogic_dispatch_zone" name="Dispatch Zones"
+              parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_dispatch_zone"
+              sequence="90"/>
+
+</odoo>

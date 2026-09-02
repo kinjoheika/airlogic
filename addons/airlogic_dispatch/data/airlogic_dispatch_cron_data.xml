@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Daily pass over every Pending dispatch request, in backlog/urgency
+  order (see _cron_process_pending's own docstring).
+-->
+<odoo>
+    <record id="cron_airlogic_dispatch_process_pending" model="ir.cron">
+        <field name="name">Airlogic: Process Pending Dispatch Requests</field>
+        <field name="model_id" ref="model_airlogic_dispatch_request"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_process_pending()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

@@ -91,6 +91,32 @@
                     </t>
                 </t>
 
+                <!-- SCHEDULE TAB: this technician's own upcoming/past
+                     jobs, independent of the client this session
+                     started from. -->
+                <t t-if="state.tab === 'schedule'">
+                    <div class="o_airlogic_group_hd">Upcoming</div>
+                    <div t-foreach="state.scheduleUpcoming" t-as="j" t-key="j.id" class="o_airlogic_card">
+                        <div class="o_airlogic_card_title" t-esc="j.partner_id and j.partner_id[1] or j.name"/>
+                        <div class="o_airlogic_card_sub">
+                            <t t-esc="j.equipment_id and j.equipment_id[1] or ''"/>
+                            <t t-if="j.date"> · <t t-esc="j.date.slice(0, 10)"/></t>
+                        </div>
+                    </div>
+                    <p t-if="!state.scheduleUpcoming.length" class="text-muted">Nothing scheduled yet.</p>
+
+                    <div class="o_airlogic_group_hd" style="margin-top:12px;">Past</div>
+                    <div t-foreach="state.schedulePast" t-as="j" t-key="j.id" class="o_airlogic_card">
+                        <div class="o_airlogic_card_title" t-esc="j.partner_id and j.partner_id[1] or j.name"/>
+                        <div class="o_airlogic_card_sub">
+                            <t t-esc="j.equipment_id and j.equipment_id[1] or ''"/>
+                            <t t-if="j.date"> · <t t-esc="j.date.slice(0, 10)"/></t>
+                            <t t-if="j.state"> · <t t-esc="j.state"/></t>
+                        </div>
+                    </div>
+                    <p t-if="!state.schedulePast.length" class="text-muted">No past jobs yet.</p>
+                </t>
+
                 <!-- UNITS TAB -->
                 <t t-if="state.tab === 'units' and !state.unitEquipment">
                     <t t-foreach="state.devices" t-as="grp" t-key="grp.sublocation">
@@ -292,10 +318,13 @@
                 </p>
             </div>
 
-            <!-- BOTTOM NAV (4 tabs) -->
+            <!-- BOTTOM NAV (5 tabs) -->
             <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_bottom_nav">
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'visit' ? 'active' : ''}}" t-on-click="() => this.setTab('visit')">
                     <div class="o_airlogic_bnav_icon">📋</div>Visit
+                </div>
+                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'schedule' ? 'active' : ''}}" t-on-click="() => this.setTab('schedule')">
+                    <div class="o_airlogic_bnav_icon">🗓</div>Schedule
                 </div>
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'units' ? 'active' : ''}}" t-on-click="() => this.setTab('units')">
                     <div class="o_airlogic_bnav_icon">📊</div>Units

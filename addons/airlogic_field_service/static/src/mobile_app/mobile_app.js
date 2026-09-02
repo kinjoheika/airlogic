@@ -139,6 +139,9 @@ export class AirlogicMobileFieldEntry extends Component {
 
             consumablesCatalog: [], // loaded once, cached
             consumableQty: {}, // productId -> quantity input value
+
+            scheduleUpcoming: [], // this technician's own future jobs
+            schedulePast: [], // this technician's own completed/past jobs
         });
 
         this._onlineHandler = () => {
@@ -234,6 +237,7 @@ export class AirlogicMobileFieldEntry extends Component {
     get currentTabMeta() {
         const map = {
             visit: { icon: "📋", label: "Visit" },
+            schedule: { icon: "🗓", label: "Schedule" },
             units: { icon: "📊", label: "Units" },
             history: { icon: "🕐", label: "History" },
             equipment: { icon: "🔧", label: "Add/Delete" },
@@ -359,6 +363,36 @@ export class AirlogicMobileFieldEntry extends Component {
         if (tab === "history") {
             this.state.historyEquipment = null; // land on the unit picker, not a stale unit's feed
             this.state.history = [];
+        }
+        if (tab === "schedule") {
+            this.loadSchedule();
+        }
+    }
+
+    // --- Schedule tab: the logged-in technician's own upcoming/past jobs,
+    // independent of whichever client this "main" screen session started
+    // from -- just airlogic.service.job, already scoped to "own" by the
+    // Technician ir.rule, so no explicit technician_id filter is needed.
+    async loadSchedule() {
+        this.state.loading = true;
+        try {
+            const jobs = await this.orm.searchRead(
+                "airlogic.service.job", [],
+                ["name", "date", "state", "equipment_id", "partner_id"],
+                { order: "date desc", limit: 100 }
+            );
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const upcoming = [];
+            const past = [];
+            for (const j of jobs) {
+                const jobDateStr = (j.date || "").slice(0, 10);
+                (jobDateStr >= todayStr ? upcoming : past).push(j);
+            }
+            upcoming.sort((a, b) => (a.date < b.date ? -1 : 1));
+            this.state.scheduleUpcoming = upcoming;
+            this.state.schedulePast = past;
+        } finally {
+            this.state.loading = false;
         }
     }
 

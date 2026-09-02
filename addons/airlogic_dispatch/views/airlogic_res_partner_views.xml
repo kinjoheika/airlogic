@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  New tab on the contact form, rather than inserting fields into the
+  existing layout: base.view_partner_form's internal structure shifts
+  across Odoo versions, but a top-level <notebook> is reliably present,
+  so appending a whole <page> there is the lowest-risk way to add these
+  two fields without depending on exact anchor points inside it.
+-->
+<odoo>
+
+    <record id="view_partner_form_airlogic_dispatch" model="ir.ui.view">
+        <field name="name">res.partner.form.airlogic.dispatch</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Field Service" name="airlogic_dispatch">
+                    <group>
+                        <field name="airlogic_dispatch_zone_id"/>
+                        <field name="airlogic_preferred_hours"/>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>

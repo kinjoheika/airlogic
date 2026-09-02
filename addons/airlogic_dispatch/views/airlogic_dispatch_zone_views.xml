@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_airlogic_dispatch_zone_list" model="ir.ui.view">
+        <field name="name">airlogic.dispatch.zone.list</field>
+        <field name="model">airlogic.dispatch.zone</field>
+        <field name="arch" type="xml">
+            <list string="Dispatch Zones" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="city"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_dispatch_zone" model="ir.actions.act_window">
+        <field name="name">Dispatch Zones</field>
+        <field name="res_model">airlogic.dispatch.zone</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a dispatch zone</p>
+            <p>Tag each client with one of these under their contact
+               record -- it's the proximity signal the dispatch engine
+               uses for "nearest available crew" and "zone sweep",
+               since there's no real geolocation data.</p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_airlogic_dispatch_zone_technician,airlogic.dispatch.zone.technician,model_airlogic_dispatch_zone,airlogic_core.group_airlogic_technician,1,0,0,0
+access_airlogic_dispatch_zone_manager,airlogic.dispatch.zone.manager,model_airlogic_dispatch_zone,airlogic_core.group_airlogic_manager,1,1,1,1
+access_airlogic_dispatch_request_technician,airlogic.dispatch.request.technician,model_airlogic_dispatch_request,airlogic_core.group_airlogic_technician,1,0,1,0
+access_airlogic_dispatch_request_supervisor,airlogic.dispatch.request.supervisor,model_airlogic_dispatch_request,airlogic_core.group_airlogic_supervisor,1,1,1,0
+access_airlogic_dispatch_request_manager,airlogic.dispatch.request.manager,model_airlogic_dispatch_request,airlogic_core.group_airlogic_manager,1,1,1,1

@@ -152,10 +152,27 @@
         </field>
     </record>
 
+    <!-- Every technician's jobs colored by technician, so the
+         Operations Officer group can see the whole team's schedule at
+         a glance instead of filtering one technician at a time. -->
+    <record id="view_airlogic_service_job_calendar" model="ir.ui.view">
+        <field name="name">airlogic.service.job.calendar</field>
+        <field name="model">airlogic.service.job</field>
+        <field name="arch" type="xml">
+            <calendar string="Technician Schedule" date_start="date" color="technician_id"
+                      mode="week" quick_create="0">
+                <field name="partner_id"/>
+                <field name="equipment_id"/>
+                <field name="technician_id"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
     <record id="action_airlogic_service_job" model="ir.actions.act_window">
         <field name="name">Service Jobs</field>
         <field name="res_model">airlogic.service.job</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">calendar,list,form</field>
         <field name="search_view_id" ref="view_airlogic_service_job_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Log a service visit</p>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_airlogic_dispatch_request_list" model="ir.ui.view">
+        <field name="name">airlogic.dispatch.request.list</field>
+        <field name="model">airlogic.dispatch.request</field>
+        <field name="arch" type="xml">
+            <list string="Dispatch Requests" default_order="create_date desc">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="zone_id"/>
+                <field name="urgency" widget="badge" class="airlogic-badge"
+                       decoration-danger="urgency == 'emergency'" decoration-warning="urgency == 'rush'"/>
+                <field name="requested_date"/>
+                <field name="suggested_technician_id"/>
+                <field name="suggested_date"/>
+                <field name="state" widget="badge" class="airlogic-badge"
+                       decoration-info="state == 'suggested'" decoration-success="state == 'confirmed'"
+                       decoration-muted="state == 'cancelled'"/>
+                <button name="action_compute_suggestion" string="Suggest" type="object"
+                        invisible="state != 'pending'" groups="airlogic_core.group_airlogic_supervisor"/>
+                <button name="action_confirm" string="Confirm" type="object"
+                        invisible="state != 'suggested'" groups="airlogic_core.group_airlogic_supervisor"/>
+                <button name="action_cancel" string="Cancel" type="object"
+                        invisible="state in ('confirmed', 'cancelled')" groups="airlogic_core.group_airlogic_supervisor"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_airlogic_dispatch_request_form" model="ir.ui.view">
+        <field name="name">airlogic.dispatch.request.form</field>
+        <field name="model">airlogic.dispatch.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_compute_suggestion" string="Compute Suggestion" type="object"
+                            class="oe_highlight airlogic-btn-primary" invisible="state != 'pending'"/>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            class="oe_highlight airlogic-btn-primary" invisible="state != 'suggested'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('confirmed', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="equipment_id"/>
+                            <field name="zone_id" readonly="1"/>
+                            <field name="urgency"/>
+                            <field name="source"/>
+                            <field name="requested_date"/>
+                        </group>
+                        <group>
+                            <field name="suggested_technician_id" readonly="state == 'pending'"/>
+                            <field name="suggested_date" readonly="state == 'pending'"/>
+                            <field name="suggested_reason" readonly="1"/>
+                            <field name="visit_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="What the client described, any context worth keeping..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_airlogic_dispatch_request_search" model="ir.ui.view">
+        <field name="name">airlogic.dispatch.request.search</field>
+        <field name="model">airlogic.dispatch.request</field>
+        <field name="arch" type="xml">
+            <search string="Dispatch Requests">
+                <field name="partner_id"/>
+                <field name="zone_id"/>
+                <field name="suggested_technician_id"/>
+                <filter name="pending" string="Pending" domain="[('state','=','pending')]"/>
+                <filter name="suggested" string="Suggested" domain="[('state','=','suggested')]"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
+                <separator/>
+                <filter name="emergency" string="Emergency" domain="[('urgency','=','emergency')]"/>
+                <filter name="rush" string="Rush" domain="[('urgency','=','rush')]"/>
+                <separator/>
+                <filter name="group_zone" string="Zone" context="{'group_by': 'zone_id'}"/>
+                <filter name="group_technician" string="Technician" context="{'group_by': 'suggested_technician_id'}"/>
+                <filter name="group_date" string="Suggested Date" context="{'group_by': 'suggested_date'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_airlogic_dispatch_request" model="ir.actions.act_window">
+        <field name="name">Dispatch Queue</field>
+        <field name="res_model">airlogic.dispatch.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_airlogic_dispatch_request_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No dispatch requests yet</p>
+            <p>A client call-in, a staff or technician ask, or a
+               subscription contract's next period all land here as
+               Pending. Suggest runs the 6-rule cascade and proposes
+               one technician + date with its reasoning; Confirm is
+               what actually creates the Visit and locks it in.</p>
+        </field>
+    </record>
+
+</odoo>

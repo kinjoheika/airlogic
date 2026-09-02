@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  40 demo dispatch requests (AIR-T55/Phase 6.5-6.6), spread across
+  backlog/emergency/rush/routine and every zoned client, so the
+  Dispatch Queue and Operations Officer schedule have real content to
+  demo instead of an empty list. All left Pending on purpose: running
+  the daily cron (or tapping Suggest) works them through the actual
+  6-rule cascade against whatever real Technician-group users exist on
+  this install, rather than baking in fake pre-computed results.
+
+  Also seeds 2 new Ermita clients (Rizal Tower Offices, Manila Grand
+  Suites) with 2 units each, since the 3 existing demo clients only
+  cover Makati/Pasay/Quezon City. Cornerstone (Quezon City)
+  deliberately has no zone, to demonstrate the engine's fallback path
+  for an unzoned client too.
+-->
+<odoo noupdate="1">
+
+    <!-- Zone the existing demo clients -->
+    <record id="airlogic_core.demo_partner_meridian" model="res.partner">
+        <field name="airlogic_dispatch_zone_id" ref="zone_makati_1"/>
+    </record>
+    <record id="airlogic_core.demo_partner_bayview" model="res.partner">
+        <field name="airlogic_dispatch_zone_id" ref="zone_pasay_1"/>
+    </record>
+
+    <!-- New Ermita clients -->
+    <record id="demo_partner_rizal_tower" model="res.partner">
+        <field name="name">Rizal Tower Offices</field>
+        <field name="is_company">True</field>
+        <field name="city">Manila</field>
+        <field name="airlogic_dispatch_zone_id" ref="zone_ermita_1"/>
+    </record>
+    <record id="demo_partner_manila_grand" model="res.partner">
+        <field name="name">Manila Grand Suites</field>
+        <field name="is_company">True</field>
+        <field name="city">Manila</field>
+        <field name="airlogic_dispatch_zone_id" ref="zone_ermita_2"/>
+    </record>
+
+    <record id="demo_sub_rizal_lobby" model="airlogic.sublocation">
+        <field name="name">Rizal Tower Lobby</field>
+    </record>
+    <record id="demo_sub_rizal_office" model="airlogic.sublocation">
+        <field name="name">Rizal Tower 5th Floor Office</field>
+    </record>
+    <record id="demo_sub_grand_lounge" model="airlogic.sublocation">
+        <field name="name">Manila Grand Lounge</field>
+    </record>
+    <record id="demo_sub_grand_room" model="airlogic.sublocation">
+        <field name="name">Manila Grand Guest Room 12</field>
+    </record>
+
+    <record id="demo_equip_rizal_1" model="airlogic.equipment">
+        <field name="name">AC Unit 1 - Rizal Tower Lobby</field>
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="sublocation_id" ref="demo_sub_rizal_lobby"/>
+        <field name="category_id" ref="airlogic_core.cat_split_floor"/>
+        <field name="brand_id" ref="airlogic_core.brand_carrier"/>
+        <field name="hp_id" ref="airlogic_core.hp_2_5"/>
+        <field name="model">42QHF030</field>
+        <field name="serial_number">CAR-2022-00390</field>
+        <field name="install_year">2022</field>
+    </record>
+    <record id="demo_equip_rizal_2" model="airlogic.equipment">
+        <field name="name">AC Unit 2 - Rizal Tower 5th Floor Office</field>
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="sublocation_id" ref="demo_sub_rizal_office"/>
+        <field name="category_id" ref="airlogic_core.cat_split_wall"/>
+        <field name="brand_id" ref="airlogic_core.brand_daikin"/>
+        <field name="hp_id" ref="airlogic_core.hp_1_5"/>
+        <field name="model">FTKC40UV2</field>
+        <field name="serial_number">DAI-2023-00551</field>
+        <field name="install_year">2023</field>
+    </record>
+    <record id="demo_equip_grand_1" model="airlogic.equipment">
+        <field name="name">AC Unit 1 - Manila Grand Lounge</field>
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="sublocation_id" ref="demo_sub_grand_lounge"/>
+        <field name="category_id" ref="airlogic_core.cat_split_floor"/>
+        <field name="brand_id" ref="airlogic_core.brand_panasonic"/>
+        <field name="hp_id" ref="airlogic_core.hp_3"/>
+        <field name="model">CS-PU24WKQ</field>
+        <field name="serial_number">PAN-2021-00276</field>
+        <field name="install_year">2021</field>
+    </record>
+    <record id="demo_equip_grand_2" model="airlogic.equipment">
+        <field name="name">AC Unit 2 - Manila Grand Guest Room 12</field>
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="sublocation_id" ref="demo_sub_grand_room"/>
+        <field name="category_id" ref="airlogic_core.cat_window"/>
+        <field name="brand_id" ref="airlogic_core.brand_koppel"/>
+        <field name="hp_id" ref="airlogic_core.hp_1"/>
+        <field name="model">KSW-10C1</field>
+        <field name="serial_number">KOP-2023-00618</field>
+        <field name="install_year">2023</field>
+    </record>
+
+    <record id="demo_dispatch_req_01" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_2"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Standard maintenance visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_02" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_3"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d')"/>
+        <field name="notes">No cooling at all, client reports burning smell.</field>
+    </record>
+
+    <record id="demo_dispatch_req_03" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_1"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_04" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_1"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Unit tripping the breaker repeatedly.</field>
+    </record>
+
+    <record id="demo_dispatch_req_05" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="equipment_id" ref="demo_equip_grand_2"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Regular checkup, no issues reported.</field>
+    </record>
+
+    <record id="demo_dispatch_req_06" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_3"/>
+        <field name="urgency">emergency</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-4)).strftime('%Y-%m-%d')"/>
+        <field name="notes">No cooling at all, client reports burning smell.</field>
+    </record>
+
+    <record id="demo_dispatch_req_07" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_2"/>
+        <field name="urgency">emergency</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-4)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Water leaking onto server room floor.</field>
+    </record>
+
+    <record id="demo_dispatch_req_08" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_3"/>
+        <field name="urgency">emergency</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d')"/>
+        <field name="notes">No cooling at all, client reports burning smell.</field>
+    </record>
+
+    <record id="demo_dispatch_req_09" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_2"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">AC completely dead, VIP guest arriving today.</field>
+    </record>
+
+    <record id="demo_dispatch_req_10" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="equipment_id" ref="demo_equip_grand_1"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Water leaking onto server room floor.</field>
+    </record>
+
+    <record id="demo_dispatch_req_11" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_4"/>
+        <field name="urgency">emergency</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Water leaking onto server room floor.</field>
+    </record>
+
+    <record id="demo_dispatch_req_12" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_1"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">AC completely dead, VIP guest arriving today.</field>
+    </record>
+
+    <record id="demo_dispatch_req_13" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_2"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">AC completely dead, VIP guest arriving today.</field>
+    </record>
+
+    <record id="demo_dispatch_req_14" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_1"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Water leaking onto server room floor.</field>
+    </record>
+
+    <record id="demo_dispatch_req_15" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="equipment_id" ref="demo_equip_grand_2"/>
+        <field name="urgency">emergency</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Unit tripping the breaker repeatedly.</field>
+    </record>
+
+    <record id="demo_dispatch_req_16" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_1"/>
+        <field name="urgency">emergency</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">No cooling at all, client reports burning smell.</field>
+    </record>
+
+    <record id="demo_dispatch_req_17" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_3"/>
+        <field name="urgency">rush</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Client paid rush fee, wants same-day check.</field>
+    </record>
+
+    <record id="demo_dispatch_req_18" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_1"/>
+        <field name="urgency">rush</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Client escalated via office, wants it resolved this week.</field>
+    </record>
+
+    <record id="demo_dispatch_req_19" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_2"/>
+        <field name="urgency">rush</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Unusual noise, client requests priority visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_20" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="equipment_id" ref="demo_equip_grand_1"/>
+        <field name="urgency">rush</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Unusual noise, client requests priority visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_21" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_2"/>
+        <field name="urgency">rush</field>
+        <field name="source">technician</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Unusual noise, client requests priority visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_22" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_2"/>
+        <field name="urgency">rush</field>
+        <field name="source">technician</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Weak airflow, client meeting tomorrow.</field>
+    </record>
+
+    <record id="demo_dispatch_req_23" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_3"/>
+        <field name="urgency">rush</field>
+        <field name="source">call_in</field>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="notes">Client escalated via office, wants it resolved this week.</field>
+    </record>
+
+    <record id="demo_dispatch_req_24" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_1"/>
+        <field name="urgency">rush</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Weak airflow, client meeting tomorrow.</field>
+    </record>
+
+    <record id="demo_dispatch_req_25" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="equipment_id" ref="demo_equip_grand_2"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=6)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Routine filter and coil check.</field>
+    </record>
+
+    <record id="demo_dispatch_req_26" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_3"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Standard maintenance visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_27" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=2)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Routine filter and coil check.</field>
+    </record>
+
+    <record id="demo_dispatch_req_28" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=8)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Routine filter and coil check.</field>
+    </record>
+
+    <record id="demo_dispatch_req_29" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Regular checkup, no issues reported.</field>
+    </record>
+
+    <record id="demo_dispatch_req_30" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Routine filter and coil check.</field>
+    </record>
+
+    <record id="demo_dispatch_req_31" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_4"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_32" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_3"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=3)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_33" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=7)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Standard maintenance visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_34" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_1"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_35" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="equipment_id" ref="demo_equip_grand_2"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_36" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_meridian"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_1"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_37" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_2"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Scheduled quarterly inspection.</field>
+    </record>
+
+    <record id="demo_dispatch_req_38" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
+        <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_3"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Routine filter and coil check.</field>
+    </record>
+
+    <record id="demo_dispatch_req_39" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_rizal_tower"/>
+        <field name="equipment_id" ref="demo_equip_rizal_2"/>
+        <field name="urgency">routine</field>
+        <field name="source">staff</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=6)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Standard maintenance visit.</field>
+    </record>
+
+    <record id="demo_dispatch_req_40" model="airlogic.dispatch.request">
+        <field name="partner_id" ref="demo_partner_manila_grand"/>
+        <field name="urgency">routine</field>
+        <field name="source">subscription</field>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=8)).strftime('%Y-%m-%d')"/>
+        <field name="notes">Standard maintenance visit.</field>
+    </record>
+
+</odoo>
