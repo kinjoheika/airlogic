@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Daily check for subscription contracts whose next_billing_date has
+  arrived: the billing-period trigger the user asked for (not Visit
+  approval, not a blanket nightly run touching every contract).
+-->
+<odoo>
+    <record id="cron_airlogic_generate_due_subscription_periods" model="ir.cron">
+        <field name="name">Airlogic: Generate Due Subscription Periods</field>
+        <field name="model_id" ref="model_airlogic_service_contract"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_generate_due_periods()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

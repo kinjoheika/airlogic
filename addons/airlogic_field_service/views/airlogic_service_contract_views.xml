@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_airlogic_service_contract_list" model="ir.ui.view">
+        <field name="name">airlogic.service.contract.list</field>
+        <field name="model">airlogic.service.contract</field>
+        <field name="arch" type="xml">
+            <list string="Subscription Contracts">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="billing_period"/>
+                <field name="price"/>
+                <field name="next_billing_date"/>
+                <field name="state" widget="badge" class="airlogic-badge"
+                       decoration-success="state == 'active'" decoration-muted="state == 'cancelled'"
+                       decoration-warning="state == 'paused'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_airlogic_service_contract_form" model="ir.ui.view">
+        <field name="name">airlogic.service.contract.form</field>
+        <field name="model">airlogic.service.contract</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_activate" string="Activate" type="object"
+                            class="oe_highlight airlogic-btn-primary" invisible="state not in ('draft', 'paused')"/>
+                    <button name="action_pause" string="Pause" type="object"
+                            invisible="state != 'active'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state == 'cancelled'"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object"
+                            invisible="state == 'draft'"/>
+                    <button name="action_generate_period" string="Generate Period Now" type="object"
+                            invisible="state != 'active'"
+                            help="Manually run this contract's next visit + invoice generation instead of waiting for the daily cron."/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_visits" type="object"
+                                class="oe_stat_button" icon="fa-wrench">
+                            <field name="visit_count" widget="statinfo" string="Visits"/>
+                        </button>
+                        <button name="action_view_invoices" type="object"
+                                class="oe_stat_button" icon="fa-usd">
+                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="equipment_ids" widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="billing_period"/>
+                            <field name="price"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="start_date"/>
+                            <field name="next_billing_date" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_airlogic_service_contract_search" model="ir.ui.view">
+        <field name="name">airlogic.service.contract.search</field>
+        <field name="model">airlogic.service.contract</field>
+        <field name="arch" type="xml">
+            <search string="Subscription Contracts">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter name="active" string="Active" domain="[('state','=','active')]"/>
+                <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
+                <separator/>
+                <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_airlogic_service_contract" model="ir.actions.act_window">
+        <field name="name">Subscription Contracts</field>
+        <field name="res_model">airlogic.service.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_airlogic_service_contract_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Set up a subscription contract</p>
+            <p>Activating a contract starts a recurring cycle: on each
+               billing period, it creates a new Service Visit (covering
+               the client's units) and a recurring invoice
+               automatically -- no manual "Create Invoice" click
+               needed for these visits.</p>
+        </field>
+    </record>
+
+</odoo>

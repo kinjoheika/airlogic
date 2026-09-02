@@ -6,4 +6,10 @@
         <field name="prefix">SVJ-%(year)s-</field>
         <field name="padding">4</field>
     </record>
+    <record id="seq_airlogic_service_contract" model="ir.sequence">
+        <field name="name">Airlogic Service Contract</field>
+        <field name="code">airlogic.service.contract</field>
+        <field name="prefix">CTR-%(year)s-</field>
+        <field name="padding">4</field>
+    </record>
 </odoo>

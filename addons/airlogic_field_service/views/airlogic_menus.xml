@@ -24,6 +24,14 @@
               parent="airlogic_core.menu_airlogic_service_visit" action="action_airlogic_service_job"
               sequence="10"/>
 
+    <!-- Sibling of Service Visits under Client Services, not nested
+         under it: a contract generates visits, it isn't a drill-down
+         from one specific visit the way Service Job/Revision Requests
+         are. -->
+    <menuitem id="menu_airlogic_service_contract" name="Subscription Contracts"
+              parent="airlogic_core.menu_airlogic_client_services" action="action_airlogic_service_contract"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="10"/>
+
     <!-- Supervisor+ (not Configuration, which is Manager-only):
          reviewing requests/corrections is a day-to-day Supervisor task,
          not admin configuration. -->

@@ -6,6 +6,8 @@ from . import airlogic_checklist_line
 from . import airlogic_owner_report
 from . import airlogic_equipment_ext
 from . import airlogic_service_visit_ext
+from . import airlogic_service_contract
+from . import airlogic_account_move_ext
 from . import airlogic_job_revision
 from . import airlogic_product_ext
 from . import airlogic_part
