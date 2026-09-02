@@ -29,7 +29,7 @@ airlogic.service.job.
 """,
     'author': 'Standard Airlogic',
     'license': 'OPL-1',
-    'depends': ['base', 'web', 'mail', 'account', 'airlogic_core'],
+    'depends': ['base', 'web', 'mail', 'account', 'purchase', 'airlogic_core'],
     'data': [
         'security/ir.model.access.csv',
         'security/airlogic_ir_rule.xml',

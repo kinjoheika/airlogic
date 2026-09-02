@@ -4,89 +4,175 @@
   section: Outdoor on Phase 2 (Power OFF), Indoor on Phase 3, both
   combined on Phase 4 as a final catch-all. noupdate="1" so a Manager
   editing/extending this list under Configuration survives upgrades.
+
+  Migrated from the old airlogic.part model to real product.template
+  records (AIR-T53/Phase 6.2), same xmlids, so Purchase's own vendor
+  pricing (product.supplierinfo) becomes available per part. No vendor
+  is seeded here: that's real-world data only the user has, added
+  under each product's Purchase tab. default_code values below are
+  placeholder model numbers, not real manufacturer part numbers.
+
+  airlogic_equipment_category_ids is left unmapped: this addon's demo
+  equipment categories (Split-Wall, Split-Floor, Window Type) don't
+  have real per-category fitment data behind them yet, so the mobile
+  app's Request Parts screen falls back to the full zone-filtered list
+  for every unit until a Manager maps specific parts to specific
+  categories under Configuration.
 -->
 <odoo noupdate="1">
 
-    <record id="part_compressor" model="airlogic.part">
+    <record id="part_compressor" model="product.template">
         <field name="name">Compressor</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">CMP-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">10</field>
     </record>
-    <record id="part_condenser_fan" model="airlogic.part">
+    <record id="part_condenser_fan" model="product.template">
         <field name="name">Condenser Fan</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">CFN-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">20</field>
     </record>
-    <record id="part_outdoor_fan_motor" model="airlogic.part">
-        <field name="name">Fan Motor</field>
-        <field name="zone">outdoor</field>
+    <record id="part_outdoor_fan_motor" model="product.template">
+        <field name="name">Fan Motor (Outdoor)</field>
+        <field name="type">consu</field>
+        <field name="default_code">FMO-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">30</field>
     </record>
-    <record id="part_pcb" model="airlogic.part">
+    <record id="part_pcb" model="product.template">
         <field name="name">PCB</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">PCB-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">40</field>
     </record>
-    <record id="part_ipm" model="airlogic.part">
+    <record id="part_ipm" model="product.template">
         <field name="name">IPM</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">IPM-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">50</field>
     </record>
-    <record id="part_thermistor" model="airlogic.part">
+    <record id="part_thermistor" model="product.template">
         <field name="name">Thermistor</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">THM-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">60</field>
     </record>
-    <record id="part_diode" model="airlogic.part">
+    <record id="part_diode" model="product.template">
         <field name="name">Diode</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">DIO-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">70</field>
     </record>
-    <record id="part_capacitor" model="airlogic.part">
+    <record id="part_capacitor" model="product.template">
         <field name="name">Capacitor</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">CAP-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">80</field>
     </record>
-    <record id="part_grommets_cable_tie" model="airlogic.part">
+    <record id="part_grommets_cable_tie" model="product.template">
         <field name="name">Grommets/Cable Tie</field>
-        <field name="zone">outdoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">GCT-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">outdoor</field>
         <field name="sequence">90</field>
     </record>
 
-    <record id="part_blower_fan" model="airlogic.part">
+    <record id="part_blower_fan" model="product.template">
         <field name="name">Blower Fan</field>
-        <field name="zone">indoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">BLF-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">10</field>
     </record>
-    <record id="part_indoor_fan_motor" model="airlogic.part">
-        <field name="name">Fan Motor</field>
-        <field name="zone">indoor</field>
+    <record id="part_indoor_fan_motor" model="product.template">
+        <field name="name">Fan Motor (Indoor)</field>
+        <field name="type">consu</field>
+        <field name="default_code">FMI-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">20</field>
     </record>
-    <record id="part_thermal_device" model="airlogic.part">
+    <record id="part_thermal_device" model="product.template">
         <field name="name">Thermal Device</field>
-        <field name="zone">indoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">TDV-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">30</field>
     </record>
-    <record id="part_sensor" model="airlogic.part">
+    <record id="part_sensor" model="product.template">
         <field name="name">Sensor</field>
-        <field name="zone">indoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">SNS-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">40</field>
     </record>
-    <record id="part_drain_pan" model="airlogic.part">
+    <record id="part_drain_pan" model="product.template">
         <field name="name">Drain Pan</field>
-        <field name="zone">indoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">DRP-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">50</field>
     </record>
-    <record id="part_sealant" model="airlogic.part">
+    <record id="part_sealant" model="product.template">
         <field name="name">Sealant</field>
-        <field name="zone">indoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">SLT-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">60</field>
     </record>
-    <record id="part_wire" model="airlogic.part">
+    <record id="part_wire" model="product.template">
         <field name="name">Wire</field>
-        <field name="zone">indoor</field>
+        <field name="type">consu</field>
+        <field name="default_code">WIR-STD-01</field>
+        <field name="airlogic_requestable">True</field>
+        <field name="airlogic_zone">indoor</field>
         <field name="sequence">70</field>
+    </record>
+
+    <!-- Consumables: routine supplies, not per-unit replacement parts.
+         Shown in the mobile app's separate Order Consumables screen. -->
+    <record id="consumable_coil_cleaner" model="product.template">
+        <field name="name">Coil Cleaner</field>
+        <field name="type">consu</field>
+        <field name="default_code">CNS-CLN-01</field>
+        <field name="airlogic_is_consumable">True</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="consumable_insulation" model="product.template">
+        <field name="name">Pipe Insulation</field>
+        <field name="type">consu</field>
+        <field name="default_code">CNS-INS-01</field>
+        <field name="airlogic_is_consumable">True</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="consumable_copper_tube" model="product.template">
+        <field name="name">Copper Tube</field>
+        <field name="type">consu</field>
+        <field name="default_code">CNS-CU-01</field>
+        <field name="airlogic_is_consumable">True</field>
+        <field name="sequence">30</field>
     </record>
 
 </odoo>

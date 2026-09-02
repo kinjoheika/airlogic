@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Catalog (Configuration, Manager-only edit) -->
-    <record id="view_airlogic_part_list" model="ir.ui.view">
-        <field name="name">airlogic.part.list</field>
-        <field name="model">airlogic.part</field>
+    <!-- Requestable Parts catalog (Configuration, Manager-only edit):
+         a filtered product.product list, not a bespoke model, since
+         AIR-T53/Phase 6.2 retired airlogic.part in favor of real
+         products with Purchase vendor pricing. -->
+    <record id="view_airlogic_requestable_part_list" model="ir.ui.view">
+        <field name="name">product.product.airlogic.requestable.list</field>
+        <field name="model">product.product</field>
         <field name="arch" type="xml">
             <list string="Requestable Parts" editable="bottom">
                 <field name="sequence" widget="handle"/>
-                <field name="zone"/>
+                <field name="default_code" string="Model No."/>
                 <field name="name"/>
+                <field name="airlogic_zone"/>
+                <field name="airlogic_equipment_category_ids" widget="many2many_tags"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
         </field>
@@ -17,17 +22,55 @@
 
     <record id="action_airlogic_part" model="ir.actions.act_window">
         <field name="name">Requestable Parts</field>
-        <field name="res_model">airlogic.part</field>
-        <field name="view_mode">list</field>
-        <field name="context">{'search_default_zone': 1}</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_airlogic_requestable_part_list"/>
+        <field name="domain">[('airlogic_requestable', '=', True)]</field>
+        <field name="context">{'default_airlogic_requestable': True, 'default_type': 'consu'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">Add a requestable part</p>
             <p>Shown in the mobile app's Request Parts section -- Outdoor
-               on Phase 2, Indoor on Phase 3, both on Phase 4.</p>
+               on Phase 2, Indoor on Phase 3, both on Phase 4. Map a part
+               to one or more Equipment Categories so it pre-fills for
+               that category's units instead of showing the full list;
+               add a vendor under the product's Purchase tab so
+               approving a request creates a real RFQ automatically.</p>
         </field>
     </record>
 
-    <!-- Requests (Supervisor+ review) -->
+    <!-- Field-service consumables (coil cleaner, insulation, copper
+         tube, etc.): same product.product model, different flag, own
+         Configuration screen since these aren't tied to a specific
+         unit's Request Parts list. -->
+    <record id="view_airlogic_consumable_product_list" model="ir.ui.view">
+        <field name="name">product.product.airlogic.consumable.list</field>
+        <field name="model">product.product</field>
+        <field name="arch" type="xml">
+            <list string="Consumables" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="default_code" string="Model No."/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_consumable_product" model="ir.actions.act_window">
+        <field name="name">Consumables</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_airlogic_consumable_product_list"/>
+        <field name="domain">[('airlogic_is_consumable', '=', True)]</field>
+        <field name="context">{'default_airlogic_is_consumable': True, 'default_type': 'consu'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a consumable</p>
+            <p>Shown in the mobile app's Order Consumables screen. Add a
+               vendor under the product's Purchase tab so ordering one
+               creates a real RFQ automatically.</p>
+        </field>
+    </record>
+
+    <!-- Part Requests (Operations Officer+ review) -->
     <record id="view_airlogic_part_request_list" model="ir.ui.view">
         <field name="name">airlogic.part.request.list</field>
         <field name="model">airlogic.part.request</field>
@@ -37,6 +80,7 @@
                 <field name="job_id"/>
                 <field name="part_id"/>
                 <field name="requested_by"/>
+                <field name="purchase_order_id"/>
                 <field name="state" widget="badge" class="airlogic-badge"
                        decoration-success="state == 'fulfilled'" decoration-info="state == 'approved'"
                        decoration-danger="state == 'rejected'"/>
@@ -75,7 +119,37 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No part requests yet</p>
             <p>Technicians tick parts they need from the mobile app's DSR
-               phases 2-4; they land here for review.</p>
+               phases 2-4; they land here for review. Approving one
+               creates a Purchase RFQ automatically if the part has a
+               vendor configured.</p>
+        </field>
+    </record>
+
+    <!-- Consumable Requests (informational log, no approval gate: see
+         the model's own docstring for why) -->
+    <record id="view_airlogic_consumable_request_list" model="ir.ui.view">
+        <field name="name">airlogic.consumable.request.list</field>
+        <field name="model">airlogic.consumable.request</field>
+        <field name="arch" type="xml">
+            <list string="Consumable Requests" default_order="create_date desc" create="0">
+                <field name="create_date" string="Requested"/>
+                <field name="technician_id"/>
+                <field name="product_id"/>
+                <field name="quantity"/>
+                <field name="purchase_order_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_airlogic_consumable_request" model="ir.actions.act_window">
+        <field name="name">Consumable Requests</field>
+        <field name="res_model">airlogic.consumable.request</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No consumable requests yet</p>
+            <p>Technicians order routine supplies from the mobile app's
+               Order Consumables screen; each one creates a Purchase RFQ
+               immediately if the product has a vendor configured.</p>
         </field>
     </record>
 

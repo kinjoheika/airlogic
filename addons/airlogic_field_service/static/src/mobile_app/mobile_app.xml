@@ -71,6 +71,9 @@
                             <t t-esc="currentTabMeta.icon"/> <t t-esc="currentTabMeta.label"/>
                         </div>
                     </div>
+                    <span t-if="state.tab === 'visit'" class="o_airlogic_consumables_link" t-on-click="openConsumables">
+                        🧴 Consumables
+                    </span>
                 </div>
 
                 <!-- VISIT TAB -->
@@ -260,6 +263,35 @@
                 </t>
             </div>
 
+            <!-- ORDER CONSUMABLES: not tied to a specific job/unit, so
+                 its own small screen rather than living inside the DSR
+                 flow (coil cleaner, insulation, copper tube, etc). -->
+            <div t-if="state.screen === 'consumables' and !state.loading" class="o_airlogic_mobile_body">
+                <div class="o_airlogic_title_row">
+                    <span class="o_airlogic_back_arrow" t-on-click="closeConsumables" title="Back">‹</span>
+                    <h4>Order Consumables</h4>
+                </div>
+                <p class="text-muted" style="font-size:13px;">
+                    Each order creates a Purchase request right away -- no approval needed.
+                </p>
+                <div t-foreach="state.consumablesCatalog" t-as="c" t-key="c.id" class="o_airlogic_item">
+                    <div class="o_airlogic_item_label">
+                        <span t-esc="c.name"/>
+                        <span t-if="c.default_code" class="o_airlogic_item_std" t-esc="c.default_code"/>
+                    </div>
+                    <div class="o_airlogic_item_control" style="gap:8px;">
+                        <input type="number" step="0.1" min="0.1" class="form-control form-control-sm o_airlogic_number"
+                               t-att-value="state.consumableQty[c.id] || ''"
+                               t-on-change="(ev) => this.onConsumableQtyChange(c.id, ev)"/>
+                        <button type="button" class="btn btn-sm airlogic-btn-primary"
+                                t-on-click="() => this.orderConsumable(c.id)">Order</button>
+                    </div>
+                </div>
+                <p t-if="!state.consumablesCatalog.length" class="text-muted">
+                    No consumables configured yet (Configuration &gt; Consumables).
+                </p>
+            </div>
+
             <!-- BOTTOM NAV (4 tabs) -->
             <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_bottom_nav">
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'visit' ? 'active' : ''}}" t-on-click="() => this.setTab('visit')">
@@ -377,6 +409,7 @@
                             <input type="checkbox" t-att-checked="findPartRequest(part.id) ? true : false"
                                    t-on-change="() => this.togglePartRequest(part.id)"/>
                             <span t-esc="part.name"/>
+                            <span t-if="part.default_code" class="o_airlogic_item_std" t-esc="part.default_code"/>
                             <span t-if="findPartRequest(part.id) and findPartRequest(part.id).state !== 'requested'"
                                   t-attf-class="o_airlogic_part_state o_airlogic_part_state_{{findPartRequest(part.id).state}}"
                                   t-esc="findPartRequest(part.id).state"/>

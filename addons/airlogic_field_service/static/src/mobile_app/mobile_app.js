@@ -133,9 +133,12 @@ export class AirlogicMobileFieldEntry extends Component {
             currentTechnician: null, // {name, isSenior}, set once the clients-list PIN passes
             clockText: "", // small digital clock in the header, ticks every second
 
-            partsCatalog: [], // [{id, name, zone}], loaded once and cached
+            partsCatalog: [], // [{id, name, airlogic_zone, ...}], loaded once and cached
             partRequests: [], // this job's airlogic.part.request rows
             partsExpanded: { 2: false, 3: false, 4: false },
+
+            consumablesCatalog: [], // loaded once, cached
+            consumableQty: {}, // productId -> quantity input value
         });
 
         this._onlineHandler = () => {
@@ -575,20 +578,44 @@ export class AirlogicMobileFieldEntry extends Component {
         if (this.state.partsCatalog.length) {
             return; // catalog doesn't change mid-session, load once
         }
+        // Real product.product records now (AIR-T53/Phase 6.2), not the
+        // old bespoke airlogic.part -- airlogic_equipment_category_ids
+        // is what lets currentPhaseParts below pre-fill the parts that
+        // actually fit THIS unit instead of always showing everything.
         this.state.partsCatalog = await this.orm.searchRead(
-            "airlogic.part", [], ["name", "zone"]
+            "product.product", [["airlogic_requestable", "=", true]],
+            ["name", "default_code", "airlogic_zone", "airlogic_equipment_category_ids"]
         );
     }
 
     get currentPhaseParts() {
+        let byZone;
         if (this.state.dsrPhase === 2) {
-            return this.state.partsCatalog.filter((p) => p.zone === "outdoor");
+            byZone = this.state.partsCatalog.filter(
+                (p) => p.airlogic_zone === "outdoor" || p.airlogic_zone === "both");
         } else if (this.state.dsrPhase === 3) {
-            return this.state.partsCatalog.filter((p) => p.zone === "indoor");
+            byZone = this.state.partsCatalog.filter(
+                (p) => p.airlogic_zone === "indoor" || p.airlogic_zone === "both");
         } else if (this.state.dsrPhase === 4) {
-            return this.state.partsCatalog;
+            byZone = this.state.partsCatalog;
+        } else {
+            return [];
         }
-        return [];
+        // Pre-fill: if this unit's own equipment category has any parts
+        // mapped to it, show only those (the technician just confirms
+        // the right model instead of typing/photographing it). Falls
+        // back to the full zone list if nothing's mapped yet for that
+        // category.
+        const categoryId = this.state.selectedEquipment && this.state.selectedEquipment.category_id
+            ? this.state.selectedEquipment.category_id[0] : null;
+        if (categoryId) {
+            const matched = byZone.filter(
+                (p) => p.airlogic_equipment_category_ids.includes(categoryId));
+            if (matched.length) {
+                return matched;
+            }
+        }
+        return byZone;
     }
 
     togglePartsSection(phase) {
@@ -617,6 +644,41 @@ export class AirlogicMobileFieldEntry extends Component {
             }]);
             this.state.partRequests.push({ id, part_id: [partId, ""], state: "requested" });
         }
+    }
+
+    // --- Order Consumables (not tied to a job/unit, own small screen) ------
+
+    async openConsumables() {
+        this.state.loading = true;
+        try {
+            if (!this.state.consumablesCatalog.length) {
+                this.state.consumablesCatalog = await this.orm.searchRead(
+                    "product.product", [["airlogic_is_consumable", "=", true]],
+                    ["name", "default_code"]
+                );
+            }
+            this.state.screen = "consumables";
+        } finally {
+            this.state.loading = false;
+        }
+    }
+
+    closeConsumables() {
+        this.state.screen = "main";
+    }
+
+    onConsumableQtyChange(productId, ev) {
+        this.state.consumableQty[productId] = ev.target.value;
+    }
+
+    async orderConsumable(productId) {
+        const qty = parseFloat(this.state.consumableQty[productId]) || 1;
+        await this.orm.create("airlogic.consumable.request", [{
+            product_id: productId,
+            quantity: qty,
+        }]);
+        this.state.consumableQty[productId] = "";
+        this.showToast("Consumable order sent to Purchase.", "success");
     }
 
     // --- Flag/Alert dialog -------------------------------------------------

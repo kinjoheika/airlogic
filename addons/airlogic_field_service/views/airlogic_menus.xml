@@ -38,6 +38,10 @@
               parent="airlogic_core.menu_airlogic_units" action="action_airlogic_part_request"
               groups="airlogic_core.group_airlogic_supervisor" sequence="10"/>
 
+    <menuitem id="menu_airlogic_consumable_request" name="Consumable Requests"
+              parent="airlogic_core.menu_airlogic_units" action="action_airlogic_consumable_request"
+              groups="airlogic_core.group_airlogic_supervisor" sequence="20"/>
+
     <menuitem id="menu_airlogic_measurement_field" name="Measurement Fields"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_measurement_field"
               sequence="60"/>
@@ -49,6 +53,10 @@
     <menuitem id="menu_airlogic_part" name="Requestable Parts"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_part"
               sequence="80"/>
+
+    <menuitem id="menu_airlogic_consumable_product" name="Consumables"
+              parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_consumable_product"
+              sequence="82"/>
 
     <menuitem id="menu_airlogic_app_config" name="App Wallpaper"
               parent="airlogic_core.menu_airlogic_configuration" action="action_airlogic_app_config"

@@ -222,6 +222,23 @@
 
 .o_airlogic_title_block {
     min-width: 0;
+    flex: 1 1 auto;
+}
+
+.o_airlogic_consumables_link {
+    font-size: 11px;
+    font-weight: 700;
+    color: #5B6470;
+    background: #F3F4F6;
+    border-radius: 20px;
+    padding: 5px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
+
+    &:active {
+        background: #E2E5E8;
+    }
 }
 
 // Icon + label under the client name showing which of the 4 bottom-nav
