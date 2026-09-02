@@ -53,6 +53,7 @@ airlogic.service.job.
         'views/airlogic_mobile_app_views.xml',
         'views/airlogic_res_users_views.xml',
         'reports/airlogic_owner_report.xml',
+        'reports/airlogic_site_visit_reports.xml',
         'views/airlogic_menus.xml',
     ],
     'assets': {

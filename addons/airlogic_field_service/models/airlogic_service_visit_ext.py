@@ -81,6 +81,16 @@ class AirlogicServiceVisitFieldServiceExt(models.Model):
         report = self.env.ref('airlogic_field_service.action_report_airlogic_owner_report')
         return report.report_action(self)
 
+    def action_print_site_visit_simple(self):
+        self.ensure_one()
+        report = self.env.ref('airlogic_field_service.action_report_airlogic_site_visit_simple')
+        return report.report_action(self)
+
+    def action_print_site_visit_readings(self):
+        self.ensure_one()
+        report = self.env.ref('airlogic_field_service.action_report_airlogic_site_visit_readings')
+        return report.report_action(self)
+
     def action_send_report_email(self):
         self.ensure_one()
         report = self.env.ref('airlogic_field_service.action_report_airlogic_owner_report')
