@@ -11,16 +11,28 @@
   the header and below "End Report" once the earlier centering bug
   (AIR-T50) was fixed and it became visible.
 
-  format is "Us Letter" (AIR-T62), not A4: this business prints on
-  Letter, not the A4 an Odoo report defaults toward otherwise. The
-  photo tile sizing (1.4in x 2.49in, see airlogic_site_visit_reports.xml)
-  was worked out against Letter's actual usable width, not A4's.
+  Letter, not A4 (AIR-T63): this business prints on Letter, not the A4
+  an Odoo report defaults toward otherwise. format="Us Letter" (AIR-T62)
+  crashed the whole registry on load: ValueError: Wrong value for
+  report.paperformat.format: 'Us Letter'. That string was a guess at
+  Odoo's internal Selection key and it was wrong, same failure class as
+  AIR-T59/AIR-T41 (one bad value here takes down every module, not just
+  this report). format="custom" plus explicit page_width/page_height in
+  mm sidesteps needing to guess that key at all: 'custom' is Odoo's
+  documented escape hatch for a paperformat that isn't one of the
+  built-in presets, and letting numbers (216mm x 279mm, Letter rounded
+  to whole mm since page_width/page_height are Integer fields) do the
+  work is unambiguous regardless of version. The photo tile sizing
+  (1.4in x 2.49in, see airlogic_site_visit_reports.xml) was worked out
+  against this exact page's usable width.
 -->
 <odoo>
     <record id="paperformat_airlogic_owner_report" model="report.paperformat">
         <field name="name">Airlogic Owner Report</field>
         <field name="default" eval="False"/>
-        <field name="format">Us Letter</field>
+        <field name="format">custom</field>
+        <field name="page_width">216</field>
+        <field name="page_height">279</field>
         <field name="orientation">Portrait</field>
         <field name="margin_top">12</field>
         <field name="margin_bottom">12</field>
