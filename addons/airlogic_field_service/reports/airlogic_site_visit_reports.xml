@@ -44,7 +44,7 @@
         <div style="page-break-inside:avoid;">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                    <h3 style="font-weight:800;">Standard Airlogic <small class="text-muted">Service Co.</small></h3>
+                    <h3 style="font-weight:800;font-size:15px;">Standard Airlogic <small class="text-muted">Service Co.</small></h3>
                     <div class="text-muted" style="font-size:11px;" t-esc="report_subtitle"/>
                 </div>
                 <div class="text-end" style="font-size:11px;">
@@ -57,11 +57,11 @@
             <hr/>
             <div class="row mb-3" style="font-size:11px;">
                 <div class="col-4">
-                    <div class="text-muted text-uppercase" style="font-size:9px;">Client</div>
+                    <div class="text-muted text-uppercase" style="font-size:8.5px;">Client</div>
                     <div class="fw-bold" t-esc="visit.partner_id.display_name"/>
                 </div>
                 <div class="col-4">
-                    <div class="text-muted text-uppercase" style="font-size:9px;">Units Inspected</div>
+                    <div class="text-muted text-uppercase" style="font-size:8.5px;">Units Inspected</div>
                     <div class="fw-bold"><t t-esc="vd['total']"/> unit(s)</div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
          frames a photo, per the user's spec. -->
     <template id="site_visit_report_photos">
         <div t-if="vd['has_photos']" style="page-break-before:always;">
-            <h5 style="font-weight:800;margin-bottom:10px;">Site Photos</h5>
+            <h5 style="font-weight:800;font-size:13px;margin-bottom:10px;">Site Photos</h5>
             <t t-foreach="vd['jobs_info']" t-as="ji">
                 <div t-if="ji['photos']" style="margin-bottom:14px;page-break-inside:avoid;">
                     <div style="font-size:11px;font-weight:700;margin-bottom:6px;">
@@ -103,8 +103,8 @@
                     <div class="page">
                         <t t-call="airlogic_field_service.site_visit_report_header"/>
 
-                        <h5 style="font-weight:800;margin-bottom:8px;">Unit-by-Unit Summary</h5>
-                        <table style="width:100%;font-size:11px;border-collapse:collapse;">
+                        <h5 style="font-weight:800;font-size:13px;margin-bottom:8px;">Unit-by-Unit Summary</h5>
+                        <table style="width:100%;font-size:10px;border-collapse:collapse;">
                             <thead>
                                 <tr style="border-bottom:1.5px solid #212529;">
                                     <th style="text-align:left;padding:5px 6px;">Unit</th>
@@ -120,7 +120,7 @@
                                     <tr style="border-bottom:1px solid #eee;page-break-inside:avoid;">
                                         <td style="padding:5px 6px;">
                                             <strong t-esc="ji['job'].equipment_id.name"/>
-                                            <div class="text-muted" style="font-size:9.5px;" t-esc="ji['job'].equipment_id.sublocation_id.name or ''"/>
+                                            <div class="text-muted" style="font-size:9px;" t-esc="ji['job'].equipment_id.sublocation_id.name or ''"/>
                                         </td>
                                         <td style="padding:5px 6px;" t-esc="ji['job'].name"/>
                                         <td style="padding:5px 6px;">
@@ -168,7 +168,7 @@
                     <div class="page">
                         <t t-call="airlogic_field_service.site_visit_report_header"/>
 
-                        <h5 style="font-weight:800;margin-bottom:8px;">Unit-by-Unit Summary</h5>
+                        <h5 style="font-weight:800;font-size:13px;margin-bottom:8px;">Unit-by-Unit Summary</h5>
                         <t t-foreach="vd['jobs_info']" t-as="ji">
                             <t t-set="text_class" t-value="{'good': 'text-success', 'watch': 'text-warning', 'urgent': 'text-danger'}[ji['status']]"/>
                             <t t-set="status_label" t-value="{'good': 'GOOD', 'watch': 'WATCH', 'urgent': 'URGENT'}[ji['status']]"/>
@@ -196,8 +196,8 @@
                              size, border weight) so the two line up
                              when flipping between "what we measured"
                              and "what's normal" for the same field row. -->
-                        <h5 style="font-weight:800;margin:14px 0 4px;">Readings</h5>
-                        <table style="width:100%;font-size:9px;border-collapse:collapse;">
+                        <h5 style="font-weight:800;font-size:13px;margin:14px 0 4px;">Readings</h5>
+                        <table style="width:100%;font-size:10px;border-collapse:collapse;">
                             <thead>
                                 <tr style="border-bottom:1.5px solid #212529;">
                                     <th style="text-align:left;padding:4px 6px;">Field</th>
@@ -233,12 +233,12 @@
                              tables line up when comparing this visit's
                              numbers against what's normal. -->
                         <div style="page-break-before:always;">
-                            <h5 style="font-weight:800;margin-bottom:4px;">Standard Reference Values</h5>
-                            <div class="text-muted mb-2" style="font-size:10px;">
+                            <h5 style="font-weight:800;font-size:13px;margin-bottom:4px;">Standard Reference Values</h5>
+                            <div class="text-muted mb-2" style="font-size:9px;">
                                 Manufacturer/standard ranges configured under Configuration &gt; Measurement Fields,
                                 listed per unit for easy side-by-side reference.
                             </div>
-                            <table style="width:100%;font-size:9px;border-collapse:collapse;">
+                            <table style="width:100%;font-size:10px;border-collapse:collapse;">
                                 <thead>
                                     <tr style="border-bottom:1.5px solid #212529;">
                                         <th style="text-align:left;padding:4px 6px;">Field</th>
