@@ -76,4 +76,9 @@
               parent="airlogic_core.menu_airlogic_configuration" action="action_seed_demo_service_history"
               groups="airlogic_core.group_airlogic_manager" sequence="99"/>
 
+    <!-- See data/airlogic_seed_action_data.xml for what this generates. -->
+    <menuitem id="menu_seed_stress_test_data" name="Seed Stress-Test Data (30 Visits)"
+              parent="airlogic_core.menu_airlogic_configuration" action="action_seed_stress_test_data"
+              groups="airlogic_core.group_airlogic_manager" sequence="100"/>
+
 </odoo>

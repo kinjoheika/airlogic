@@ -401,3 +401,12 @@ class AirlogicServiceJob(models.Model):
         """
         from ..hooks import seed_demo_service_history
         seed_demo_service_history(self.env)
+
+    @api.model
+    def action_seed_stress_test_data(self):
+        """Same reasoning as action_seed_demo_service_history above: the
+        import has to live in a plain model method, not directly in the
+        server action's own sandboxed code (AIR-T64).
+        """
+        from ..hooks import seed_stress_test_visits
+        seed_stress_test_visits(self.env)

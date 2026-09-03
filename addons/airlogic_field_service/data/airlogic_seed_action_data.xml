@@ -25,4 +25,23 @@
         <field name="code">model.action_seed_demo_service_history()</field>
     </record>
 
+    <!-- 30 deliberately weird/boundary Service Visits (AIR-T64), for a
+         testing pass across every report/screen this addon has: empty
+         visits, huge visits, blank/extreme/OL readings, leaks, very
+         long and Unicode/XSS-probe text, null optional equipment
+         fields, past/future/missing dates, a subscription-linked
+         visit, an unzoned dispatch request, missing vendor pricing on
+         a Part/Consumable Request, and a few "boring/clean" controls.
+         Not idempotent on purpose: each click adds another fresh
+         batch, since the point is having data ready whenever a
+         testing pass is needed, not a one-time seed. Every job's notes
+         field is prefixed "[STRESS TEST]" so the whole batch is one
+         search away to review or delete later. -->
+    <record id="action_seed_stress_test_data" model="ir.actions.server">
+        <field name="name">Seed Stress-Test Data (30 Visits)</field>
+        <field name="model_id" ref="model_airlogic_service_job"/>
+        <field name="state">code</field>
+        <field name="code">model.action_seed_stress_test_data()</field>
+    </record>
+
 </odoo>
