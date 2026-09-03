@@ -143,7 +143,7 @@
                                     <div t-if="ji['photos']" style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;">
                                         <img t-foreach="ji['photos'][:2]" t-as="photo"
                                              t-attf-src="data:{{photo.mimetype}};base64,{{photo.datas.decode()}}"
-                                             style="width:60px;height:60px;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
+                                             style="width:34px;height:60px;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
                                         <div t-if="len(ji['photos']) > 2" class="text-muted text-center" style="font-size:8px;">
                                             +<t t-esc="len(ji['photos']) - 2"/> more
                                         </div>

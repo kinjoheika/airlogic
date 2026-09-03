@@ -13,8 +13,9 @@
   (Phase 1 vitals + anything out of range), see
   models/airlogic_site_visit_report.py's VITAL_CODES for exactly which.
 
-  Both share the same header and a photo appendix (2in tiles, headed
-  per unit, e.g. "AC Unit 1 - Reception Lobby, Reception Lobby ·
+  Both share the same header and a photo appendix (1.2in x 2.13in
+  portrait tiles, 9:16 like a phone camera photo, headed per unit,
+  e.g. "AC Unit 1 - Reception Lobby, Reception Lobby ·
   SVJ-2026-0041"), placed right before the final page. Report A has
   no last page at all. Report B's is a Standard Reference table (from
   Configuration > Measurement Fields), one column per unit on the
@@ -69,8 +70,9 @@
 
     <!-- Photos headed per unit (not one undifferentiated pool), still
          collected together as an appendix rather than scattered inline
-         in the compact per-unit summary above: 2in tiles per the
-         user's spec. -->
+         in the compact per-unit summary above: 1.2in x 2.13in portrait
+         tiles, a 9:16 ratio matching how a phone camera actually
+         frames a photo, per the user's spec. -->
     <template id="site_visit_report_photos">
         <div t-if="vd['has_photos']" style="page-break-before:always;">
             <h5 style="font-weight:800;margin-bottom:10px;">Site Photos</h5>
@@ -82,7 +84,7 @@
                     <div style="display:flex;flex-wrap:wrap;gap:10px;">
                         <img t-foreach="ji['photos']" t-as="photo"
                              t-attf-src="data:{{photo.mimetype}};base64,{{photo.datas.decode()}}"
-                             style="width:2in;height:2in;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
+                             style="width:1.2in;height:2.13in;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
                     </div>
                 </div>
             </t>
