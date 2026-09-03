@@ -185,14 +185,37 @@
                                         <span t-attf-class="{{issue['severity'] == 'flagged' and 'text-danger' or 'text-warning'}} fw-bold" t-esc="issue['label']"/><t t-if="not issue_last">, </t>
                                     </t>
                                 </div>
-                                <div t-if="ji['readings']" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;padding-top:6px;border-top:1px dashed #E7E9EB;font-size:9.5px;">
-                                    <span t-foreach="ji['readings']" t-as="r" t-key="r_index"
-                                          t-attf-class="{{r['out_of_range'] and 'text-danger fw-bold' or ''}}">
-                                        <t t-esc="r['label']"/>: <t t-esc="r['value']"/> <t t-esc="r['unit']"/>
-                                    </span>
-                                </div>
                             </div>
                         </t>
+
+                        <!-- Field x Unit readings matrix, styled to
+                             match the Standard Reference table on the
+                             last page cell-for-cell (same padding, font
+                             size, border weight) so the two line up
+                             when flipping between "what we measured"
+                             and "what's normal" for the same field row. -->
+                        <h5 style="font-weight:800;margin:14px 0 4px;">Readings</h5>
+                        <table style="width:100%;font-size:9px;border-collapse:collapse;">
+                            <thead>
+                                <tr style="border-bottom:1.5px solid #212529;">
+                                    <th style="text-align:left;padding:4px 6px;">Field</th>
+                                    <th t-foreach="vd['jobs_info']" t-as="u" t-key="u['job'].id"
+                                        style="text-align:left;padding:4px 6px;" t-esc="u['job'].equipment_id.name"/>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="standards" t-as="f" t-key="f.id" style="border-bottom:1px solid #eee;">
+                                    <td style="padding:4px 6px;" t-esc="f.name"/>
+                                    <t t-foreach="vd['jobs_info']" t-as="u" t-key="u['job'].id">
+                                        <t t-set="cell" t-value="vd['reading_matrix'].get((f.id, u['job'].id))"/>
+                                        <td style="padding:4px 6px;">
+                                            <span t-if="cell" t-attf-class="{{cell['out_of_range'] and 'text-danger fw-bold' or ''}}" t-esc="cell['value']"/>
+                                            <span t-else="" class="text-muted">—</span>
+                                        </td>
+                                    </t>
+                                </tr>
+                            </tbody>
+                        </table>
 
                         <t t-call="airlogic_field_service.site_visit_report_photos"/>
 
@@ -201,7 +224,12 @@
                              standard: units are read from vd only to
                              label the columns, the standard value
                              itself is identical in every column, since
-                             it's not unit-specific data. -->
+                             it's not unit-specific data. Same padding/
+                             font-size/border as the Readings table
+                             above, on purpose (AIR-T58): same row set,
+                             same row order, same spacing, so the two
+                             tables line up when comparing this visit's
+                             numbers against what's normal. -->
                         <div style="page-break-before:always;">
                             <h5 style="font-weight:800;margin-bottom:4px;">Standard Reference Values</h5>
                             <div class="text-muted mb-2" style="font-size:10px;">
@@ -218,7 +246,7 @@
                                 </thead>
                                 <tbody>
                                     <tr t-foreach="standards" t-as="f" t-key="f.id" style="border-bottom:1px solid #eee;">
-                                        <td style="padding:4px 6px;font-weight:700;" t-esc="f.name"/>
+                                        <td style="padding:4px 6px;" t-esc="f.name"/>
                                         <td t-foreach="vd['jobs_info']" t-as="u" t-key="u['job'].id"
                                             style="padding:4px 6px;" t-esc="f.standard"/>
                                     </tr>
