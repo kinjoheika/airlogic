@@ -13,12 +13,15 @@
   (Phase 1 vitals + anything out of range), see
   models/airlogic_site_visit_report.py's VITAL_CODES for exactly which.
 
-  Both share the same header, a photo appendix (2in tiles, every
-  photo across every unit on the visit, collected together rather than
-  scattered per-unit) placed right before the final page, and a last
-  page of standard/healthy reference values that is explicitly NOT
-  tied to this visit's own data (page-break-before:always, no visit
-  variables used): a static comparison sheet, not a computed one.
+  Both share the same header and a photo appendix (2in tiles, headed
+  per unit, e.g. "AC Unit 1 - Reception Lobby, Reception Lobby ·
+  SVJ-2026-0041"), placed right before the final page. Report A has
+  no last page at all. Report B's is a Standard Reference table (from
+  Configuration > Measurement Fields), one column per unit on the
+  visit, each column showing that field's standard value: it reads
+  the visit only for which units to list as columns, never for their
+  actual measured data, so the numbers themselves never vary per
+  visit.
 
   Reuses paperformat_airlogic_owner_report (see
   data/airlogic_report_paperformat_data.xml) and the same
@@ -64,55 +67,25 @@
         </div>
     </template>
 
-    <!-- Every photo across every unit on this visit, collected in one
-         place (not scattered per-unit) so the earlier per-unit section
-         can stay compact: 2in tiles per the user's spec, in a plain
-         wrapping grid. -->
+    <!-- Photos headed per unit (not one undifferentiated pool), still
+         collected together as an appendix rather than scattered inline
+         in the compact per-unit summary above: 2in tiles per the
+         user's spec. -->
     <template id="site_visit_report_photos">
-        <div t-if="vd['photos']" style="page-break-before:always;">
+        <div t-if="vd['has_photos']" style="page-break-before:always;">
             <h5 style="font-weight:800;margin-bottom:10px;">Site Photos</h5>
-            <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                <img t-foreach="vd['photos']" t-as="photo"
-                     t-attf-src="data:{{photo.mimetype}};base64,{{photo.datas.decode()}}"
-                     style="width:2in;height:2in;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
-            </div>
-        </div>
-    </template>
-
-    <!-- Static reference sheet: deliberately does NOT read visit/vd,
-         Configuration > Measurement Fields' own standard/min/max
-         values, for the reader to compare this visit's own numbers
-         against while flipping back a page. Always starts on its own
-         fresh page and never varies per visit. -->
-    <template id="site_visit_report_standards_page">
-        <div style="page-break-before:always;">
-            <h5 style="font-weight:800;margin-bottom:4px;">Standard Reference Values</h5>
-            <div class="text-muted mb-2" style="font-size:10px;">
-                Manufacturer/standard ranges configured under Configuration &gt; Measurement Fields --
-                a fixed reference sheet, not specific to this visit.
-            </div>
-            <table style="width:100%;font-size:10px;border-collapse:collapse;">
-                <thead>
-                    <tr style="border-bottom:1.5px solid #212529;">
-                        <th style="text-align:left;padding:4px 6px;">Field</th>
-                        <th style="text-align:left;padding:4px 6px;">Section</th>
-                        <th style="text-align:left;padding:4px 6px;">Standard</th>
-                        <th style="text-align:left;padding:4px 6px;">Min</th>
-                        <th style="text-align:left;padding:4px 6px;">Max</th>
-                        <th style="text-align:left;padding:4px 6px;">Unit</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr t-foreach="standards" t-as="f" style="border-bottom:1px solid #eee;">
-                        <td style="padding:4px 6px;" t-esc="f.name"/>
-                        <td style="padding:4px 6px;" t-esc="f.section"/>
-                        <td style="padding:4px 6px;" t-esc="f.standard"/>
-                        <td style="padding:4px 6px;" t-esc="f.min_value or ''"/>
-                        <td style="padding:4px 6px;" t-esc="f.max_value or ''"/>
-                        <td style="padding:4px 6px;" t-esc="f.unit"/>
-                    </tr>
-                </tbody>
-            </table>
+            <t t-foreach="vd['jobs_info']" t-as="ji">
+                <div t-if="ji['photos']" style="margin-bottom:14px;page-break-inside:avoid;">
+                    <div style="font-size:11px;font-weight:700;margin-bottom:6px;">
+                        <t t-esc="ji['job'].equipment_id.name"/> — <t t-esc="ji['job'].equipment_id.sublocation_id.name or 'No sublocation'"/> · <t t-esc="ji['job'].name"/>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                        <img t-foreach="ji['photos']" t-as="photo"
+                             t-attf-src="data:{{photo.mimetype}};base64,{{photo.datas.decode()}}"
+                             style="width:2in;height:2in;object-fit:cover;border:1px solid #ddd;border-radius:3px;"/>
+                    </div>
+                </div>
+            </t>
         </div>
     </template>
 
@@ -163,7 +136,6 @@
                         </table>
 
                         <t t-call="airlogic_field_service.site_visit_report_photos"/>
-                        <t t-call="airlogic_field_service.site_visit_report_standards_page"/>
                     </div>
                 </t>
             </t>
@@ -223,7 +195,36 @@
                         </t>
 
                         <t t-call="airlogic_field_service.site_visit_report_photos"/>
-                        <t t-call="airlogic_field_service.site_visit_report_standards_page"/>
+
+                        <!-- One column per unit on this visit, each
+                             showing that field's Configuration-set
+                             standard: units are read from vd only to
+                             label the columns, the standard value
+                             itself is identical in every column, since
+                             it's not unit-specific data. -->
+                        <div style="page-break-before:always;">
+                            <h5 style="font-weight:800;margin-bottom:4px;">Standard Reference Values</h5>
+                            <div class="text-muted mb-2" style="font-size:10px;">
+                                Manufacturer/standard ranges configured under Configuration &gt; Measurement Fields,
+                                listed per unit for easy side-by-side reference.
+                            </div>
+                            <table style="width:100%;font-size:9px;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="border-bottom:1.5px solid #212529;">
+                                        <th style="text-align:left;padding:4px 6px;">Field</th>
+                                        <th t-foreach="vd['jobs_info']" t-as="u" t-key="u['job'].id"
+                                            style="text-align:left;padding:4px 6px;" t-esc="u['job'].equipment_id.name"/>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="standards" t-as="f" t-key="f.id" style="border-bottom:1px solid #eee;">
+                                        <td style="padding:4px 6px;font-weight:700;" t-esc="f.name"/>
+                                        <td t-foreach="vd['jobs_info']" t-as="u" t-key="u['job'].id"
+                                            style="padding:4px 6px;" t-esc="f.standard"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </t>
             </t>

@@ -18,11 +18,9 @@ def _build_visit_data(env, visit, include_readings):
     numbers).
     """
     jobs_info = []
-    all_photos = env['ir.attachment']
     for job in visit.job_ids:
         status = visit._job_status(job)
         photos = job.media_ids.filtered(lambda a: a.mimetype and a.mimetype.startswith('image/'))
-        all_photos |= photos
         readings = []
         if include_readings:
             for line in job.reading_line_ids:
@@ -40,10 +38,11 @@ def _build_visit_data(env, visit, include_readings):
             'status': status,
             'issues': visit._job_issues(job),
             'readings': readings,
+            'photos': photos,
         })
     return {
         'jobs_info': jobs_info,
-        'photos': all_photos,
+        'has_photos': any(ji['photos'] for ji in jobs_info),
         'total': len(visit.job_ids),
     }
 
