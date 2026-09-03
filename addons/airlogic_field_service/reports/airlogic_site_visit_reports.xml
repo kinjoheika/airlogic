@@ -91,7 +91,7 @@
 
     <!-- ============== Report A: Simple (status only) ============== -->
 
-    <template id="report_airlogic_site_visit_simple">
+    <template id="report_svr_simple">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="visit">
                 <t t-set="vd" t-value="visit_data[visit.id]"/>
@@ -142,12 +142,12 @@
         </t>
     </template>
 
-    <record id="action_report_airlogic_site_visit_simple" model="ir.actions.report">
+    <record id="action_report_svr_simple" model="ir.actions.report">
         <field name="name">Site Visit Report — Simple</field>
         <field name="model">airlogic.service.visit</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">airlogic_field_service.report_airlogic_site_visit_simple</field>
-        <field name="report_file">airlogic_field_service.report_airlogic_site_visit_simple</field>
+        <field name="report_name">airlogic_field_service.report_svr_simple</field>
+        <field name="report_file">airlogic_field_service.report_svr_simple</field>
         <field name="print_report_name">'StandardAir_Site Visit Simple_%s_%s' % (object.partner_id.name, object.date and object.date.strftime('%Y-%m-%d') or '')</field>
         <field name="paperformat_id" ref="paperformat_airlogic_owner_report"/>
         <field name="binding_model_id" ref="airlogic_core.model_airlogic_service_visit"/>
@@ -156,7 +156,7 @@
 
     <!-- ============== Report B: With Readings ============== -->
 
-    <template id="report_airlogic_site_visit_readings">
+    <template id="report_svr_readings">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="visit">
                 <t t-set="vd" t-value="visit_data[visit.id]"/>
@@ -259,12 +259,12 @@
         </t>
     </template>
 
-    <record id="action_report_airlogic_site_visit_readings" model="ir.actions.report">
+    <record id="action_report_svr_readings" model="ir.actions.report">
         <field name="name">Site Visit Report — With Readings</field>
         <field name="model">airlogic.service.visit</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">airlogic_field_service.report_airlogic_site_visit_readings</field>
-        <field name="report_file">airlogic_field_service.report_airlogic_site_visit_readings</field>
+        <field name="report_name">airlogic_field_service.report_svr_readings</field>
+        <field name="report_file">airlogic_field_service.report_svr_readings</field>
         <field name="print_report_name">'StandardAir_Site Visit Readings_%s_%s' % (object.partner_id.name, object.date and object.date.strftime('%Y-%m-%d') or '')</field>
         <field name="paperformat_id" ref="paperformat_airlogic_owner_report"/>
         <field name="binding_model_id" ref="airlogic_core.model_airlogic_service_visit"/>

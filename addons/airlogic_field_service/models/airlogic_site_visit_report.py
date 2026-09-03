@@ -61,7 +61,13 @@ class AirlogicSiteVisitSimpleReport(models.AbstractModel):
     """Report A: status only, no reading numbers -- the compact
     reference version.
     """
-    _name = 'report.airlogic_field_service.report_airlogic_site_visit_simple'
+    # Short technical name on purpose (AIR-T59): report.<name> becomes
+    # the postgres table name (dots -> underscores), capped at 63 chars
+    # by NAMEDATALEN -- report.airlogic_field_service.
+    # report_airlogic_site_visit_simple blew past that and crashed the
+    # whole registry on load ("Table name ... is too long"), not just
+    # this one report.
+    _name = 'report.airlogic_field_service.report_svr_simple'
     _description = 'Airlogic Site Visit Report — Simple'
 
     def _get_report_values(self, docids, data=None):
@@ -80,7 +86,7 @@ class AirlogicSiteVisitReadingsReport(models.AbstractModel):
     """Report B: same compact status summary, plus a Field x Unit
     readings matrix that mirrors the last page's own layout exactly.
     """
-    _name = 'report.airlogic_field_service.report_airlogic_site_visit_readings'
+    _name = 'report.airlogic_field_service.report_svr_readings'  # see AIR-T59 note above
     _description = 'Airlogic Site Visit Report — With Readings'
 
     def _get_report_values(self, docids, data=None):
