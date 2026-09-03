@@ -194,8 +194,11 @@ class AirlogicDispatchRequest(models.Model):
 
     def _find_least_loaded_technician(self, target_date):
         self.ensure_one()
+        # group_ids, not groups_id: this build renamed res.users.groups_id
+        # -> group_ids (see kiroku_microapp's own migration note from
+        # early in this project).
         technicians = self.env['res.users'].search(
-            [('groups_id', 'in', self.env.ref('airlogic_core.group_airlogic_technician').id)])
+            [('group_ids', 'in', self.env.ref('airlogic_core.group_airlogic_technician').id)])
         if not technicians:
             return self.env['res.users']
         return self._least_loaded_among(technicians, target_date)
@@ -292,7 +295,7 @@ class AirlogicDispatchRequest(models.Model):
         if self.requested_by.partner_id:
             partner_ids.add(self.requested_by.partner_id.id)
         officers = self.env['res.users'].search(
-            [('groups_id', 'in', self.env.ref('airlogic_core.group_airlogic_supervisor').id)])
+            [('group_ids', 'in', self.env.ref('airlogic_core.group_airlogic_supervisor').id)])
         for officer in officers:
             if officer.partner_id:
                 partner_ids.add(officer.partner_id.id)
