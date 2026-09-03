@@ -712,7 +712,7 @@ export class AirlogicMobileFieldEntry extends Component {
             quantity: qty,
         }]);
         this.state.consumableQty[productId] = "";
-        this.showToast("Consumable order sent to Purchase.", "success");
+        this.showToast("Consumable order sent for approval.", "success");
     }
 
     // --- Flag/Alert dialog -------------------------------------------------

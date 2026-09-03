@@ -35,6 +35,21 @@
                 <page string="Visual Comparison" name="visual_comparison">
                     <field name="visual_comparison_html" readonly="1"/>
                 </page>
+                <page string="Compatible Parts" name="compatible_parts">
+                    <p class="text-muted">
+                        Parts mapped to this unit's Equipment Category under Configuration
+                        &gt; Requestable Parts or Equipment Categories -- what the mobile
+                        app's Request Parts screen pre-fills for this unit. Edit the
+                        mapping from either of those, not here.
+                    </p>
+                    <field name="compatible_part_ids" readonly="1">
+                        <list>
+                            <field name="default_code" string="Model No."/>
+                            <field name="name"/>
+                            <field name="airlogic_zone"/>
+                        </list>
+                    </field>
+                </page>
             </notebook>
         </field>
     </record>

@@ -28,8 +28,16 @@ class ProductTemplateFieldServiceExt(models.Model):
              'of the per-unit Request Parts list -- coil cleaner, insulation, copper '
              'tube, and other supplies used across jobs rather than swapped into one '
              'specific broken unit.')
+    # Explicit relation/column names (AIR-T60), not Odoo's auto-derived
+    # ones: airlogic.equipment.category (in airlogic_core) has its own
+    # reverse field over this exact same table (see
+    # airlogic_equipment_category_ext.py), so a Manager can manage this
+    # one relationship from either the part's form or the category's
+    # list -- "unify and link" the catalog and the compatibility
+    # mapping instead of only editing it from one side.
     airlogic_equipment_category_ids = fields.Many2many(
-        'airlogic.equipment.category', string='Compatible Equipment Categories',
+        'airlogic.equipment.category', relation='airlogic_part_category_rel',
+        column1='product_tmpl_id', column2='category_id', string='Compatible Equipment Categories',
         help='Which equipment categories this part fits. Powers the mobile app\'s '
              'Request Parts pre-fill: tapping Request Parts on a specific unit shows '
              'parts mapped to that unit\'s category first, so the technician confirms '

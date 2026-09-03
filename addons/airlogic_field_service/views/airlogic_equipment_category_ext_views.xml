@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lets a Manager set up Equipment/Parts compatibility from the
+  category side, not just from each individual part's own form
+  (Requestable Parts): same underlying relation table either way
+  (see airlogic_equipment_category_ext.py), so this is a second entry
+  point onto the same data, not a separate mapping to keep in sync.
+-->
+<odoo>
+
+    <record id="view_airlogic_equipment_category_list_inherit_field_service" model="ir.ui.view">
+        <field name="name">airlogic.equipment.category.list.field.service</field>
+        <field name="model">airlogic.equipment.category</field>
+        <field name="inherit_id" ref="airlogic_core.view_airlogic_equipment_category_list"/>
+        <field name="arch" type="xml">
+            <field name="rate" position="after">
+                <field name="compatible_part_tmpl_ids" widget="many2many_tags"
+                       domain="[('airlogic_requestable', '=', True)]"
+                       context="{'default_airlogic_requestable': True}"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

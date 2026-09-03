@@ -47,6 +47,7 @@ airlogic.service.job.
         'views/airlogic_app_config_views.xml',
         'views/airlogic_job_revision_views.xml',
         'views/airlogic_equipment_ext_views.xml',
+        'views/airlogic_equipment_category_ext_views.xml',
         'views/airlogic_service_job_views.xml',
         'views/airlogic_service_visit_ext_views.xml',
         'views/airlogic_service_contract_views.xml',

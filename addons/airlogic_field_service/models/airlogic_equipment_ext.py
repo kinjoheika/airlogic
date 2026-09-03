@@ -21,11 +21,28 @@ class AirlogicEquipmentFieldServiceExt(models.Model):
         string='Reading Comparison', compute='_compute_reading_comparison_html', sanitize=False)
     visual_comparison_html = fields.Html(
         string='Visual Comparison', compute='_compute_visual_comparison_html', sanitize=False)
+    # Read-only here on purpose (AIR-T60): the actual mapping is edited
+    # from Configuration (Requestable Parts or Equipment Categories,
+    # whichever a Manager has open -- see airlogic_product_ext.py /
+    # airlogic_equipment_category_ext.py), reusing the exact same
+    # relation table via category_id. This is just this specific unit's
+    # view onto that same data, so "unify and link" holds across all
+    # three surfaces instead of drifting apart.
+    compatible_part_ids = fields.Many2many(
+        'product.product', string='Compatible Parts', compute='_compute_compatible_part_ids')
 
     @api.depends('job_ids')
     def _compute_job_count(self):
         for rec in self:
             rec.job_count = len(rec.job_ids)
+
+    @api.depends('category_id')
+    def _compute_compatible_part_ids(self):
+        for rec in self:
+            rec.compatible_part_ids = self.env['product.product'].search([
+                ('airlogic_requestable', '=', True),
+                ('airlogic_equipment_category_ids', 'in', rec.category_id.id),
+            ]) if rec.category_id else self.env['product.product']
 
     def action_view_jobs(self):
         self.ensure_one()
