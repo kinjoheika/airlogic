@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
+    <t t-name="airlogic_field_service.AirlogicClock">
+        <span class="o_airlogic_nav_clock" t-esc="state.text"/>
+    </t>
+
     <t t-name="airlogic_field_service.MobileFieldEntry">
         <div class="o_airlogic_mobile" t-att-style="state.wallpaperUrl ? 'background-image:url(' + state.wallpaperUrl + ')' : ''">
             <div class="o_airlogic_mobile_nav">
                 <div class="o_airlogic_nav_exit" t-on-click="exitApp" title="Exit to Odoo">⌂</div>
                 <div class="o_airlogic_mobile_brand">Standard <span>Airlogic</span></div>
-                <div class="o_airlogic_nav_logout" t-on-click="onLogout" title="Log Out">⏻</div>
-                <div class="o_airlogic_nav_clock" t-esc="state.clockText"/>
+                <div class="o_airlogic_nav_logout" t-on-click="requestLogout" title="Log Out">⏻</div>
+                <AirlogicClock/>
                 <div t-attf-class="o_airlogic_conn_badge {{state.online ? 'online' : 'offline'}}">
                     <t t-if="state.online">Online</t>
                     <t t-else="">Offline</t>
@@ -60,20 +64,25 @@
                 </div>
                 <p t-if="!state.clients.length" class="text-muted">No clients on file yet.</p>
             </div>
+            <div t-if="state.screen === 'clients' and !state.loading" class="o_airlogic_footer_bar">
+                <button type="button" class="btn airlogic-btn-primary" t-on-click="openDispatchDirect">
+                    🚚 Dispatch
+                </button>
+                <button type="button" class="btn btn-outline-secondary" t-on-click="openConsumables">
+                    🧴 Consumables
+                </button>
+            </div>
 
             <!-- MAIN (bottom-nav tabs) -->
             <div t-if="state.screen === 'main' and !state.loading" class="o_airlogic_mobile_body o_airlogic_main">
                 <div class="o_airlogic_title_row">
                     <span class="o_airlogic_back_arrow" t-on-click="backToClients" title="Back to Clients">‹</span>
                     <div class="o_airlogic_title_block">
-                        <h4><t t-esc="state.selectedPartner.name"/></h4>
+                        <h4><t t-esc="state.selectedPartner ? state.selectedPartner.name : 'My Dispatch'"/></h4>
                         <div t-if="currentTabMeta" class="o_airlogic_tab_subtitle">
                             <t t-esc="currentTabMeta.icon"/> <t t-esc="currentTabMeta.label"/>
                         </div>
                     </div>
-                    <span t-if="state.tab === 'visit'" class="o_airlogic_consumables_link" t-on-click="openConsumables">
-                        🧴 Consumables
-                    </span>
                 </div>
 
                 <!-- VISIT TAB -->
@@ -91,22 +100,29 @@
                     </t>
                 </t>
 
-                <!-- SCHEDULE TAB: this technician's own upcoming/past
-                     jobs, independent of the client this session
-                     started from. -->
-                <t t-if="state.tab === 'schedule'">
+                <!-- DISPATCH TAB: "Upcoming" is this technician's own
+                     confirmed-not-yet-fulfilled dispatch requests;
+                     tapping one asks to fulfill it (see the confirm
+                     dialog below). "Past" stays actual job history,
+                     independent of the client this session started from. -->
+                <t t-if="state.tab === 'dispatch'">
                     <div class="o_airlogic_group_hd">Upcoming</div>
-                    <div t-foreach="state.scheduleUpcoming" t-as="j" t-key="j.id" class="o_airlogic_card">
-                        <div class="o_airlogic_card_title" t-esc="j.partner_id and j.partner_id[1] or j.name"/>
+                    <div t-foreach="state.dispatchUpcoming" t-as="d" t-key="d.id"
+                         class="o_airlogic_card" t-on-click="() => this.openFulfillConfirm(d)">
+                        <div class="o_airlogic_card_title">
+                            <t t-esc="d.partner_id and d.partner_id[1] or d.name"/>
+                            <span t-attf-class="o_airlogic_urgency_badge o_airlogic_urgency_{{d.urgency}}"
+                                  t-esc="d.urgency"/>
+                        </div>
                         <div class="o_airlogic_card_sub">
-                            <t t-esc="j.equipment_id and j.equipment_id[1] or ''"/>
-                            <t t-if="j.date"> · <t t-esc="j.date.slice(0, 10)"/></t>
+                            <t t-esc="d.equipment_id and d.equipment_id[1] or 'All units'"/>
+                            <t t-if="d.suggested_date"> · <t t-esc="formatDispatchWhen(d.suggested_date)"/></t>
                         </div>
                     </div>
-                    <p t-if="!state.scheduleUpcoming.length" class="text-muted">Nothing scheduled yet.</p>
+                    <p t-if="!state.dispatchUpcoming.length" class="text-muted">Nothing dispatched yet.</p>
 
                     <div class="o_airlogic_group_hd" style="margin-top:12px;">Past</div>
-                    <div t-foreach="state.schedulePast" t-as="j" t-key="j.id" class="o_airlogic_card">
+                    <div t-foreach="state.dispatchPast" t-as="j" t-key="j.id" class="o_airlogic_card">
                         <div class="o_airlogic_card_title" t-esc="j.partner_id and j.partner_id[1] or j.name"/>
                         <div class="o_airlogic_card_sub">
                             <t t-esc="j.equipment_id and j.equipment_id[1] or ''"/>
@@ -114,7 +130,7 @@
                             <t t-if="j.state"> · <t t-esc="j.state"/></t>
                         </div>
                     </div>
-                    <p t-if="!state.schedulePast.length" class="text-muted">No past jobs yet.</p>
+                    <p t-if="!state.dispatchPast.length" class="text-muted">No past jobs yet.</p>
                 </t>
 
                 <!-- UNITS TAB -->
@@ -323,9 +339,6 @@
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'visit' ? 'active' : ''}}" t-on-click="() => this.setTab('visit')">
                     <div class="o_airlogic_bnav_icon">📋</div>Visit
                 </div>
-                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'schedule' ? 'active' : ''}}" t-on-click="() => this.setTab('schedule')">
-                    <div class="o_airlogic_bnav_icon">🗓</div>Schedule
-                </div>
                 <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'units' ? 'active' : ''}}" t-on-click="() => this.setTab('units')">
                     <div class="o_airlogic_bnav_icon">📊</div>Units
                 </div>
@@ -335,6 +348,12 @@
                 <div t-if="state.currentTechnician and state.currentTechnician.isSenior"
                      t-attf-class="o_airlogic_bnav_tab {{state.tab === 'equipment' ? 'active' : ''}}" t-on-click="() => this.setTab('equipment')">
                     <div class="o_airlogic_bnav_icon">🔧</div>Add/Delete
+                </div>
+                <!-- Dispatch last (moved from its old 2nd position): the
+                     tab a technician checks least often once they're
+                     already mid-visit. -->
+                <div t-attf-class="o_airlogic_bnav_tab {{state.tab === 'dispatch' ? 'active' : ''}}" t-on-click="() => this.setTab('dispatch')">
+                    <div class="o_airlogic_bnav_icon">🚚</div>Dispatch
                 </div>
             </div>
 
@@ -375,7 +394,7 @@
                                 </button>
                             </t>
                             <t t-if="item.type === 'number'">
-                                <input type="number" step="0.1" class="form-control form-control-sm o_airlogic_number"
+                                <input type="number" step="0.1" min="0" class="form-control form-control-sm o_airlogic_number"
                                        t-att-value="checklistLine(item.key) ? checklistLine(item.key).value : ''"
                                        t-on-change="(ev) => this.onNumberChecklistChange(item.key, ev)"/>
                                 <span t-if="item.unit" class="o_airlogic_unit" t-esc="item.unit"/>
@@ -500,6 +519,36 @@
                     </p>
                     <button type="button" class="btn airlogic-btn-primary w-100 mb-2" t-on-click="stayInDsr">Stay</button>
                     <button type="button" class="btn btn-outline-secondary w-100" t-on-click="confirmExitDsr">Exit</button>
+                </div>
+            </div>
+
+            <!-- LOGOUT-CONFIRM DIALOG -->
+            <div t-if="state.logoutConfirm" class="o_airlogic_dialog_overlay">
+                <div class="o_airlogic_dialog_sheet text-center">
+                    <div style="font-size:28px;">⏻</div>
+                    <div class="o_airlogic_dialog_hd">Log Out?</div>
+                    <p class="text-muted">
+                        You'll be sent back to PIN entry. Any unsynced changes stay saved
+                        on this device and sync once you're back online.
+                    </p>
+                    <button type="button" class="btn btn-danger w-100 mb-2" t-on-click="confirmLogout">Log Out</button>
+                    <button type="button" class="btn btn-outline-secondary w-100" t-on-click="cancelLogoutConfirm">Cancel</button>
+                </div>
+            </div>
+
+            <!-- FULFILL DISPATCH CONFIRM DIALOG -->
+            <div t-if="state.fulfillConfirm" class="o_airlogic_dialog_overlay">
+                <div class="o_airlogic_dialog_sheet text-center">
+                    <div style="font-size:28px;">🚚</div>
+                    <div class="o_airlogic_dialog_hd">Fulfill this dispatch?</div>
+                    <p class="text-muted">
+                        <t t-esc="state.fulfillConfirm.partner_id and state.fulfillConfirm.partner_id[1] or ''"/>
+                        <t t-if="state.fulfillConfirm.suggested_date">
+                            — <t t-esc="formatDispatchWhen(state.fulfillConfirm.suggested_date)"/>
+                        </t>. You'll go to their Visit page to create the Service Job.
+                    </p>
+                    <button type="button" class="btn airlogic-btn-primary w-100 mb-2" t-on-click="confirmFulfillYes">Yes</button>
+                    <button type="button" class="btn btn-outline-secondary w-100" t-on-click="cancelFulfillConfirm">No</button>
                 </div>
             </div>
         </div>

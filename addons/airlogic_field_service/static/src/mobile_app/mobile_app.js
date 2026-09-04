@@ -73,9 +73,51 @@ function saveLocalValues(jobId, values) {
     }
 }
 
+// Every zone this company dispatches to (Makati/Pasay/Ermita, see
+// airlogic_dispatch's zone data) is Metro Manila -- pinning every
+// on-screen time to this zone, instead of each phone's own device
+// timezone, is what "centralizes" the clock: a technician's phone set
+// to a different locale/timezone was showing a different time than the
+// desktop backend (which renders in the Odoo user's/company's own tz,
+// itself expected to be Asia/Manila).
+const MANILA_TZ = "Asia/Manila";
+
+// Small header clock, its own component with its own useState -- kept
+// OUT of AirlogicMobileFieldEntry's state on purpose. That state backs
+// the entire template (all 5 tabs, the DSR phases, every dialog), and
+// Owl re-renders a component's whole template whenever any reactive
+// property it read gets written. A clock ticking every second inside
+// that same state forced a full re-render of the giant template once a
+// second -- including every open number <input>, which is how a
+// technician mid-keystroke on a reading would see it reset to the last
+// *committed* value (t-on-change hasn't fired yet, so state still held
+// the old value) a moment later. Isolating the clock here means only
+// this tiny component re-renders each tick.
+class AirlogicClock extends Component {
+    static template = "airlogic_field_service.AirlogicClock";
+    static props = [];
+
+    setup() {
+        this.state = useState({ text: "" });
+        this.tick();
+        onMounted(() => {
+            this._timer = setInterval(() => this.tick(), 1000);
+        });
+        onWillUnmount(() => clearInterval(this._timer));
+    }
+
+    tick() {
+        this.state.text = new Date().toLocaleTimeString("en-PH", {
+            hour: "2-digit", minute: "2-digit", second: "2-digit",
+            timeZone: MANILA_TZ,
+        });
+    }
+}
+
 export class AirlogicMobileFieldEntry extends Component {
     static template = "airlogic_field_service.MobileFieldEntry";
     static props = ["*"];
+    static components = { AirlogicClock };
 
     setup() {
         this.orm = useService("orm");
@@ -114,6 +156,7 @@ export class AirlogicMobileFieldEntry extends Component {
             dsrPhase: 1,
             flagDialog: null, // {key, label, note}
             exitConfirm: false,
+            logoutConfirm: false,
             pendingCount: 0,
             online: navigator.onLine,
 
@@ -131,7 +174,6 @@ export class AirlogicMobileFieldEntry extends Component {
             toast: null, // {message, type}
             wallpaperUrl: null, // Configuration > App Wallpaper, applied behind every screen
             currentTechnician: null, // {name, isSenior}, set once the clients-list PIN passes
-            clockText: "", // small digital clock in the header, ticks every second
 
             partsCatalog: [], // [{id, name, airlogic_zone, ...}], loaded once and cached
             partRequests: [], // this job's airlogic.part.request rows
@@ -140,8 +182,12 @@ export class AirlogicMobileFieldEntry extends Component {
             consumablesCatalog: [], // loaded once, cached
             consumableQty: {}, // productId -> quantity input value
 
-            scheduleUpcoming: [], // this technician's own future jobs
-            schedulePast: [], // this technician's own completed/past jobs
+            dispatchUpcoming: [], // this technician's own confirmed-not-yet-fulfilled
+                                   // airlogic.dispatch.request rows
+            dispatchPast: [], // this technician's own completed/past jobs
+            fulfillConfirm: null, // dispatch row awaiting "Fulfill this dispatch?" Yes/No
+            fulfillingDispatchId: null, // set while the Visit tab is being used to
+                                        // fulfill that dispatch (see enterDsr)
         });
 
         this._onlineHandler = () => {
@@ -155,14 +201,11 @@ export class AirlogicMobileFieldEntry extends Component {
             window.addEventListener("online", this._onlineHandler);
             window.addEventListener("offline", this._offlineHandler);
             this.loadWallpaper();
-            this.updateClock();
-            this._clockTimer = setInterval(() => this.updateClock(), 1000);
         });
         onWillUnmount(() => {
             window.removeEventListener("online", this._onlineHandler);
             window.removeEventListener("offline", this._offlineHandler);
             clearTimeout(this._toastTimer);
-            clearInterval(this._clockTimer);
         });
     }
 
@@ -183,6 +226,23 @@ export class AirlogicMobileFieldEntry extends Component {
 
     exitApp() {
         window.location.href = "/odoo";
+    }
+
+    // Log Out asks first (a stray tap here mid-visit used to lose the
+    // technician's place with no way back) -- requestLogout just opens
+    // the confirm dialog; the actual reset stays in onLogout below,
+    // only reachable from confirmLogout.
+    requestLogout() {
+        this.state.logoutConfirm = true;
+    }
+
+    cancelLogoutConfirm() {
+        this.state.logoutConfirm = false;
+    }
+
+    confirmLogout() {
+        this.state.logoutConfirm = false;
+        this.onLogout();
     }
 
     // "Logout" here means back to this app's own PIN entry screen, NOT
@@ -207,12 +267,7 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.unitEquipment = null;
         this.state.historyEquipment = null;
         this.state.equipmentEdit = null;
-    }
-
-    updateClock() {
-        this.state.clockText = new Date().toLocaleTimeString([], {
-            hour: "2-digit", minute: "2-digit", second: "2-digit",
-        });
+        this.state.fulfillingDispatchId = null;
     }
 
     // Configuration > App Wallpaper -- purely decorative, so a missing
@@ -237,10 +292,10 @@ export class AirlogicMobileFieldEntry extends Component {
     get currentTabMeta() {
         const map = {
             visit: { icon: "📋", label: "Visit" },
-            schedule: { icon: "🗓", label: "Schedule" },
             units: { icon: "📊", label: "Units" },
             history: { icon: "🕐", label: "History" },
             equipment: { icon: "🔧", label: "Add/Delete" },
+            dispatch: { icon: "🚚", label: "Dispatch" },
         };
         return map[this.state.tab] || null;
     }
@@ -364,36 +419,69 @@ export class AirlogicMobileFieldEntry extends Component {
             this.state.historyEquipment = null; // land on the unit picker, not a stale unit's feed
             this.state.history = [];
         }
-        if (tab === "schedule") {
-            this.loadSchedule();
+        if (tab === "dispatch") {
+            this.loadDispatch();
         }
     }
 
-    // --- Schedule tab: the logged-in technician's own upcoming/past jobs,
-    // independent of whichever client this "main" screen session started
-    // from -- just airlogic.service.job, already scoped to "own" by the
-    // Technician ir.rule, so no explicit technician_id filter is needed.
-    async loadSchedule() {
+    // --- Dispatch tab: "Upcoming" is this technician's own confirmed,
+    // not-yet-fulfilled airlogic.dispatch.request rows (already scoped
+    // to "own" -- requested_by OR suggested_technician_id -- by the
+    // Technician ir.rule in airlogic_dispatch, so no explicit filter is
+    // needed beyond state). "Past" stays actual completed job history,
+    // independent of whichever client this "main" screen session
+    // started from.
+    async loadDispatch() {
         this.state.loading = true;
         try {
+            this.state.dispatchUpcoming = await this.orm.searchRead(
+                "airlogic.dispatch.request", [["state", "=", "confirmed"]],
+                ["name", "partner_id", "equipment_id", "suggested_date", "urgency"],
+                { order: "suggested_date asc", limit: 50 }
+            );
             const jobs = await this.orm.searchRead(
                 "airlogic.service.job", [],
                 ["name", "date", "state", "equipment_id", "partner_id"],
                 { order: "date desc", limit: 100 }
             );
             const todayStr = new Date().toISOString().slice(0, 10);
-            const upcoming = [];
-            const past = [];
-            for (const j of jobs) {
-                const jobDateStr = (j.date || "").slice(0, 10);
-                (jobDateStr >= todayStr ? upcoming : past).push(j);
-            }
-            upcoming.sort((a, b) => (a.date < b.date ? -1 : 1));
-            this.state.scheduleUpcoming = upcoming;
-            this.state.schedulePast = past;
+            this.state.dispatchPast = jobs.filter(
+                (j) => (j.date || "").slice(0, 10) < todayStr
+            );
         } finally {
             this.state.loading = false;
         }
+    }
+
+    // --- Fulfilling a dispatch: tapping an Upcoming card asks Yes/No;
+    // Yes drops the technician into that dispatch's client on the Visit
+    // tab (same as picking the client from the list) and remembers
+    // which dispatch is being fulfilled so enterDsr can link it once
+    // the resulting Visit actually gets created.
+    openFulfillConfirm(dispatch) {
+        this.state.fulfillConfirm = dispatch;
+    }
+
+    cancelFulfillConfirm() {
+        this.state.fulfillConfirm = null;
+    }
+
+    async confirmFulfillYes() {
+        const dispatch = this.state.fulfillConfirm;
+        this.state.fulfillConfirm = null;
+        this.state.fulfillingDispatchId = dispatch.id;
+        await this.selectClient({ id: dispatch.partner_id[0], name: dispatch.partner_id[1] });
+    }
+
+    formatDispatchWhen(dt) {
+        if (!dt) {
+            return "";
+        }
+        const d = new Date(dt.replace(" ", "T") + "Z");
+        return d.toLocaleString("en-PH", {
+            timeZone: MANILA_TZ,
+            month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+        });
     }
 
     backToClients() {
@@ -401,6 +489,18 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.selectedPartner = null;
         this.state.equipmentUnlocked = false;
         this.state.currentVisitId = null;
+        this.state.fulfillingDispatchId = null;
+    }
+
+    // Landing-page shortcut (item 7): jump straight to the Dispatch tab
+    // without picking a client first -- checking/fulfilling dispatches
+    // doesn't need one until a specific dispatch's client is chosen via
+    // confirmFulfillYes above.
+    async openDispatchDirect() {
+        this.state.screen = "main";
+        this.state.selectedPartner = null;
+        this.state.tab = "dispatch";
+        await this.loadDispatch();
     }
 
     // --- Device tap -> PIN2 -> DSR ---------------------------------------
@@ -446,6 +546,18 @@ export class AirlogicMobileFieldEntry extends Component {
                         partner_id: this.state.selectedPartner.id,
                     }]);
                     this.state.currentVisitId = visitId;
+                    // Fulfilling a dispatch (confirmFulfillYes set this):
+                    // this new Visit is the one that dispatch was waiting
+                    // on -- link it back and mark the request Fulfilled.
+                    // Only fires once per session, right as the Visit
+                    // itself is created, not on every further unit.
+                    if (this.state.fulfillingDispatchId) {
+                        await this.orm.call(
+                            "airlogic.dispatch.request", "action_fulfill",
+                            [[this.state.fulfillingDispatchId], visitId]
+                        );
+                        this.state.fulfillingDispatchId = null;
+                    }
                 }
                 const created = await this.orm.create("airlogic.service.job", [{
                     equipment_id: device.id,
@@ -599,7 +711,16 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     onNumberChecklistChange(key, ev) {
-        this.commitChecklistValue(key, ev.target.value, this.checklistLine(key)?.note);
+        let val = ev.target.value;
+        // parseFloat("...") on the Ph4 "Technician Notes" textarea (which
+        // reuses this same handler) is NaN, and NaN < 0 is always false,
+        // so this clamp only ever touches the actual number items.
+        if (val !== "" && parseFloat(val) < 0) {
+            val = "0";
+            ev.target.value = "0";
+            this.showToast("Negative values aren't allowed here.", "warning");
+        }
+        this.commitChecklistValue(key, val, this.checklistLine(key)?.note);
     }
 
     // --- Request Parts (bottom of Ph2/3/4) ---------------------------
@@ -702,11 +823,18 @@ export class AirlogicMobileFieldEntry extends Component {
     }
 
     onConsumableQtyChange(productId, ev) {
-        this.state.consumableQty[productId] = ev.target.value;
+        let val = ev.target.value;
+        if (val !== "" && parseFloat(val) < 0) {
+            val = "";
+            ev.target.value = "";
+            this.showToast("Negative values aren't allowed here.", "warning");
+        }
+        this.state.consumableQty[productId] = val;
     }
 
     async orderConsumable(productId) {
-        const qty = parseFloat(this.state.consumableQty[productId]) || 1;
+        const raw = parseFloat(this.state.consumableQty[productId]);
+        const qty = raw > 0 ? raw : 1;
         await this.orm.create("airlogic.consumable.request", [{
             product_id: productId,
             quantity: qty,
@@ -932,7 +1060,7 @@ export class AirlogicMobileFieldEntry extends Component {
             // description so a Manager reviewing photos later in
             // Inventory sees it without the technician typing anything.
             const geo = await this._tryGetLocation();
-            const capturedAt = new Date().toLocaleString();
+            const capturedAt = new Date().toLocaleString("en-PH", { timeZone: MANILA_TZ });
             const phaseLabel = this.currentDsrPhase ? this.currentDsrPhase.title : "";
             const tagParts = [`Phase ${this.state.dsrPhase} — ${phaseLabel}`, `Captured ${capturedAt}`];
             if (geo) {
@@ -1110,7 +1238,8 @@ export class AirlogicMobileFieldEntry extends Component {
             return "";
         }
         const d = new Date(dateStr.replace(" ", "T") + "Z");
-        return d.toLocaleString(undefined, {
+        return d.toLocaleString("en-PH", {
+            timeZone: MANILA_TZ,
             weekday: "short", year: "numeric", month: "short", day: "numeric",
             hour: "2-digit", minute: "2-digit",
         });
