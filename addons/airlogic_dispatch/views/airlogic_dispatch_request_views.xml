@@ -15,14 +15,16 @@
                 <field name="suggested_technician_id"/>
                 <field name="suggested_date"/>
                 <field name="state" widget="badge" class="airlogic-badge"
-                       decoration-info="state == 'suggested'" decoration-success="state == 'confirmed'"
+                       decoration-info="state == 'suggested'"
+                       decoration-warning="state == 'confirmed'"
+                       decoration-success="state == 'fulfilled'"
                        decoration-muted="state == 'cancelled'"/>
                 <button name="action_compute_suggestion" string="Suggest" type="object"
                         invisible="state != 'pending'" groups="airlogic_core.group_airlogic_supervisor"/>
                 <button name="action_confirm" string="Confirm" type="object"
                         invisible="state != 'suggested'" groups="airlogic_core.group_airlogic_supervisor"/>
                 <button name="action_cancel" string="Cancel" type="object"
-                        invisible="state in ('confirmed', 'cancelled')" groups="airlogic_core.group_airlogic_supervisor"/>
+                        invisible="state in ('confirmed', 'fulfilled', 'cancelled')" groups="airlogic_core.group_airlogic_supervisor"/>
             </list>
         </field>
     </record>
@@ -38,7 +40,7 @@
                     <button name="action_confirm" string="Confirm" type="object"
                             class="oe_highlight airlogic-btn-primary" invisible="state != 'suggested'"/>
                     <button name="action_cancel" string="Cancel" type="object"
-                            invisible="state in ('confirmed', 'cancelled')"/>
+                            invisible="state in ('confirmed', 'fulfilled', 'cancelled')"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
@@ -79,6 +81,7 @@
                 <filter name="pending" string="Pending" domain="[('state','=','pending')]"/>
                 <filter name="suggested" string="Suggested" domain="[('state','=','suggested')]"/>
                 <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
+                <filter name="fulfilled" string="Fulfilled" domain="[('state','=','fulfilled')]"/>
                 <separator/>
                 <filter name="emergency" string="Emergency" domain="[('urgency','=','emergency')]"/>
                 <filter name="rush" string="Rush" domain="[('urgency','=','rush')]"/>
@@ -101,8 +104,10 @@
             <p>A client call-in, a staff or technician ask, or a
                subscription contract's next period all land here as
                Pending. Suggest runs the 6-rule cascade and proposes
-               one technician + date with its reasoning; Confirm is
-               what actually creates the Visit and locks it in.</p>
+               one technician + date with its reasoning; Confirm locks
+               that in. The assigned technician then creates the
+               Service Visit themselves from the Field Service mobile
+               app's Dispatch tab, which marks the request Fulfilled.</p>
         </field>
     </record>
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta
+from datetime import datetime, time as dt_time, timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
@@ -11,8 +11,16 @@ class AirlogicDispatchRequest(models.Model):
     action_compute_suggestion runs the 6-rule cascade described to the
     user and diagrammed at publish time; it always produces exactly one
     suggestion with its reasoning attached and leaves the request in
-    'suggested' state -- action_confirm (a human tapping Accept) is the
-    only thing that actually creates the Visit/Job and locks it in.
+    'suggested' state.
+
+    action_confirm (a human tapping Accept) only locks in the suggested
+    technician + date -- it does NOT create the Service Visit/Job itself
+    (AIR-T67 change: it used to). The assigned technician creates that
+    later, from the Field Service mobile app's Dispatch tab: tapping
+    their confirmed dispatch there asks "Fulfill this dispatch?" and, on
+    Yes, drops them into that client's Visit tab to create the Service
+    Job the same way as any walk-in visit. action_fulfill is what links
+    the resulting Visit back to this request and marks it done.
 
     v1 heuristics, not a real routing/optimization engine: "nearest" is
     same dispatch zone, not real geolocation, and "available" is "has
@@ -46,11 +54,11 @@ class AirlogicDispatchRequest(models.Model):
         ('technician', 'Technician'),
         ('subscription', 'Subscription Contract'),
     ], default='call_in', required=True, tracking=True)
-    requested_date = fields.Date(
-        default=fields.Date.context_today, required=True, tracking=True,
-        help='When the client wants/needs this. A request whose date has '
-             "already passed while still Pending is this engine's definition "
-             'of a missed/backlog visit (Rule 1).')
+    requested_date = fields.Datetime(
+        default=fields.Datetime.now, required=True, tracking=True,
+        help='When the client wants/needs this, time included. A request '
+             "whose date has already passed while still Pending is this "
+             "engine's definition of a missed/backlog visit (Rule 1).")
     notes = fields.Text()
     requested_by = fields.Many2one(
         'res.users', default=lambda self: self.env.user, readonly=True, tracking=True)
@@ -58,17 +66,19 @@ class AirlogicDispatchRequest(models.Model):
         ('pending', 'Pending'),
         ('suggested', 'Suggested'),
         ('confirmed', 'Confirmed'),
+        ('fulfilled', 'Fulfilled'),
         ('cancelled', 'Cancelled'),
     ], default='pending', required=True, tracking=True)
     suggested_technician_id = fields.Many2one('res.users', string='Suggested Technician', tracking=True)
-    suggested_date = fields.Date(tracking=True)
+    suggested_date = fields.Datetime(tracking=True)
     suggested_reason = fields.Text(string='Why', readonly=True)
     visit_id = fields.Many2one(
-        'airlogic.service.visit', string='Visit', readonly=True, copy=False,
+        'airlogic.service.visit', string='Service Visit', readonly=True, copy=False,
         help='Pre-set when a subscription contract created this request (the '
-             'Visit already exists, covering every unit in that period); left '
-             'empty for an ad hoc request, which creates its own Visit on '
-             'confirm.')
+             'Visit already exists, covering every unit in that period). For '
+             'an ad hoc request, this stays empty until the assigned '
+             'technician fulfills it from the mobile app (action_fulfill) --'
+             ' confirming alone does not create it.')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -93,10 +103,10 @@ class AirlogicDispatchRequest(models.Model):
         that day's load.
         """
         urgency_rank = {'emergency': 0, 'rush': 1, 'routine': 2}
-        today = fields.Date.context_today(self)
+        now = fields.Datetime.now()
 
         def sort_key(req):
-            is_backlog = 1 if req.requested_date < today else 0
+            is_backlog = 1 if req.requested_date < now else 0
             return (-is_backlog, urgency_rank.get(req.urgency, 9), req.requested_date)
 
         pending = self.search([('state', '=', 'pending')])
@@ -109,13 +119,13 @@ class AirlogicDispatchRequest(models.Model):
 
     def _compute_suggestion_one(self):
         self.ensure_one()
-        today = fields.Date.context_today(self)
+        now = fields.Datetime.now()
         reasons = []
 
         # Rule 1: an overdue Pending request is this engine's definition
-        # of "missed" -- always targeted at today, regardless of urgency.
-        is_backlog = self.requested_date < today
-        target_date = today if (is_backlog or self.urgency in ('emergency', 'rush')) else self.requested_date
+        # of "missed" -- always targeted at now, regardless of urgency.
+        is_backlog = self.requested_date < now
+        target_date = now if (is_backlog or self.urgency in ('emergency', 'rush')) else self.requested_date
         if is_backlog:
             reasons.append(_('Backlog: originally requested for %s, now overdue.') % self.requested_date)
 
@@ -170,18 +180,31 @@ class AirlogicDispatchRequest(models.Model):
         if self.urgency in ('emergency', 'rush'):
             self._sweep_nearby_requests(target_date)
 
+    @api.model
+    def _day_bounds(self, dt):
+        """target_date carries a real time now (AIR-T67: requested_date/
+        suggested_date became Datetime, for the time-of-day the user
+        asked for) but "same day" zone/load matching against
+        airlogic.service.job.date still needs to compare the whole day,
+        not one exact instant -- an exact '=' would only ever match a
+        job scheduled at that literal second.
+        """
+        start = datetime.combine(dt.date(), dt_time.min)
+        return start, start + timedelta(days=1)
+
     def _find_nearest_technician(self, target_date):
         """Rule 3/4's proximity proxy: a Technician-group user who
         already has a confirmed or suggested job/request in this same
-        zone on target_date, picking whichever of them has the fewest
-        jobs that day (a simple load-balance among zone matches, not a
-        real route-optimal pick).
+        zone on target_date's day, picking whichever of them has the
+        fewest jobs that day (a simple load-balance among zone matches,
+        not a real route-optimal pick).
         """
         self.ensure_one()
         if not self.zone_id:
             return self.env['res.users']
+        day_start, day_end = self._day_bounds(target_date)
         same_zone_jobs = self.env['airlogic.service.job'].search([
-            ('date', '=', target_date),
+            ('date', '>=', day_start), ('date', '<', day_end),
             ('equipment_id.partner_id.airlogic_dispatch_zone_id', '=', self.zone_id.id),
         ])
         # .mapped(), not .technician_id directly: a Many2one accessed by
@@ -204,8 +227,10 @@ class AirlogicDispatchRequest(models.Model):
         return self._least_loaded_among(technicians, target_date)
 
     def _least_loaded_among(self, technicians, target_date):
+        day_start, day_end = self._day_bounds(target_date)
         jobs = self.env['airlogic.service.job'].search(
-            [('date', '=', target_date), ('technician_id', 'in', technicians.ids)])
+            [('date', '>=', day_start), ('date', '<', day_end),
+             ('technician_id', 'in', technicians.ids)])
         counts = {t.id: 0 for t in technicians}
         for job in jobs:
             counts[job.technician_id.id] = counts.get(job.technician_id.id, 0) + 1
@@ -255,38 +280,45 @@ class AirlogicDispatchRequest(models.Model):
                 raise UserError(_(
                     "No technician could be suggested for this request -- "
                     "assign one manually before confirming."))
-            visit = req.visit_id
-            if not visit:
-                visit = self.env['airlogic.service.visit'].create({
-                    'partner_id': req.partner_id.id,
-                    'technician_id': req.suggested_technician_id.id,
-                    'date': req.suggested_date,
-                })
-                req.visit_id = visit.id
-            units = req.equipment_id or self.env['airlogic.equipment'].search(
-                [('partner_id', '=', req.partner_id.id)])
-            for unit in units:
-                self.env['airlogic.service.job'].create({
-                    'equipment_id': unit.id,
-                    'visit_id': visit.id,
-                    'technician_id': req.suggested_technician_id.id,
-                    'date': req.suggested_date,
-                })
             req.state = 'confirmed'
-            req._notify_confirmation(visit)
+            req._notify_confirmation()
 
     def action_cancel(self):
         self.write({'state': 'cancelled'})
 
-    def _notify_confirmation(self, visit):
+    def action_fulfill(self, visit_id):
+        """Called from the mobile app's Dispatch tab once the assigned
+        technician actually walks through the client's Visit tab and
+        creates the Service Visit for this dispatch (see mobile_app.js's
+        enterDsr, which calls this right after creating a fresh Visit
+        for a fulfillFlow session) -- action_confirm no longer creates
+        the Visit itself (AIR-T67), so this is what finally links the
+        two and marks the request done.
+
+        sudo()'d write because Technician has no write access on this
+        model (see ir.model.access.csv) -- everything else here is
+        write-gated to Supervisor+ on purpose, so the ownership check
+        below (against the un-sudo'd self, using the caller's own
+        session user) is what keeps this narrow: only the technician
+        this request was actually assigned to can fulfill it.
+        """
+        self.ensure_one()
+        if self.suggested_technician_id.id != self.env.user.id:
+            raise UserError(_("This dispatch wasn't assigned to you."))
+        if self.state != 'confirmed':
+            raise UserError(_("Only a confirmed dispatch can be fulfilled."))
+        self.sudo().write({'visit_id': visit_id, 'state': 'fulfilled'})
+
+    def _notify_confirmation(self):
         """4-way notification, per the confirmed dispatch design:
         the assigned technician, the requester (a stand-in for "any
         client whose visit moved" -- there's no client-portal user in
         this system to notify directly), any OTHER technician whose own
         job got pulled onto a new date by Rule 4's sweep, and every
-        Operations Officer. Uses Odoo's own inbox notification
-        (message_post with partner_ids) rather than a custom push
-        mechanism.
+        Operations Officer. Posted on this request itself, not a Visit
+        (AIR-T67: confirming no longer creates one) -- uses Odoo's own
+        inbox notification (message_post with partner_ids) rather than
+        a custom push mechanism.
         """
         self.ensure_one()
         partner_ids = set()
@@ -299,9 +331,10 @@ class AirlogicDispatchRequest(models.Model):
         for officer in officers:
             if officer.partner_id:
                 partner_ids.add(officer.partner_id.id)
-        visit.message_post(
+        self.message_post(
             body=_(
-                'Dispatch confirmed: %(client)s, %(date)s, assigned to %(tech)s.') % {
+                'Dispatch confirmed: %(client)s, %(date)s, assigned to %(tech)s -- '
+                'open the Field Service app\'s Dispatch tab to create the Service Visit.') % {
                 'client': self.partner_id.name, 'date': self.suggested_date,
                 'tech': self.suggested_technician_id.name,
             },

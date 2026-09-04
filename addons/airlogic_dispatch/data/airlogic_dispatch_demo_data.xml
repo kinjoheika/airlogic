@@ -101,7 +101,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_2"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Standard maintenance visit.</field>
     </record>
 
@@ -110,7 +110,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_3"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">No cooling at all, client reports burning smell.</field>
     </record>
 
@@ -119,7 +119,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_1"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -128,7 +128,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_1"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Unit tripping the breaker repeatedly.</field>
     </record>
 
@@ -137,7 +137,7 @@
         <field name="equipment_id" ref="demo_equip_grand_2"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Regular checkup, no issues reported.</field>
     </record>
 
@@ -146,7 +146,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_3"/>
         <field name="urgency">emergency</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-4)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-4)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">No cooling at all, client reports burning smell.</field>
     </record>
 
@@ -155,7 +155,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_2"/>
         <field name="urgency">emergency</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-4)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-4)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Water leaking onto server room floor.</field>
     </record>
 
@@ -164,7 +164,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_3"/>
         <field name="urgency">emergency</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=-2)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">No cooling at all, client reports burning smell.</field>
     </record>
 
@@ -173,7 +173,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_2"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">AC completely dead, VIP guest arriving today.</field>
     </record>
 
@@ -182,7 +182,7 @@
         <field name="equipment_id" ref="demo_equip_grand_1"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Water leaking onto server room floor.</field>
     </record>
 
@@ -191,7 +191,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_4"/>
         <field name="urgency">emergency</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Water leaking onto server room floor.</field>
     </record>
 
@@ -200,7 +200,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_1"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">AC completely dead, VIP guest arriving today.</field>
     </record>
 
@@ -209,7 +209,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_2"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">AC completely dead, VIP guest arriving today.</field>
     </record>
 
@@ -218,7 +218,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_1"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Water leaking onto server room floor.</field>
     </record>
 
@@ -227,7 +227,7 @@
         <field name="equipment_id" ref="demo_equip_grand_2"/>
         <field name="urgency">emergency</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Unit tripping the breaker repeatedly.</field>
     </record>
 
@@ -236,7 +236,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_1"/>
         <field name="urgency">emergency</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">No cooling at all, client reports burning smell.</field>
     </record>
 
@@ -245,7 +245,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_3"/>
         <field name="urgency">rush</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Client paid rush fee, wants same-day check.</field>
     </record>
 
@@ -254,7 +254,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_1"/>
         <field name="urgency">rush</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Client escalated via office, wants it resolved this week.</field>
     </record>
 
@@ -263,7 +263,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_2"/>
         <field name="urgency">rush</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Unusual noise, client requests priority visit.</field>
     </record>
 
@@ -272,7 +272,7 @@
         <field name="equipment_id" ref="demo_equip_grand_1"/>
         <field name="urgency">rush</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Unusual noise, client requests priority visit.</field>
     </record>
 
@@ -281,7 +281,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_2"/>
         <field name="urgency">rush</field>
         <field name="source">technician</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Unusual noise, client requests priority visit.</field>
     </record>
 
@@ -290,7 +290,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_2"/>
         <field name="urgency">rush</field>
         <field name="source">technician</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Weak airflow, client meeting tomorrow.</field>
     </record>
 
@@ -299,7 +299,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_3"/>
         <field name="urgency">rush</field>
         <field name="source">call_in</field>
-        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today()).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Client escalated via office, wants it resolved this week.</field>
     </record>
 
@@ -308,7 +308,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_1"/>
         <field name="urgency">rush</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Weak airflow, client meeting tomorrow.</field>
     </record>
 
@@ -317,7 +317,7 @@
         <field name="equipment_id" ref="demo_equip_grand_2"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=6)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=6)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Routine filter and coil check.</field>
     </record>
 
@@ -326,7 +326,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_3"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Standard maintenance visit.</field>
     </record>
 
@@ -334,7 +334,7 @@
         <field name="partner_id" ref="airlogic_core.demo_partner_cornerstone"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=2)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Routine filter and coil check.</field>
     </record>
 
@@ -342,7 +342,7 @@
         <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=8)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=8)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Routine filter and coil check.</field>
     </record>
 
@@ -350,7 +350,7 @@
         <field name="partner_id" ref="demo_partner_rizal_tower"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Regular checkup, no issues reported.</field>
     </record>
 
@@ -358,7 +358,7 @@
         <field name="partner_id" ref="demo_partner_manila_grand"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=10)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=10)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Routine filter and coil check.</field>
     </record>
 
@@ -367,7 +367,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_4"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -376,7 +376,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_3"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=3)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -384,7 +384,7 @@
         <field name="partner_id" ref="airlogic_core.demo_partner_bayview"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=7)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Standard maintenance visit.</field>
     </record>
 
@@ -393,7 +393,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_1"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -402,7 +402,7 @@
         <field name="equipment_id" ref="demo_equip_grand_2"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=9)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -411,7 +411,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_meridian_1"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -420,7 +420,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_cornerstone_2"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Scheduled quarterly inspection.</field>
     </record>
 
@@ -429,7 +429,7 @@
         <field name="equipment_id" ref="airlogic_core.demo_equip_bayview_3"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Routine filter and coil check.</field>
     </record>
 
@@ -438,7 +438,7 @@
         <field name="equipment_id" ref="demo_equip_rizal_2"/>
         <field name="urgency">routine</field>
         <field name="source">staff</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=6)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=6)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Standard maintenance visit.</field>
     </record>
 
@@ -446,7 +446,7 @@
         <field name="partner_id" ref="demo_partner_manila_grand"/>
         <field name="urgency">routine</field>
         <field name="source">subscription</field>
-        <field name="requested_date" eval="(datetime.today() + relativedelta(days=8)).strftime('%Y-%m-%d')"/>
+        <field name="requested_date" eval="(datetime.today() + relativedelta(days=8)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="notes">Standard maintenance visit.</field>
     </record>
 

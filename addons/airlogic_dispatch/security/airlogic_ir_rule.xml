@@ -2,9 +2,14 @@
 <odoo>
 
     <record id="rule_dispatch_request_technician_own" model="ir.rule">
-        <field name="name">Technician: own dispatch requests only</field>
+        <field name="name">Technician: own or assigned dispatch requests</field>
         <field name="model_id" ref="model_airlogic_dispatch_request"/>
-        <field name="domain_force">[('requested_by', '=', user.id)]</field>
+        <!-- Both directions matter: requests THEY submitted (source=
+             technician) and, separately, requests the engine assigned
+             TO them, which the mobile app's Dispatch tab (AIR-T67)
+             needs so a technician can see their own confirmed
+             dispatches at all. -->
+        <field name="domain_force">['|', ('requested_by', '=', user.id), ('suggested_technician_id', '=', user.id)]</field>
         <field name="groups" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
     </record>
 
