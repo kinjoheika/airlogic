@@ -33,6 +33,7 @@ airlogic.service.job.
     'data': [
         'security/ir.model.access.csv',
         'security/airlogic_ir_rule.xml',
+        'data/airlogic_initial_users_data.xml',
         'data/airlogic_sequence_data.xml',
         'data/airlogic_measurement_field_data.xml',
         'data/airlogic_history_tag_data.xml',

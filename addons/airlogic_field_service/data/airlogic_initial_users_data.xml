@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One starter login per role, for initial role testing (all 4 currently
+  point at the same person's own email aliases, not separate real
+  staff); noupdate="1" so a later module upgrade never recreates these
+  or touches whatever the user has since changed by hand in Settings >
+  Users.
+
+  Deliberately no password here: creating a res.users record with no
+  password leaves the login unusable until someone actually sets one.
+  After this installs, go to Settings > Users, select these 4, and use
+  "Send an Invitation Email" (or "Change Password" to set one directly)
+  to actually activate each login. Real staff onboarding (the 10
+  technicians etc.) should go through Settings > Users normally once
+  roles are confirmed working here; this file is a one-time
+  role-testing bootstrap, not the ongoing onboarding path.
+-->
+<odoo noupdate="1">
+
+    <record id="user_airlogic_seed_manager" model="res.users">
+        <field name="name">Alex Co (Manager)</field>
+        <field name="login">alexmatthewco@gmail.com</field>
+        <field name="email">alexmatthewco@gmail.com</field>
+        <field name="group_ids" eval="[(4, ref('airlogic_core.group_airlogic_manager'))]"/>
+    </record>
+
+    <record id="user_airlogic_seed_ops_officer" model="res.users">
+        <field name="name">Alex Co (Operations Officer)</field>
+        <field name="login">alexmatt878@gmail.com</field>
+        <field name="email">alexmatt878@gmail.com</field>
+        <field name="group_ids" eval="[(4, ref('airlogic_core.group_airlogic_supervisor'))]"/>
+    </record>
+
+    <record id="user_airlogic_seed_accountant" model="res.users">
+        <field name="name">Alex Co (Accountant)</field>
+        <field name="login">alexmattco11@gmail.com</field>
+        <field name="email">alexmattco11@gmail.com</field>
+        <field name="group_ids" eval="[(4, ref('airlogic_core.group_airlogic_accounting'))]"/>
+    </record>
+
+    <record id="user_airlogic_seed_technician" model="res.users">
+        <field name="name">Alex Co (Technician)</field>
+        <field name="login">amatthewc143@gmail.com</field>
+        <field name="email">amatthewc143@gmail.com</field>
+        <field name="group_ids" eval="[(4, ref('airlogic_core.group_airlogic_technician'))]"/>
+        <!-- Field App PIN, NOT the Odoo login password; gates the
+             mobile app's client list/device-entry/senior-tech screens
+             (see airlogic_res_users_ext.py). Deliberately plain text by
+             that model's own design (a quick-relock friction gate, not
+             a cryptographic secret), unlike the login password above. -->
+        <field name="airlogic_field_pin">7788</field>
+    </record>
+
+</odoo>
