@@ -188,6 +188,9 @@ export class AirlogicMobileFieldEntry extends Component {
             fulfillConfirm: null, // dispatch row awaiting "Fulfill this dispatch?" Yes/No
             fulfillingDispatchId: null, // set while the Visit tab is being used to
                                         // fulfill that dispatch (see enterDsr)
+
+            myStats: null, // {visits_made, aircons_this_month, aircons_this_year,
+                            //  problems_resolved, clean_streak}, loaded on tab open
         });
 
         this._onlineHandler = () => {
@@ -296,6 +299,7 @@ export class AirlogicMobileFieldEntry extends Component {
             history: { icon: "🕐", label: "History" },
             equipment: { icon: "🔧", label: "Add/Delete" },
             dispatch: { icon: "🚚", label: "Dispatch" },
+            mystats: { icon: "🏆", label: "My Stats" },
         };
         return map[this.state.tab] || null;
     }
@@ -422,6 +426,23 @@ export class AirlogicMobileFieldEntry extends Component {
         if (tab === "dispatch") {
             this.loadDispatch();
         }
+        if (tab === "mystats") {
+            this.loadMyStats();
+        }
+    }
+
+    // --- My Stats tab: a positively-framed personal dashboard, separate
+    // from the Manager-only revision-rate stats on the technician's own
+    // res.users record. One RPC, computed fresh each time the tab opens.
+    async loadMyStats() {
+        this.state.loading = true;
+        try {
+            this.state.myStats = await this.orm.call(
+                "res.users", "get_airlogic_my_stats", []
+            );
+        } finally {
+            this.state.loading = false;
+        }
     }
 
     // --- Dispatch tab: "Upcoming" is this technician's own confirmed,
@@ -501,6 +522,16 @@ export class AirlogicMobileFieldEntry extends Component {
         this.state.selectedPartner = null;
         this.state.tab = "dispatch";
         await this.loadDispatch();
+    }
+
+    // Same landing-page-shortcut pattern as Dispatch above: My Stats is
+    // personal, not tied to any one client, so it doesn't need a client
+    // picked first either.
+    async openMyStatsDirect() {
+        this.state.screen = "main";
+        this.state.selectedPartner = null;
+        this.state.tab = "mystats";
+        await this.loadMyStats();
     }
 
     // --- Device tap -> PIN2 -> DSR ---------------------------------------
@@ -1096,8 +1127,22 @@ export class AirlogicMobileFieldEntry extends Component {
             );
             return;
         }
+        // Celebrate a clean job differently from one with flagged issues --
+        // checked client-side from the already-loaded checklist lines, no
+        // extra round-trip. Purely a feel-good moment (item 2 of the
+        // gamification pass); it doesn't affect action_submit's own logic.
+        const hadIssues = this.state.checklistLines.some((l) => {
+            if (l.key === "leak") {
+                return l.value && l.value !== "pass";
+            }
+            return l.value === "flagged" || l.value === "alert";
+        });
         await this.orm.call("airlogic.service.job", "action_submit", [[this.state.job.id]]);
-        this.showToast("Job submitted.", "success");
+        if (hadIssues) {
+            this.showToast("Job submitted -- nice catch on those flagged items.", "success");
+        } else {
+            this.showToast("🎉 Job submitted -- clean sweep, no issues found!", "success");
+        }
         this.state.screen = "main";
         this.state.tab = "visit";
     }

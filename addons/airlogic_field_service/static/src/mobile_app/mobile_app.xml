@@ -71,6 +71,9 @@
                 <button type="button" class="btn btn-outline-secondary" t-on-click="openConsumables">
                     🧴 Consumables
                 </button>
+                <button type="button" class="btn btn-outline-secondary" t-on-click="openMyStatsDirect">
+                    🏆 My Stats
+                </button>
             </div>
 
             <!-- MAIN (bottom-nav tabs) -->
@@ -78,7 +81,7 @@
                 <div class="o_airlogic_title_row">
                     <span class="o_airlogic_back_arrow" t-on-click="backToClients" title="Back to Clients">‹</span>
                     <div class="o_airlogic_title_block">
-                        <h4><t t-esc="state.selectedPartner ? state.selectedPartner.name : 'My Dispatch'"/></h4>
+                        <h4><t t-esc="state.selectedPartner ? state.selectedPartner.name : (state.tab === 'mystats' ? 'My Stats' : 'My Dispatch')"/></h4>
                         <div t-if="currentTabMeta" class="o_airlogic_tab_subtitle">
                             <t t-esc="currentTabMeta.icon"/> <t t-esc="currentTabMeta.label"/>
                         </div>
@@ -131,6 +134,40 @@
                         </div>
                     </div>
                     <p t-if="!state.dispatchPast.length" class="text-muted">No past jobs yet.</p>
+                </t>
+
+                <!-- MY STATS TAB: one page, 5 positively-framed personal
+                     numbers; no leaderboard against other technicians
+                     (10 people is too small a pool for ranking to stay
+                     motivating rather than discouraging), just each
+                     technician's own progress. get_airlogic_my_stats
+                     computes all of it fresh on open. -->
+                <t t-if="state.tab === 'mystats' and state.myStats">
+                    <div class="o_airlogic_streak_card">
+                        <div class="o_airlogic_streak_flame">🔥</div>
+                        <div class="o_airlogic_streak_value"><t t-esc="state.myStats.clean_streak"/></div>
+                        <div class="o_airlogic_streak_label">Clean Jobs in a Row</div>
+                        <div class="o_airlogic_streak_sub">No revisions requested against these yet</div>
+                    </div>
+
+                    <div class="o_airlogic_stats_grid">
+                        <div class="o_airlogic_stat_tile">
+                            <div class="o_airlogic_stat_value"><t t-esc="state.myStats.visits_made"/></div>
+                            <div class="o_airlogic_stat_label">Visits Made</div>
+                        </div>
+                        <div class="o_airlogic_stat_tile">
+                            <div class="o_airlogic_stat_value"><t t-esc="state.myStats.problems_resolved"/></div>
+                            <div class="o_airlogic_stat_label">Problems Resolved</div>
+                        </div>
+                        <div class="o_airlogic_stat_tile">
+                            <div class="o_airlogic_stat_value"><t t-esc="state.myStats.aircons_this_month"/></div>
+                            <div class="o_airlogic_stat_label">Aircons This Month</div>
+                        </div>
+                        <div class="o_airlogic_stat_tile">
+                            <div class="o_airlogic_stat_value"><t t-esc="state.myStats.aircons_this_year"/></div>
+                            <div class="o_airlogic_stat_label">Aircons This Year</div>
+                        </div>
+                    </div>
                 </t>
 
                 <!-- UNITS TAB -->

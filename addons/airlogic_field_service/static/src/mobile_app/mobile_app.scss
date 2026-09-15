@@ -823,6 +823,75 @@
     }
 }
 
+// --- My Stats tab -------------------------------------------------------
+// One glanceable page: a streak "hero" card up top (the number a
+// technician actually watches build over time), then a 2x2 grid of the
+// remaining counters. Warm gold/amber, distinct from the app's teal
+// action color, so this reads as a reward moment rather than another
+// data screen.
+.o_airlogic_streak_card {
+    background: linear-gradient(135deg, #FFF6E0, #FCEBC2);
+    border: 1.5px solid #C9A227;
+    border-radius: 14px;
+    padding: 22px 16px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.o_airlogic_streak_flame {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.o_airlogic_streak_value {
+    font-size: 40px;
+    font-weight: 800;
+    color: #0D1B2A;
+    line-height: 1.1;
+    margin-top: 4px;
+}
+
+.o_airlogic_streak_label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #5B6470;
+    margin-top: 2px;
+}
+
+.o_airlogic_streak_sub {
+    font-size: 11.5px;
+    color: #8B92A0;
+    margin-top: 4px;
+}
+
+.o_airlogic_stats_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.o_airlogic_stat_tile {
+    background: #fff;
+    border: 1px solid #D8DBDE;
+    border-radius: 10px;
+    padding: 16px 10px;
+    text-align: center;
+}
+
+.o_airlogic_stat_value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0ABFB8;
+    font-variant-numeric: tabular-nums;
+}
+
+.o_airlogic_stat_label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #5B6470;
+    margin-top: 2px;
+}
+
 // --- Dispatch tab: urgency badge on each Upcoming card -----------------
 .o_airlogic_urgency_badge {
     margin-left: 6px;

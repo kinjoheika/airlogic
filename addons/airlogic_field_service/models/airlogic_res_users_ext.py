@@ -88,6 +88,59 @@ class ResUsersFieldServiceExt(models.Model):
         return {'name': user.name, 'isSenior': bool(user.airlogic_is_senior_technician)}
 
     @api.model
+    def get_airlogic_my_stats(self):
+        """Personal, positively-framed stats for the mobile app's My Stats
+        tab -- deliberately separate from the Manager-only revision stats
+        above, which stay clinical/audit-facing. Computed on demand for
+        the calling technician (self.env.user), not stored: this is a
+        small dashboard glance, not something queried often enough to
+        need its own indexed fields.
+        """
+        user = self.env.user
+        jobs = self.env['airlogic.service.job'].search(
+            [('technician_id', '=', user.id), ('state', '=', 'submitted')],
+            order='date desc')
+
+        today = fields.Date.context_today(self)
+        month_start = today.replace(day=1)
+        year_start = today.replace(month=1, day=1)
+        jobs_this_month = jobs.filtered(lambda j: j.date and j.date.date() >= month_start)
+        jobs_this_year = jobs.filtered(lambda j: j.date and j.date.date() >= year_start)
+
+        # "Problems resolved": every flagged/alert checklist item, plus
+        # every detected leak, across this technician's own submitted
+        # jobs -- the same proxy _job_issues (airlogic_service_visit_ext.py)
+        # uses for the Owner Report, since there's no separate before/
+        # after "actually fixed" tracking on a checklist item.
+        lines = self.env['airlogic.checklist.line'].search([('job_id', 'in', jobs.ids)])
+        problems_resolved = 0
+        for line in lines:
+            if line.value in ('flagged', 'alert'):
+                problems_resolved += 1
+            elif line.key == 'leak' and line.value and line.value != 'pass':
+                problems_resolved += 1
+
+        # Clean-job streak: walk most-recent-first, counting consecutive
+        # submitted jobs with zero linked Job Revision requests, stopping
+        # at the first one that has any -- the positive counterpart to
+        # airlogic_revision_rate above (that one's for a Manager watching
+        # a trend; this one's for the technician themselves to build on).
+        Revision = self.env['airlogic.job.revision']
+        streak = 0
+        for job in jobs:
+            if Revision.search_count([('job_id', '=', job.id)]):
+                break
+            streak += 1
+
+        return {
+            'visits_made': len(jobs),
+            'aircons_this_month': len(jobs_this_month.mapped('equipment_id')),
+            'aircons_this_year': len(jobs_this_year.mapped('equipment_id')),
+            'problems_resolved': problems_resolved,
+            'clean_streak': streak,
+        }
+
+    @api.model
     def action_verify_senior_tech_pin(self, *args, **kwargs):
         """Gate for the mobile app's Add/Delete Equipment tab: passes only
         if the calling user is flagged Senior Technician AND their Field
