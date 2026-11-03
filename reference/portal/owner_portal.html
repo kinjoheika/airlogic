@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIRLOGIC — Owner Portal</title>
+<style>
+/* ============================================================
+   AIRLOGIC Owner Portal — /my/airlogic
+   Question-led quarterly review. Each section answers one
+   question a property owner actually asks at the PM visit.
+   Odoo 17 · airlogic_contract portal controllers (spec §11)
+   ============================================================ */
+
+:root{
+  --al-navy:#0d1b2a; --al-navy-2:#152A3D;
+  --al-cyan:#00b8d4; --al-cyan-dk:#0091a7;
+  --bg:#f4f7f9; --surface:#fff; --surface-2:#f8fafc;
+  --line:#e3e9ef; --line-2:#c9d4de;
+  --text:#0f1e2b; --text-2:#56697a; --text-3:#8798a8;
+
+  --band-a:#12a150; --band-a-bg:#e8f7ee;
+  --band-b:#6aa832; --band-b-bg:#eff7e6;
+  --band-c:#dc9a06; --band-c-bg:#fdf5e0;
+  --band-d:#d92d20; --band-d-bg:#fdeceb;
+
+  --radius:12px;
+  --shadow:0 1px 2px rgba(16,30,54,.05),0 1px 3px rgba(16,30,54,.08);
+  --shadow-lg:0 8px 24px rgba(16,30,54,.10);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--al-cyan-dk);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.015em}
+
+/* ---------- Nav ---------- */
+.navbar{background:var(--al-navy);color:#fff;padding:0 24px;height:58px;display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:60}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.06em}
+.brand .mark{width:29px;height:29px;border-radius:7px;background:linear-gradient(135deg,var(--al-cyan),#0072a3);display:grid;place-items:center;flex:none}
+.brand .mark svg{width:18px;height:18px}
+.brand small{font-size:9px;letter-spacing:.18em;color:var(--al-cyan);display:block;font-weight:600;margin-top:-4px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.acct{display:flex;align-items:center;gap:9px;font-size:13px}
+.acct .av{width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,#2c5f7c,#1a3a4d);display:grid;place-items:center;font-size:11px;font-weight:700;color:#cfe8f2}
+.acct .nm{line-height:1.2}
+.acct .nm b{display:block;font-weight:600}
+.acct .nm span{font-size:11px;color:#8fa4b5}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px 70px}
+
+/* ---------- Scope bar ---------- */
+.scope{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;padding:26px 0 20px}
+.scope .fld label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700;margin-bottom:5px}
+select.sel{
+  appearance:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--text);
+  background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238798a8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center/15px;
+  border:1px solid var(--line-2);border-radius:9px;padding:9px 36px 9px 13px;cursor:pointer;min-width:210px;
+}
+select.sel:focus{outline:2px solid var(--al-cyan);outline-offset:1px}
+.scope .spacer{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.visit-tag{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;
+  background:var(--surface);border:1px solid var(--line);font-size:12.5px;color:var(--text-2);
+}
+.visit-tag b{color:var(--text)}
+
+/* ---------- Headline ---------- */
+.headline{
+  background:linear-gradient(135deg,var(--al-navy) 0%,#1a3448 100%);
+  color:#fff;border-radius:var(--radius);padding:24px 26px;margin-bottom:22px;
+  display:flex;gap:26px;align-items:center;flex-wrap:wrap;
+}
+.headline .lead{flex:1;min-width:250px}
+.headline h1{font-size:23px;margin-bottom:6px}
+.headline p{margin:0;color:#a9c0d1;font-size:14px}
+.headline .verdict{
+  display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:7px 14px;border-radius:8px;
+  font-size:13px;font-weight:600;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);
+}
+
+/* ---------- Accordion ---------- */
+details.q{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;
+}
+details.q[open]{box-shadow:var(--shadow-lg)}
+details.q > summary{
+  list-style:none;cursor:pointer;padding:19px 22px;display:flex;gap:15px;align-items:flex-start;
+  transition:background .12s;
+}
+details.q > summary::-webkit-details-marker{display:none}
+details.q > summary:hover{background:var(--surface-2)}
+.q-num{
+  flex:none;width:29px;height:29px;border-radius:8px;background:#e5f6fa;color:var(--al-cyan-dk);
+  display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px;
+}
+.q-txt{flex:1;min-width:0}
+.q-txt h2{font-size:17px;line-height:1.35}
+.q-txt .ans{margin-top:5px;font-size:14px;color:var(--text-2)}
+.q-txt .ans b{color:var(--text)}
+.q-chev{flex:none;color:var(--text-3);transition:transform .2s;margin-top:5px}
+.q-chev svg{width:19px;height:19px;display:block}
+details.q[open] > summary .q-chev{transform:rotate(180deg)}
+.q-body{padding:4px 22px 22px;border-top:1px solid var(--line);margin-top:-1px}
+.q-body > .pad{padding-top:20px}
+
+/* nested sub-computation */
+details.sub{border:1px solid var(--line);border-radius:9px;margin-top:10px;background:var(--surface-2)}
+details.sub > summary{list-style:none;cursor:pointer;padding:12px 15px;display:flex;align-items:center;gap:10px;font-size:13.5px}
+details.sub > summary::-webkit-details-marker{display:none}
+details.sub > summary:hover{background:rgba(0,0,0,.02)}
+details.sub .lbl{font-weight:600;flex:1}
+details.sub .amt{font-family:var(--mono);font-weight:700;font-size:14px}
+details.sub .cv{color:var(--text-3);transition:transform .2s}
+details.sub .cv svg{width:16px;height:16px;display:block}
+details.sub[open] > summary .cv{transform:rotate(180deg)}
+.sub-body{padding:0 15px 15px;border-top:1px solid var(--line);padding-top:13px;font-size:13px}
+
+/* ---------- Bits ---------- */
+.band{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:700}
+.band .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.band-a{background:var(--band-a-bg);color:var(--band-a)}
+.band-b{background:var(--band-b-bg);color:var(--band-b)}
+.band-c{background:var(--band-c-bg);color:var(--band-c)}
+.band-d{background:var(--band-d-bg);color:var(--band-d)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;background:var(--surface-2);color:var(--text-2);border:1px solid var(--line)}
+.pill-red{background:var(--band-d-bg);color:var(--band-d);border-color:#f6c9c5}
+.pill-amb{background:var(--band-c-bg);color:#a87c05;border-color:#f0dfae}
+.pill-grn{background:var(--band-a-bg);color:var(--band-a);border-color:#bfe6cd}
+.pill-cy{background:#e5f6fa;color:var(--al-cyan-dk);border-color:#b6e4ee}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:.12s}
+.btn:hover{background:var(--surface-2);border-color:#94a3b8;text-decoration:none}
+.btn-c{background:var(--al-cyan-dk);border-color:var(--al-cyan-dk);color:#fff}
+.btn-c:hover{background:#007a8c;border-color:#007a8c}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn svg{width:14px;height:14px}
+
+.grid{display:grid;gap:18px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g-dm{grid-template-columns:minmax(0,auto) minmax(0,1fr)}
+
+.tile{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface-2)}
+.tile .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);font-weight:700}
+.tile .val{font-size:25px;font-weight:700;letter-spacing:-.02em;margin-top:3px;line-height:1.15}
+.tile .val small{font-size:13px;font-weight:600;color:var(--text-3)}
+.tile .foot{font-size:11.5px;color:var(--text-2);margin-top:3px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.clk{cursor:pointer}
+tbody tr.clk:hover{background:#f5fbfd}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:13px}
+tfoot td{padding:11px 12px;border-top:2px solid var(--line-2);font-weight:700}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--text-3)}
+.tiny{font-size:11.5px}
+.tblwrap{overflow-x:auto;margin:0 -6px;padding:0 6px}
+
+.legend{display:flex;gap:8px;flex-direction:column;font-size:13px}
+.legend .li{display:flex;align-items:center;gap:9px}
+.legend .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.legend .li .n{flex:1}
+.legend .li .v{font-family:var(--mono);font-weight:700}
+.legend .li .p{color:var(--text-3);font-size:11.5px;min-width:38px;text-align:right}
+
+.donut{position:relative;flex:none}
+.donut .mid{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.15}
+.donut .mid .n{font-size:27px;font-weight:700;letter-spacing:-.03em}
+.donut .mid .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700}
+
+.mini{display:flex;height:7px;border-radius:4px;overflow:hidden;background:#eef2f6;min-width:70px}
+.mini i{display:block}
+
+.why{
+  border-left:3px solid var(--band-d);background:var(--band-d-bg);
+  border-radius:0 9px 9px 0;padding:14px 16px;margin-bottom:12px;
+}
+.why.c{border-left-color:var(--band-c);background:var(--band-c-bg)}
+.why .hd{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.why .hd b{font-size:14.5px}
+.why .hd .loc{font-size:12.5px;color:var(--text-2)}
+.why .rsn{font-size:13.5px;color:var(--text-2)}
+.why .rsn li{margin-bottom:3px}
+.why ul{margin:6px 0 0;padding-left:19px}
+.why .act{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+
+.calc{font-family:var(--mono);font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:11px 13px;margin:10px 0;overflow-x:auto;white-space:pre;color:var(--text-2)}
+.calc b{color:var(--text)}
+.assume{font-size:12px;color:var(--text-3);margin-top:8px;padding-left:14px;border-left:2px solid var(--line)}
+.assume b{color:var(--text-2)}
+
+.empty{padding:30px 16px;text-align:center;color:var(--text-3);font-size:13.5px}
+.empty svg{width:30px;height:30px;opacity:.4;margin-bottom:8px}
+.note{font-size:12.5px;color:var(--text-3);margin-top:12px}
+.hr{height:1px;background:var(--line);margin:18px 0}
+.sec-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);font-weight:700;margin:22px 0 10px}
+.sec-lbl:first-child{margin-top:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13.5px}
+.kv dt{color:var(--text-3);font-size:13px}
+.kv dd{margin:0;font-weight:500;text-align:right}
+.qr{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff}
+.crumbs{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-3);padding:18px 0 6px;flex-wrap:wrap}
+.crumbs .sep{color:var(--line-2)}
+.crumbs .cur{color:var(--text);font-weight:600}
+.chart{width:100%;display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card-h h3{font-size:14.5px}
+.card-h .sub{font-size:12px;color:var(--text-3);font-weight:400}
+.card-b{padding:18px}
+.card-b.flush{padding:0}
+.sub-bar{margin-bottom:11px}
+.sub-bar .row{display:flex;align-items:baseline;font-size:13px;margin-bottom:4px}
+.sub-bar .row .w{font-size:10.5px;color:var(--text-3);margin-left:6px;font-family:var(--mono)}
+.sub-bar .row .v{margin-left:auto;font-weight:700;font-family:var(--mono)}
+.track{height:7px;border-radius:4px;background:#eef2f6;overflow:hidden}
+.track i{display:block;height:100%;border-radius:4px}
+.tl{position:relative;padding-left:26px}
+.tl:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tli{position:relative;padding-bottom:17px}
+.tli:last-child{padding-bottom:0}
+.tli .knob{position:absolute;left:-26px;top:3px;width:16px;height:16px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1.5px var(--line-2)}
+.tli .hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.tli .dt{font-size:12px;color:var(--text-3);font-family:var(--mono)}
+.tli .bd{font-size:12.5px;color:var(--text-2);margin-top:3px}
+
+footer.pf{border-top:1px solid var(--line);margin-top:36px;padding:20px 24px;font-size:11.5px;color:var(--text-3);text-align:center;line-height:1.7}
+footer.pf b{color:var(--text-2)}
+
+@media(max-width:860px){
+  .g-3,.g-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g-dm{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .g-2,.g-3,.g-4{grid-template-columns:1fr}
+  .wrap{padding:0 14px 40px}
+  .acct .nm{display:none}
+  select.sel{min-width:0;width:100%}
+  .scope .fld{flex:1;min-width:150px}
+  .q-txt h2{font-size:15.5px}
+  details.q > summary{padding:16px 15px;gap:11px}
+  .q-body{padding:4px 15px 18px}
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0a1117;--surface:#111b24;--surface-2:#0d151d;--line:#202d38;--line-2:#2f404d;
+    --text:#e6eef4;--text-2:#9fb2c1;--text-3:#6f8496;
+    --band-a-bg:#0f2b1c;--band-b-bg:#18290f;--band-c-bg:#2e2409;--band-d-bg:#31130f;
+    --band-a:#3ecf7e;--band-b:#93cd5e;--band-c:#f0b429;--band-d:#f5675a;
+    --shadow:0 1px 2px rgba(0,0,0,.4);--shadow-lg:0 10px 26px rgba(0,0,0,.5);
+  }
+  .track,.mini{background:#1a242e}
+  .qr{background:#fff}
+  tbody tr.clk:hover{background:#16222c}
+  .q-num{background:#0d2f38}
+  select.sel{background-color:var(--surface)}
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="brand">
+    <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M3 12h4l2-5 3 10 2.5-7 1.5 4h5"/></svg></span>
+    <div>AIRLOGIC<small>HVAC INTELLIGENCE</small></div>
+  </div>
+  <div class="nav-right">
+    <div class="acct">
+      <span class="av">AP</span>
+      <span class="nm"><b>Ayala Property Holdings</b><span>Portal · Owner</span></span>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap"><div id="app"></div></div>
+
+<footer class="pf">
+  <b>AIRLOGIC HVAC Intelligence Suite</b> · PULSE™ Inspection Protocol · A-Score™ Health Algorithm · TRIAGE™ Response Bands · DRIFT™ Anomaly Detection<br>
+  Every figure on this page traces back to an instrument reading captured on site. Scores are reproducible from <span class="mono">inputs_json</span> under algorithm <span class="mono">ascore-1.0</span>.
+</footer>
+
+<script>
+/* ============================================================
+   1. DATA LAYER — mirrors the Odoo models in spec §5.
+   Quarterly PM cadence per contract PMC-00058, plus corrective
+   visits in between. Deterministic: same seed, same numbers.
+   ============================================================ */
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rnd=mulberry32(20260718);
+const rr=(lo,hi)=>lo+rnd()*(hi-lo);
+const ri=(lo,hi)=>Math.floor(rr(lo,hi+1));
+const pick=a=>a[Math.floor(rnd()*a.length)];
+
+const TODAY=new Date(2026,6,18);
+const KWH_RATE=12.50;          // ₱/kWh, Meralco commercial band
+const COP=3.2;                 // assumed seasonal coefficient of performance
+const RUN_HOURS_QTR=780;       // 10 h/day × 26 days × 3 months
+
+/* --- airlogic.asset.model (§5.3) --- */
+const CATALOG=[
+ {id:1,brand:"Daikin",model_no:"FCQ100KAVE",equipment_type:"cassette",refrigerant:"r410a",capacity_kw:10.0,capacity_hp:4.0,rated_voltage:"v400_3ph",rla_amps:6.5,rated_capacitor_uf:45,target_superheat_k:6,target_subcool_k:5,dt_min:8,dt_max:12,max_discharge_temp:105,replace_cost:245000},
+ {id:2,brand:"Daikin",model_no:"RZQ200PY1",equipment_type:"accu",refrigerant:"r410a",capacity_kw:20.0,capacity_hp:8.0,rated_voltage:"v400_3ph",rla_amps:13.2,rated_capacitor_uf:60,target_superheat_k:6,target_subcool_k:5,dt_min:8,dt_max:12,max_discharge_temp:105,replace_cost:410000},
+ {id:3,brand:"Carrier",model_no:"42CVL060",equipment_type:"fcu",refrigerant:"r410a",capacity_kw:6.0,capacity_hp:2.5,rated_voltage:"v230_1ph",rla_amps:4.1,rated_capacitor_uf:30,target_superheat_k:6,target_subcool_k:5,dt_min:8,dt_max:12,max_discharge_temp:105,replace_cost:138000},
+ {id:4,brand:"Trane",model_no:"RAUJ-C20",equipment_type:"ahu",refrigerant:"r407c",capacity_kw:70.0,capacity_hp:28,rated_voltage:"v400_3ph",rla_amps:41.0,rated_capacitor_uf:80,target_superheat_k:7,target_subcool_k:6,dt_min:9,dt_max:13,max_discharge_temp:110,replace_cost:1250000},
+ {id:5,brand:"Mitsubishi",model_no:"PUHY-P250YMF",equipment_type:"vrf_odu",refrigerant:"r410a",capacity_kw:28.0,capacity_hp:10,rated_voltage:"v400_3ph",rla_amps:18.6,rated_capacitor_uf:70,target_superheat_k:5,target_subcool_k:5,dt_min:8,dt_max:12,max_discharge_temp:108,replace_cost:620000},
+ {id:6,brand:"York",model_no:"YCAL0080",equipment_type:"package",refrigerant:"r410a",capacity_kw:80.0,capacity_hp:32,rated_voltage:"v400_3ph",rla_amps:52.0,rated_capacitor_uf:90,target_superheat_k:6,target_subcool_k:5,dt_min:8,dt_max:12,max_discharge_temp:105,replace_cost:1480000},
+];
+const EQ_LABEL={split:"Split",cassette:"Ceiling cassette",fcu:"Fan coil unit",ahu:"Air handling unit",accu:"Condensing unit",vrf_idu:"VRF indoor",vrf_odu:"VRF outdoor",window:"Window type",package:"Packaged rooftop"};
+const REF_LABEL={r22:"R-22",r410a:"R-410A",r32:"R-32",r134a:"R-134a",r407c:"R-407C",other:"Other"};
+
+/* --- TRIAGE™ (§2.3) --- */
+function bandOf(s){return s>=85?"a":s>=70?"b":s>=50?"c":"d"}
+const BANDS={
+ a:{label:"A",color:"#12a150",range:"85–100",word:"Healthy",action:"Routine PM cadence — nothing needed"},
+ b:{label:"B",color:"#6aa832",range:"70–84",word:"Watch",action:"Re-inspect next PM, trend flagged"},
+ c:{label:"C",color:"#dc9a06",range:"50–69",word:"Attention",action:"Corrective quote within 5 business days"},
+ d:{label:"D",color:"#d92d20",range:"0–49",word:"Critical",action:"Same-day alert, intervention quote within 48 h"},
+};
+const SUBS=[
+ {k:"refrigerant",n:"Refrigerant charge",w:25,plain:"the amount of refrigerant in the circuit, measured by superheat and subcool"},
+ {k:"coil",n:"Coils",w:20,plain:"how clean the evaporator and condenser coils are, measured by the temperature split"},
+ {k:"compressor",n:"Compressor",w:20,plain:"compressor current draw and discharge temperature against the nameplate"},
+ {k:"electrical",n:"Electrical",w:15,plain:"running amps as a percentage of rated load, voltage balance, terminal condition"},
+ {k:"capacitor",n:"Capacitor",w:10,plain:"measured capacitance against the rated µF stamped on the part"},
+ {k:"insulation",n:"Insulation",w:10,plain:"motor winding insulation resistance in megohms"},
+];
+const SUB_FAIL_REASON={
+ refrigerant:"the refrigerant charge is off nameplate — superheat and subcool are outside the manufacturer's target band",
+ coil:"the coils are fouled — the temperature split has fallen outside the target band, so the unit is moving less heat per kWh",
+ compressor:"the compressor is drawing more current than expected and running hotter than the catalog maximum discharge temperature",
+ electrical:"the electrical readings are outside tolerance — running amps, voltage balance or terminal condition failed inspection",
+ capacitor:"the run capacitor has lost capacitance against its rated µF, which makes the compressor work harder on every start",
+ insulation:"motor winding insulation resistance has dropped into the caution band, which typically precedes a winding failure",
+};
+
+/* --- Quarters --- */
+function qNum(d){return Math.floor(d.getMonth()/3)+1}
+function qKey(d){return d.getFullYear()+"-Q"+qNum(d)}
+const QUARTERS=[];
+(function(){
+  let y=TODAY.getFullYear(), q=qNum(TODAY);
+  for(let i=0;i<8;i++){
+    QUARTERS.push({key:y+"-Q"+q,y,q,label:"Q"+q+" "+y,
+      start:new Date(y,(q-1)*3,1), end:new Date(y,q*3,0)});
+    q--; if(q===0){q=4;y--}
+  }
+})();
+const QMAP=Object.fromEntries(QUARTERS.map(q=>[q.key,q]));
+
+/* --- airlogic.building (§5.1) --- */
+const BUILDINGS=[
+ {id:1,name:"Ayala Tower One",code:"AT1",street:"Ayala Triangle, Ayala Ave.",city:"Makati City",manager:"Rico Villanueva",n:14,floors:["Basement 2","Ground Lobby","7F","12F","18F","24F","Roof Deck"]},
+ {id:2,name:"One Roxas Triangle",code:"ORT",street:"Paseo de Roxas cor. Ayala Ave.",city:"Makati City",manager:"Cherry Ann Dizon",n:9,floors:["Ground Lobby","5F","11F","Penthouse","Roof Deck"]},
+ {id:3,name:"Makati Exchange Plaza",code:"MEP",street:"5th Ave., Bonifacio Global City",city:"Taguig City",manager:"Joel Santiago",n:7,floors:["Ground Lobby","3F","9F","14F","Roof Deck"]},
+];
+const ROOMS=["Server Room B","Executive Lobby","Open Office North","Conference 12A","Data Closet","Retail Arcade","Pump Room","Reception","Training Room","Pantry Level","Trading Floor","Records Vault"];
+const TECHS=["Marvin Ocampo","Dennis Aguilar","Kier Ramos","Jomar Beltran","Arnel Cruz"];
+
+/* --- Parts catalog: planned cost vs. the cost if it fails in service --- */
+const PARTS=[
+ {key:"capacitor",name:"Run capacitor",spec:c=>c.rated_capacitor_uf+" µF",cost:3800,emergency:48000,
+  why:"Measured capacitance had dropped below the manufacturer's tolerance.",
+  ifFailed:"a failed capacitor stalls the compressor on start-up; the usual outcome is a burnt winding plus an after-hours callout",
+  effGain:.06,lifeYears:0},
+ {key:"contactor",name:"Compressor contactor",spec:()=>"3-pole 40 A",cost:4200,emergency:52000,
+  why:"Pitted and heat-discoloured contacts found during the terminal check.",
+  ifFailed:"welded contacts leave the compressor energised or dead — both take the unit offline without warning",
+  effGain:.02,lifeYears:0},
+ {key:"blower_bearing",name:"Blower bearing set",spec:()=>"sealed, pair",cost:6500,emergency:74000,
+  why:"Bearing noise flagged on the blower checklist item.",
+  ifFailed:"seized bearings shear the shaft and usually take the motor with them",
+  effGain:.04,lifeYears:0},
+ {key:"drain_pump",name:"Condensate pump",spec:()=>"18 W",cost:5900,emergency:96000,
+  why:"Drain flow test failed — standing water in the pan.",
+  ifFailed:"pan overflow into the ceiling void below, which is a tenant claim, not just an HVAC repair",
+  effGain:0,lifeYears:0},
+ {key:"fan_motor",name:"Condenser fan motor",spec:()=>"3-ph",cost:18000,emergency:135000,
+  why:"Insulation resistance fell into the caution band.",
+  ifFailed:"loss of condenser airflow trips the unit on high pressure and cooks the compressor",
+  effGain:.05,lifeYears:1},
+ {key:"refrigerant",name:"Leak repair + recharge",spec:c=>REF_LABEL[c.refrigerant],cost:12000,emergency:88000,
+  why:"Superheat and subcool showed the circuit was off nameplate charge.",
+  ifFailed:"running undercharged returns liquid to the compressor and destroys it over a few months",
+  effGain:.14,lifeYears:2},
+ {key:"terminal_block",name:"Compressor terminal block",spec:()=>"factory kit",cost:7400,emergency:168000,
+  why:"Terminal discolouration and heat damage found on the safety checklist.",
+  ifFailed:"terminal burn-out is the single most common cause of a full compressor loss, and it is a fire risk",
+  effGain:.03,lifeYears:3},
+ {key:"coil_clean",name:"Coil chemical clean",spec:()=>"evaporator + condenser",cost:8500,emergency:64000,service:true,
+  why:"Coil fouling pushed the temperature split outside the target band.",
+  ifFailed:"head pressure keeps climbing until the unit trips on a hot afternoon, which is when you least want it",
+  effGain:.11,lifeYears:1},
+];
+const PARTMAP=Object.fromEntries(PARTS.map(p=>[p.key,p]));
+
+/* --- Build assets, quarterly snapshots, jobs, repairs --- */
+let AID=0,SID=0,JID=0,RID=0,ALID=0,REPID=0;
+const ASSETS=[],SNAPS=[],JOBS=[],RECS=[],ALERTS=[],REPAIRS=[];
+
+BUILDINGS.forEach(b=>{
+  b.asset_ids=[];
+  for(let i=0;i<b.n;i++){
+    const c=pick(CATALOG);
+    const roll=rnd();
+    const target = roll>0.90 ? rr(38,58) : roll>0.74 ? rr(58,72) : roll>0.36 ? rr(74,86) : rr(86,97);
+    const a={
+      id:++AID, code:"AST-"+String(10400+AID).padStart(5,"0"),
+      qr_token:(function(){let s="",h="0123456789abcdef";for(let k=0;k<32;k++)s+=h[Math.floor(rnd()*16)];
+        return s.slice(0,8)+"-"+s.slice(8,12)+"-4"+s.slice(13,16)+"-a"+s.slice(17,20)+"-"+s.slice(20,32)})(),
+      building_id:b.id, floor:pick(b.floors), room:pick(ROOMS), model_id:c.id,
+      serial_no:c.brand.slice(0,2).toUpperCase()+ri(10,99)+"-"+ri(100000,999999),
+      install_date:new Date(2016+ri(0,7),ri(0,11),ri(1,28)),
+      warranty_expiry:new Date(2026,ri(2,11),ri(1,28)),
+      state:"active", _base:{}
+    };
+    a.name=c.brand+" "+c.model_no;
+    SUBS.forEach(s=>{a._base[s.k]=Math.max(2,Math.min(100,target+rr(-14,14)))});
+    if(target<50) a._base.insulation=rr(4,22);
+    ASSETS.push(a); b.asset_ids.push(a.id);
+
+    /* one PM job + snapshot per quarter, oldest first */
+    a.snapshot_ids=[];
+    QUARTERS.slice().reverse().forEach((Q,qi)=>{
+      const drift=(7-qi)/7*rr(5,16);   // was healthier further back
+      const maxDay = (Q.y===TODAY.getFullYear()&&Q.q===qNum(TODAY)) ? Math.min(17,TODAY.getDate()) : 26;
+      const d=new Date(Q.y,(Q.q-1)*3+ri(0,2),ri(3,maxDay));
+      if(d>TODAY) d.setTime(new Date(Q.y,(Q.q-1)*3,ri(3,Math.min(17,TODAY.getDate()))).getTime());
+      const sn=makeSnapshot(a,d,drift,Q.key);
+      SNAPS.push(sn); a.snapshot_ids.push(sn.id);
+      const j={id:++JID,name:"JOB-"+String(Q.y).slice(2)+"-"+String(1200+JID).padStart(5,"0"),
+        job_type:"pm",asset_id:a.id,building_id:b.id,technician:pick(TECHS),
+        scheduled_date:new Date(d),state:"done",duration_minutes:ri(38,82),
+        snapshot_id:sn.id,quarter:Q.key,qr_verified:true,report_sent:true,score_after:sn.score_overall};
+      sn.job_id=j.id; JOBS.push(j);
+    });
+
+    const latest=SNAPS[SNAPS.length-1];
+    a.health_score=latest.score_overall;
+    a.health_band=latest.band;
+    a.last_pm_date=latest.date;
+    a.next_pm_date=new Date(latest.date.getFullYear(),latest.date.getMonth()+3,latest.date.getDate());
+  }
+});
+
+function makeSnapshot(a,date,drift,quarter){
+  const s={};
+  SUBS.forEach(x=>{s["score_"+x.k]=Math.max(0,Math.min(100,Math.round(a._base[x.k]+rr(-6,6)+drift)))});
+  let overall=SUBS.reduce((t,x)=>t+s["score_"+x.k]*x.w/100,0);
+  const safetyFail = s.score_insulation<25 || s.score_electrical<25;
+  let capped=false;
+  if(safetyFail&&overall>49){overall=49;capped=true}
+  overall=Math.round(overall*10)/10;
+  return {id:++SID,asset_id:a.id,job_id:null,date:new Date(date),quarter,...s,
+    score_overall:overall,band:bandOf(overall),hard_capped:capped,
+    algorithm_version:"ascore-1.0",ai_summary:null};
+}
+
+/* plain-English summary per snapshot */
+const AI_LINES={
+ a:"The unit is operating inside every manufacturer target band. Refrigerant charge, airflow and electrical draw are all normal for this model. Nothing is needed before the next scheduled visit.",
+ b:"The unit is serviceable and safe to run. One or two readings have moved away from their target band since the last visit — worth watching, but it is not affecting cooling today.",
+ c:"The unit is still cooling, but at least one measurement is now outside the manufacturer's acceptable range. Left alone this raises power consumption and shortens component life. A corrective quote has been prepared.",
+ d:"This unit needs attention now. A safety-critical reading failed inspection, which caps the health score regardless of the other results. Continued operation risks an unplanned outage.",
+};
+SNAPS.forEach(s=>{s.ai_summary=AI_LINES[s.band]});
+JOBS.forEach(j=>{
+  const prev=SNAPS.filter(s=>s.asset_id===j.asset_id&&s.id<j.snapshot_id).pop();
+  j.score_before=prev?prev.score_overall:null;
+});
+
+/* --- Repairs / parts replacement history (corrective work between PMs) --- */
+ASSETS.forEach(a=>{
+  const c=CATALOG.find(x=>x.id===a.model_id);
+  const n = a.health_band==="d" ? ri(1,3) : a.health_band==="c" ? ri(1,2) : rnd()>0.55 ? ri(1,2) : 0;
+  const used=new Set();
+  for(let i=0;i<n;i++){
+    let p=pick(PARTS),g=0;
+    while(used.has(p.key)&&g++<10)p=pick(PARTS);
+    used.add(p.key);
+    const Q=QUARTERS[ri(0,6)];
+    const maxDay=(Q.y===TODAY.getFullYear()&&Q.q===qNum(TODAY))?Math.max(2,TODAY.getDate()-1):27;
+    const d=new Date(Q.y,(Q.q-1)*3+ri(0,2),ri(2,maxDay));
+    if(d>TODAY)continue;
+    const j={id:++JID,name:"JOB-"+String(Q.y).slice(2)+"-"+String(1200+JID).padStart(5,"0"),
+      job_type:"corrective",asset_id:a.id,building_id:a.building_id,technician:pick(TECHS),
+      scheduled_date:d,state:"done",duration_minutes:ri(55,180),quarter:Q.key,
+      qr_verified:true,report_sent:true,snapshot_id:null,score_before:null,score_after:null};
+    JOBS.push(j);
+    REPAIRS.push({
+      id:++REPID,ref:"REP-"+String(400+REPID).padStart(5,"0"),
+      asset_id:a.id,building_id:a.building_id,job_id:j.id,date:d,quarter:Q.key,
+      part_key:p.key,part:p.name,spec:p.spec(c),cost:p.cost,
+      emergency_equivalent:p.emergency,why:p.why,ifFailed:p.ifFailed,
+      eff_gain:p.effGain,life_years:p.lifeYears,is_service:!!p.service,
+      found_by:pick(["PULSE™ checklist","DRIFT™ alert","Instrument reading deviation"]),
+      technician:j.technician
+    });
+  }
+});
+
+/* --- Recommendations still open (§5.13) --- */
+const REC_FOR={
+ capacitor:["Replace run capacitor","Measured µF is below the manufacturer's rated tolerance."],
+ coil_clean:["Chemical clean both coils","Fouling is restricting heat transfer and pushing the temperature split out of band."],
+ terminal_block:["Re-terminate and torque electrical connections","Terminal inspection failed — loose or discoloured terminations are a fire and nuisance-trip risk."],
+ fan_motor:["Replace condenser fan motor","Winding insulation resistance has fallen into the caution band."],
+ refrigerant:["Leak search and recharge to nameplate","Superheat/subcool deviation indicates the circuit is off nameplate charge."],
+ drain_pump:["Replace condensate pump","Drain flow is restricted — overflow risk to the tenant space below."],
+ blower_bearing:["Replace blower bearings","Bearing noise detected; failure will take the unit offline without warning."],
+};
+ASSETS.forEach(a=>{
+  const n = a.health_band==="d"?ri(2,3):a.health_band==="c"?ri(1,2):a.health_band==="b"&&rnd()>0.7?1:0;
+  const keys=Object.keys(REC_FOR),used=new Set();
+  for(let i=0;i<n;i++){
+    let k=pick(keys),g=0;
+    while(used.has(k)&&g++<10)k=pick(keys);
+    used.add(k);
+    const sev=a.health_band==="d"?"urgent":a.health_band==="c"?"soon":"advisory";
+    const created=new Date(a.last_pm_date);
+    const dl=new Date(created);
+    dl.setDate(dl.getDate()+(sev==="urgent"?2:sev==="soon"?7:30));
+    RECS.push({id:++RID,name:"REC-"+String(2100+RID).padStart(5,"0"),
+      asset_id:a.id,building_id:a.building_id,part_key:k,
+      title:REC_FOR[k][0],description:REC_FOR[k][1],severity:sev,
+      estimated_cost:Math.round((PARTMAP[k].cost*rr(1.5,3.2))/500)*500,
+      state:rnd()>0.78?pick(["approved","quoted"]):"proposed",
+      create_date:created,deadline:dl,quarter:qKey(created)});
+  }
+});
+
+/* --- DRIFT™ alerts (§5.12) --- */
+const METRICS={
+ compressor_amps:{n:"Compressor amps",u:"A",dir:+1,base:c=>c.rla_amps*rr(.72,.88),cv:.06,
+   plain:"the compressor is pulling more current than it normally does on this unit"},
+ superheat:{n:"Superheat",u:"K",dir:+1,base:c=>c.target_superheat_k*rr(.9,1.15),cv:.10,
+   plain:"superheat has climbed above this unit's own normal, which points to a loss of charge or a restriction"},
+ subcool:{n:"Subcool",u:"K",dir:-1,base:c=>c.target_subcool_k*rr(.9,1.15),cv:.10,
+   plain:"subcool has dropped below this unit's own normal, which points to an undercharge"},
+ delta_t:{n:"Temperature split ΔT",u:"°C",dir:-1,base:c=>(c.dt_min+c.dt_max)/2*rr(.95,1.08),cv:.07,
+   plain:"the unit is producing a smaller temperature split than it used to, so it is moving less heat for the same power"},
+ insulation:{n:"Insulation resistance",u:"MΩ",dir:-1,base:()=>rr(60,180),cv:.15,
+   plain:"winding insulation resistance is falling away from this unit's own baseline"},
+};
+ASSETS.forEach(a=>{
+  if(a.health_band==="a")return;
+  const c=CATALOG.find(x=>x.id===a.model_id);
+  const n=a.health_band==="d"?ri(1,2):rnd()>0.55?1:0;
+  const seen=new Set();
+  for(let i=0;i<n;i++){
+    let m=pick(Object.keys(METRICS)),g=0;
+    while(seen.has(m)&&g++<8)m=pick(Object.keys(METRICS));
+    seen.add(m);
+    const M=METRICS[m], z=a.health_band==="d"?rr(3.0,4.6):rr(2.0,2.95);
+    const mean=M.base(c), sd=mean*M.cv*rr(.7,1.3);
+    ALERTS.push({id:++ALID,name:"DRF-"+String(60+ALID).padStart(5,"0"),
+      asset_id:a.id,building_id:a.building_id,metric:m,
+      z_score:Math.round(M.dir*z*100)/100,baseline_mean:Math.round(mean*100)/100,
+      baseline_std:Math.round(sd*100)/100,value:Math.round(Math.max(.1,mean+M.dir*z*sd)*100)/100,
+      severity:z>=3?"critical":"watch",state:rnd()>0.72?"acknowledged":"open",
+      date:a.last_pm_date,quarter:qKey(a.last_pm_date)});
+  }
+});
+
+/* --- Contract (§5.14) --- */
+const CONTRACT={name:"PMC-00058",partner:"Ayala Property Holdings, Inc.",frequency:"quarterly",
+  date_start:new Date(2024,9,1),date_end:new Date(2026,11,31),state:"running",
+  price_per_asset:2850,next_invoice_date:new Date(2026,9,1)};
+CONTRACT.units=ASSETS.length;
+CONTRACT.amount_recurring=CONTRACT.units*CONTRACT.price_per_asset;
+
+/* ============================================================
+   2. QUERY HELPERS — everything is scoped by (building, quarter)
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fdate=d=>`${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+const php=n=>"₱"+Math.round(n).toLocaleString("en-PH");
+const phpK=n=>n>=1e6?"₱"+(n/1e6).toFixed(2)+"M":"₱"+Math.round(n).toLocaleString("en-PH");
+const cat=a=>CATALOG.find(c=>c.id===a.model_id);
+const bldg=id=>BUILDINGS.find(b=>b.id===id);
+const asset=id=>ASSETS.find(a=>a.id===id);
+const bandTag=b=>`<span class="band band-${b}"><span class="dot"></span>Band ${BANDS[b].label} · ${BANDS[b].word}</span>`;
+const plural=(n,s,p)=>n===1?s:(p||s+"s");
+
+let VIEW={building:"all",quarter:QUARTERS[0].key};
+
+function scopedAssets(){
+  return VIEW.building==="all"?ASSETS:ASSETS.filter(a=>a.building_id===+VIEW.building);
+}
+/* snapshot for an asset as of a given quarter (the PM visit that quarter) */
+function snapIn(assetId,qk){
+  return SNAPS.filter(s=>s.asset_id===assetId&&s.quarter===qk).pop()||null;
+}
+function prevQuarterKey(qk){
+  const i=QUARTERS.findIndex(q=>q.key===qk);
+  return i>=0&&i<QUARTERS.length-1?QUARTERS[i+1].key:null;
+}
+/* every quarter up to and including qk, within the same calendar year */
+function ytdQuarters(qk){
+  const Q=QMAP[qk];
+  return QUARTERS.filter(x=>x.y===Q.y&&x.q<=Q.q).sort((a,b)=>a.q-b.q);
+}
+
+/* the per-quarter view of the scoped portfolio */
+function snapshotOfQuarter(qk){
+  const as=scopedAssets();
+  const rows=as.map(a=>({asset:a,snap:snapIn(a.id,qk)})).filter(r=>r.snap);
+  const score=rows.length?Math.round(rows.reduce((s,r)=>s+r.snap.score_overall,0)/rows.length*10)/10:0;
+  const counts={a:0,b:0,c:0,d:0};
+  rows.forEach(r=>counts[r.snap.band]++);
+  return {rows,score,band:bandOf(score),counts,total:rows.length};
+}
+
+/* ---- SAVINGS ENGINE ------------------------------------------------
+   Four components. (a) and (d) are invoice-verifiable; (b) and (c) are
+   modelled from stated assumptions and labelled as such on the page.
+-------------------------------------------------------------------- */
+function savings(qk){
+  const Q=QMAP[qk], year=Q.y;
+  const ids=new Set(scopedAssets().map(a=>a.id));
+  const qs=ytdQuarters(qk).map(x=>x.key);
+  const reps=REPAIRS.filter(r=>ids.has(r.asset_id)&&qs.includes(r.quarter));
+
+  /* (a) Avoided emergency breakdowns */
+  const a_items=reps.map(r=>({r,avoided:r.emergency_equivalent-r.cost}));
+  const a_total=a_items.reduce((s,x)=>s+x.avoided,0);
+
+  /* (b) Energy recovered — restored efficiency for the rest of the year */
+  const b_items=reps.filter(r=>r.eff_gain>0).map(r=>{
+    const a=asset(r.asset_id), c=cat(a);
+    const inputKw=c.capacity_kw/COP;
+    // quarters the unit has run since the fix, inclusive of the quarter it was fixed in
+    const qElapsed=Q.q-QMAP[r.quarter].q+1;
+    const hours=Math.max(0,qElapsed)*RUN_HOURS_QTR;
+    const kwh=inputKw*hours*r.eff_gain;
+    return {r,asset:a,inputKw,hours,kwh,value:kwh*KWH_RATE};
+  }).filter(x=>x.hours>0);
+  const b_total=b_items.reduce((s,x)=>s+x.value,0);
+
+  /* (c) Deferred replacement capex — life extension, annualised */
+  const EXPECTED_LIFE=15;
+  const c_items=reps.filter(r=>r.life_years>0).map(r=>{
+    const a=asset(r.asset_id), c=cat(a);
+    return {r,asset:a,replace:c.replace_cost,years:r.life_years,
+      value:c.replace_cost*(r.life_years/EXPECTED_LIFE)};
+  });
+  const c_total=c_items.reduce((s,x)=>s+x.value,0);
+
+  /* (d) Warranty cover preserved — documented PM is a condition of cover */
+  const d_items=scopedAssets().filter(a=>a.warranty_expiry>TODAY).map(a=>{
+    const c=cat(a);
+    return {asset:a,exposure:c.replace_cost*0.35};   // compressor+coil share of unit value
+  });
+  const d_total=d_items.reduce((s,x)=>s+x.exposure,0);
+
+  const spent=reps.reduce((s,r)=>s+r.cost,0);
+  const fees=scopedAssets().length*CONTRACT.price_per_asset*qs.length;
+
+  return {year,qs,reps,a_items,a_total,b_items,b_total,c_items,c_total,d_items,d_total,
+    verified:a_total, modelled:b_total+c_total, total:a_total+b_total+c_total,
+    spent,fees,net:a_total+b_total+c_total-spent-fees,EXPECTED_LIFE};
+}
+
+/* ---- WHY a unit needs attention (plain English, from the data) ---- */
+function whyUrgent(a,sn){
+  const reasons=[];
+  if(sn.hard_capped)
+    reasons.push("A <b>safety-critical item failed inspection</b>, which caps the score at 49 no matter how the other readings look. This is the A-Score™ hard-cap rule.");
+  SUBS.forEach(s=>{
+    const v=sn["score_"+s.k];
+    if(v<50) reasons.push(`<b>${s.n} scored ${v}/100</b> — ${SUB_FAIL_REASON[s.k]}.`);
+  });
+  ALERTS.filter(x=>x.asset_id===a.id&&x.state!=="resolved").forEach(al=>{
+    const M=METRICS[al.metric];
+    reasons.push(`<b>DRIFT™ flagged ${M.n.toLowerCase()}</b> at ${al.value} ${M.u} against this unit's own normal of ${al.baseline_mean} ${M.u} — ${M.plain}.`);
+  });
+  if(!reasons.length) reasons.push("Multiple sub-scores have drifted down together; no single reading has failed outright yet.");
+  return reasons;
+}
+
+/* ============================================================
+   3. CHART PRIMITIVES
+   ============================================================ */
+function donut(segs,size,thick,midN,midL){
+  const r=(size-thick)/2, C=2*Math.PI*r;
+  const total=segs.reduce((s,x)=>s+x.value,0)||1;
+  let acc=0;
+  const arcs=segs.filter(s=>s.value>0).map(s=>{
+    const len=s.value/total*C;
+    const el=`<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}"
+      stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}"
+      stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"
+      ><title>${esc(s.label)}: ${s.value} (${Math.round(s.value/total*100)}%)</title></circle>`;
+    acc+=len; return el;
+  }).join("");
+  return `<div class="donut" style="width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${thick}"/>
+      ${arcs}
+    </svg>
+    ${midN!==undefined?`<div class="mid"><div><div class="n">${midN}</div><div class="l">${midL||""}</div></div></div>`:""}
+  </div>`;
+}
+function legend(segs){
+  const total=segs.reduce((s,x)=>s+x.value,0)||1;
+  return `<div class="legend">${segs.map(s=>`<div class="li">
+    <span class="sw" style="background:${s.color}"></span>
+    <span class="n">${esc(s.label)}</span>
+    <span class="v">${s.value}</span>
+    <span class="p">${Math.round(s.value/total*100)}%</span>
+  </div>`).join("")}</div>`;
+}
+function miniBar(counts,total){
+  return `<div class="mini">${["a","b","c","d"].filter(k=>counts[k]>0)
+    .map(k=>`<i title="${counts[k]} in band ${BANDS[k].label}" style="width:${counts[k]/total*100}%;background:${BANDS[k].color}"></i>`).join("")}</div>`;
+}
+function trendChart(points,h){
+  h=h||180;
+  const w=760,padL=32,padR=10,padT=10,padB=24;
+  const iw=w-padL-padR, ih=h-padT-padB;
+  const x=i=>padL+(points.length<2?iw/2:i*iw/(points.length-1));
+  const y=v=>padT+ih-(v/100)*ih;
+  const pts=points.filter(p=>p.score!==null);
+  if(!pts.length)return"";
+  const line=points.map((p,i)=>p.score===null?null:(i===0?"M":"L")+x(i).toFixed(1)+" "+y(p.score).toFixed(1)).filter(Boolean).join(" ").replace(/^L/,"M");
+  const zones=[[85,100,BANDS.a.color],[70,85,BANDS.b.color],[50,70,BANDS.c.color],[0,50,BANDS.d.color]];
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:${h}px">
+    ${zones.map(([lo,hi,c])=>`<rect x="${padL}" y="${y(hi)}" width="${iw}" height="${y(lo)-y(hi)}" fill="${c}" opacity=".06"/>`).join("")}
+    ${[0,50,100].map(v=>`<line x1="${padL}" x2="${w-padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>
+      <text x="${padL-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--text-3)">${v}</text>`).join("")}
+    <path d="${line}" fill="none" stroke="var(--al-cyan)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    ${points.map((p,i)=>p.score===null?"":`<circle cx="${x(i)}" cy="${y(p.score)}" r="4" fill="var(--surface)" stroke="${BANDS[bandOf(p.score)].color}" stroke-width="2.6"><title>${esc(p.label)} — A-Score ${p.score}</title></circle>`).join("")}
+    ${points.map((p,i)=>`<text x="${x(i)}" y="${h-6}" text-anchor="middle" font-size="10" fill="var(--text-3)">${esc(p.label)}</text>`).join("")}
+  </svg>`;
+}
+function qrSvg(token,size){
+  size=size||100; const n=21,cell=size/n;
+  let seed=0; for(let i=0;i<token.length;i++)seed=(seed*31+token.charCodeAt(i))>>>0;
+  const r=mulberry32(seed);
+  const finder=(ox,oy)=>`<rect x="${ox*cell}" y="${oy*cell}" width="${7*cell}" height="${7*cell}" fill="#000"/>
+    <rect x="${(ox+1)*cell}" y="${(oy+1)*cell}" width="${5*cell}" height="${5*cell}" fill="#fff"/>
+    <rect x="${(ox+2)*cell}" y="${(oy+2)*cell}" width="${3*cell}" height="${3*cell}" fill="#000"/>`;
+  const inF=(x,y)=>(x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9);
+  let cells="";
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++)
+    if(!inF(x,y)&&r()>0.52)cells+=`<rect x="${x*cell}" y="${y*cell}" width="${cell}" height="${cell}" fill="#000"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">
+    <rect width="${size}" height="${size}" fill="#fff"/>${cells}${finder(0,0)}${finder(n-7,0)}${finder(0,n-7)}</svg>`;
+}
+
+const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg>';
+const IC={
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+ ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.1V12a10 10 0 11-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>',
+ warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+};
+
+/* ============================================================
+   4. THE FIVE QUESTIONS
+   ============================================================ */
+
+function section(n,question,answer,body,open){
+  return `<details class="q" ${open?"open":""}>
+    <summary>
+      <span class="q-num">${n}</span>
+      <span class="q-txt"><h2>${question}</h2><div class="ans">${answer}</div></span>
+      <span class="q-chev">${CHEV}</span>
+    </summary>
+    <div class="q-body"><div class="pad">${body}</div></div>
+  </details>`;
+}
+
+/* --- Q1: overall health ------------------------------------------- */
+function q1(qk){
+  const V=snapshotOfQuarter(qk);
+  const pq=prevQuarterKey(qk);
+  let delta=null;
+  if(pq){
+    const P=snapshotOfQuarter(pq);
+    if(P.total) delta=Math.round((V.score-P.score)*10)/10;
+  }
+  const segs=["a","b","c","d"].map(k=>({label:`Band ${BANDS[k].label} — ${BANDS[k].word} (${BANDS[k].range})`,value:V.counts[k],color:BANDS[k].color}));
+
+  /* categorical grouping: by model, and by equipment type */
+  const byModel={};
+  V.rows.forEach(({asset:a,snap:s})=>{
+    const c=cat(a), key=c.brand+" "+c.model_no;
+    (byModel[key]=byModel[key]||{c,rows:[],counts:{a:0,b:0,c:0,d:0}});
+    byModel[key].rows.push(s); byModel[key].counts[s.band]++;
+  });
+  const models=Object.entries(byModel).map(([k,v])=>({
+    key:k,c:v.c,n:v.rows.length,counts:v.counts,
+    avg:Math.round(v.rows.reduce((s,x)=>s+x.score_overall,0)/v.rows.length*10)/10
+  })).sort((x,y)=>x.avg-y.avg);
+
+  const byType={};
+  V.rows.forEach(({asset:a,snap:s})=>{
+    const t=cat(a).equipment_type;
+    (byType[t]=byType[t]||{n:0,sum:0}); byType[t].n++; byType[t].sum+=s.score_overall;
+  });
+  const TYPE_COLORS=["#0091a7","#4a7fb5","#7a6fc0","#b06aa8","#c08a4a","#5aa88c","#8898a8"];
+  const typeSegs=Object.entries(byType).map(([t,v],i)=>({label:EQ_LABEL[t],value:v.n,color:TYPE_COLORS[i%TYPE_COLORS.length]}));
+
+  /* trend across the last 8 quarters */
+  const trend=QUARTERS.slice().reverse().map(Q=>{
+    const S=snapshotOfQuarter(Q.key);
+    return {label:"Q"+Q.q+" '"+String(Q.y).slice(2),score:S.total?S.score:null};
+  });
+
+  const healthy=V.counts.a+V.counts.b;
+  const answer=`<b>${healthy} of ${V.total}</b> ${plural(healthy,"unit is","units are")} healthy. `+
+    `Portfolio A-Score™ is <b style="color:${BANDS[V.band].color}">${V.score}/100</b> — Band ${BANDS[V.band].label}`+
+    (delta!==null?`, ${delta>0?`up ${delta} points`:delta<0?`down ${Math.abs(delta)} points`:"unchanged"} from last quarter.`:".");
+
+  const body=`
+    <div class="grid g-2">
+      <div>
+        <div class="sec-lbl">Condition of every unit</div>
+        <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+          ${donut(segs,158,26,V.total,"units")}
+          <div style="flex:1;min-width:190px">${legend(segs)}</div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-lbl">What kind of equipment you have</div>
+        <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+          ${donut(typeSegs,158,26,typeSegs.length,"types")}
+          <div style="flex:1;min-width:190px">${legend(typeSegs)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-lbl">By brand and model — worst average first</div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Brand &amp; model</th><th>Type</th><th class="num">Units</th><th class="num">Avg A-Score™</th><th>Condition spread</th><th>Worst case</th></tr></thead>
+      <tbody>
+      ${models.map(m=>`<tr>
+        <td><b>${esc(m.key)}</b><div class="tiny muted">${m.c.capacity_kw} kW · ${m.c.capacity_hp} HP · ${REF_LABEL[m.c.refrigerant]}</div></td>
+        <td class="tiny">${EQ_LABEL[m.c.equipment_type]}</td>
+        <td class="num">${m.n}</td>
+        <td class="num"><b style="color:${BANDS[bandOf(m.avg)].color}">${m.avg}</b></td>
+        <td style="min-width:110px">${miniBar(m.counts,m.n)}
+          <div class="tiny muted" style="margin-top:4px">${["a","b","c","d"].filter(k=>m.counts[k]).map(k=>m.counts[k]+"×"+BANDS[k].label).join(" · ")}</div></td>
+        <td>${bandTag(["d","c","b","a"].find(k=>m.counts[k]>0))}</td>
+      </tr>`).join("")}
+      </tbody>
+    </table></div>
+    <div class="note">Grouping by model matters because every score is measured against <i>that</i> model's rated specs from the catalog — superheat target, rated load amps, rated capacitance. A Band C on a 32 HP rooftop package is a very different bill from a Band C on a 2.5 HP fan coil.</div>
+
+    <div class="sec-lbl">Where the portfolio has been — last 8 quarterly visits</div>
+    ${trendChart(trend,180)}
+    <div class="note">Each point is one full round of PM visits. Shaded bands are the TRIAGE™ ranges: green ${BANDS.a.range} and ${BANDS.b.range}, amber ${BANDS.c.range}, red ${BANDS.d.range}.</div>`;
+  return section(1,"What is the overall health of my aircons?",answer,body,true);
+}
+
+/* --- Q2: urgent attention ----------------------------------------- */
+function q2(qk){
+  const V=snapshotOfQuarter(qk);
+  const urgent=V.rows.filter(r=>r.snap.band==="d").sort((a,b)=>a.snap.score_overall-b.snap.score_overall);
+  const soon=V.rows.filter(r=>r.snap.band==="c").sort((a,b)=>a.snap.score_overall-b.snap.score_overall);
+  const openRecs=RECS.filter(r=>r.state==="proposed"&&V.rows.some(x=>x.asset.id===r.asset_id));
+  const quoted=openRecs.reduce((s,r)=>s+r.estimated_cost,0);
+
+  const answer = urgent.length
+    ? `<b style="color:${BANDS.d.color}">${urgent.length} ${plural(urgent.length,"unit needs","units need")} attention now</b>`+
+      (soon.length?` and <b style="color:${BANDS.c.color}">${soon.length} more</b> ${plural(soon.length,"is","are")} close behind.`:".")+
+      ` Estimated corrective work: <b>${php(quoted)}</b>.`
+    : soon.length
+      ? `Nothing is critical. <b style="color:${BANDS.c.color}">${soon.length} ${plural(soon.length,"unit","units")}</b> ${plural(soon.length,"needs","need")} corrective work within 5 business days.`
+      : `<b style="color:${BANDS.a.color}">Nothing needs urgent attention this quarter.</b>`;
+
+  const card=(r,cls)=>{
+    const a=r.asset,sn=r.snap,c=cat(a),b=bldg(a.building_id);
+    const recs=RECS.filter(x=>x.asset_id===a.id&&x.state!=="declined");
+    const cost=recs.reduce((s,x)=>s+x.estimated_cost,0);
+    return `<div class="why ${cls}">
+      <div class="hd">
+        <b>${esc(a.code)} — ${esc(c.brand)} ${esc(c.model_no)}</b>
+        ${bandTag(sn.band)}
+        <span class="mono" style="color:${BANDS[sn.band].color};font-weight:700">${sn.score_overall}/100</span>
+      </div>
+      <div class="hd" style="margin-top:-2px;margin-bottom:8px">
+        <span class="loc">${esc(b.name)} · ${esc(a.floor)} · ${esc(a.room)} · ${EQ_LABEL[c.equipment_type]} ${c.capacity_hp} HP</span>
+      </div>
+      <div class="rsn"><b style="color:var(--text)">Why:</b>
+        <ul>${whyUrgent(a,sn).map(x=>`<li>${x}</li>`).join("")}</ul>
+      </div>
+      ${recs.length?`<div class="rsn" style="margin-top:9px"><b style="color:var(--text)">What we recommend:</b>
+        <ul>${recs.map(x=>`<li>${esc(x.title)} — <span class="mono">${php(x.estimated_cost)}</span>
+          <span class="pill ${x.severity==="urgent"?"pill-red":x.severity==="soon"?"pill-amb":"pill-cy"}">${x.severity}</span>
+          ${x.state!=="proposed"?`<span class="pill pill-cy">${x.state}</span>`:""}</li>`).join("")}</ul></div>`:""}
+      <div class="act">
+        <span class="pill">TRIAGE™ ${BANDS[sn.band].action}</span>
+        ${cost?`<span>Total estimated: <b class="mono">${php(cost)}</b></span>`:""}
+        <a class="btn btn-sm" href="#/asset/${a.id}">See the readings</a>
+        ${recs.some(x=>x.state==="proposed")?`<button class="btn btn-sm btn-c" onclick="approveAsset(${a.id})">Request quote</button>`:""}
+      </div>
+    </div>`;
+  };
+
+  const body = (urgent.length||soon.length) ? `
+    ${urgent.length?`<div class="sec-lbl">Critical — Band D · same-day alert already sent to your building manager</div>
+      ${urgent.map(r=>card(r,"")).join("")}`:""}
+    ${soon.length?`<div class="sec-lbl">Attention — Band C · quote due within 5 business days</div>
+      ${soon.map(r=>card(r,"c")).join("")}`:""}
+    <div class="note">Every "why" above is derived from an instrument reading or a checklist answer captured on site during the PULSE™ inspection, not from an opinion. Open any unit to see the raw numbers behind it.</div>`
+  : `<div class="empty">${IC.ok}<div>No unit fell into Band C or D at this quarter's visit.</div></div>`;
+
+  return section(2,"How many units need urgent attention, and why?",answer,body,urgent.length>0);
+}
+
+/* --- Q3: parts replacement / repair history ----------------------- */
+function q3(qk){
+  const ids=new Set(scopedAssets().map(a=>a.id));
+  const all=REPAIRS.filter(r=>ids.has(r.asset_id)).sort((a,b)=>b.date-a.date);
+  const byAsset={};
+  all.forEach(r=>{(byAsset[r.asset_id]=byAsset[r.asset_id]||[]).push(r)});
+  const units=Object.entries(byAsset).map(([id,rs])=>({
+    a:asset(+id),rs,spend:rs.reduce((s,x)=>s+x.cost,0),last:rs[0]
+  })).sort((x,y)=>y.rs.length-x.rs.length||y.spend-x.spend);
+  const repeat=units.filter(u=>u.rs.length>=2);
+  const spend=all.reduce((s,r)=>s+r.cost,0);
+  const thisQ=all.filter(r=>r.quarter===qk);
+
+  const answer = units.length
+    ? `<b>${units.length} of ${scopedAssets().length} units</b> have had parts replaced or repairs done, `+
+      `<b>${php(spend)}</b> in total. <b>${repeat.length}</b> ${plural(repeat.length,"unit is","units are")} a repeat offender with two or more events.`
+    : "No unit in this scope has needed a repair yet.";
+
+  const body = units.length ? `
+    <div class="grid g-4" style="margin-bottom:6px">
+      <div class="tile"><div class="lbl">Units with repairs</div><div class="val">${units.length}<small>/${scopedAssets().length}</small></div><div class="foot">${Math.round(units.length/scopedAssets().length*100)}% of the fleet</div></div>
+      <div class="tile"><div class="lbl">Repair events</div><div class="val">${all.length}</div><div class="foot">${thisQ.length} this quarter</div></div>
+      <div class="tile"><div class="lbl">Parts &amp; labour spend</div><div class="val" style="font-size:21px">${php(spend)}</div><div class="foot">since ${fdate(QUARTERS[QUARTERS.length-1].start)}</div></div>
+      <div class="tile"><div class="lbl">Repeat offenders</div><div class="val" style="color:${repeat.length?BANDS.c.color:"inherit"}">${repeat.length}</div><div class="foot">2+ events — replacement candidates</div></div>
+    </div>
+
+    <div class="sec-lbl">Units ranked by repair history</div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Unit</th><th>Location</th><th class="num">Events</th><th>What was replaced</th><th class="num">Spend</th><th>Last event</th><th>Now</th></tr></thead>
+      <tbody>
+      ${units.map(u=>{
+        const c=cat(u.a),b=bldg(u.a.building_id);
+        return `<tr class="clk" onclick="go('#/asset/${u.a.id}')">
+          <td><b>${esc(u.a.code)}</b><div class="tiny muted">${esc(c.brand)} ${esc(c.model_no)}</div></td>
+          <td class="tiny">${esc(b.code)} · ${esc(u.a.floor)}<div class="muted">${esc(u.a.room)}</div></td>
+          <td class="num">${u.rs.length>=2?`<span class="pill pill-amb">${u.rs.length}</span>`:u.rs.length}</td>
+          <td class="tiny">${u.rs.map(r=>esc(r.part)).join("<br>")}</td>
+          <td class="num">${php(u.spend)}</td>
+          <td class="tiny">${fdate(u.last.date)}<div class="muted">${esc(u.last.found_by)}</div></td>
+          <td>${bandTag(u.a.health_band)}</td>
+        </tr>`}).join("")}
+      </tbody>
+      <tfoot><tr><td colspan="4">Total</td><td class="num">${php(spend)}</td><td colspan="2"></td></tr></tfoot>
+    </table></div>
+
+    ${repeat.length?`<div class="sec-lbl">Why the repeat offenders matter</div>
+      ${repeat.slice(0,4).map(u=>{
+        const c=cat(u.a);
+        const ratio=u.spend/c.replace_cost;
+        return `<div class="why c">
+          <div class="hd"><b>${esc(u.a.code)} — ${esc(c.brand)} ${esc(c.model_no)}</b>
+            <span class="pill pill-amb">${u.rs.length} repairs</span>
+            ${bandTag(u.a.health_band)}</div>
+          <div class="rsn">
+            Installed ${fdate(u.a.install_date)}, so it is <b>${TODAY.getFullYear()-u.a.install_date.getFullYear()} years old</b>.
+            You have spent <b>${php(u.spend)}</b> on it, which is <b>${(ratio*100).toFixed(1)}%</b> of the ${php(c.replace_cost)} it would cost to replace outright.
+            ${ratio>0.12
+              ? " At this rate it is worth pricing a replacement against continued repair at the next contract renewal."
+              : " Still comfortably cheaper to maintain than to replace."}
+            <ul>${u.rs.map(r=>`<li>${fdate(r.date)} — <b>${esc(r.part)}</b> (${esc(r.spec)}), ${php(r.cost)}. ${esc(r.why)} Found by ${esc(r.found_by)}.</li>`).join("")}</ul>
+          </div>
+        </div>`}).join("")}`:""}
+
+    <div class="sec-lbl">Full repair log</div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Ref</th><th>Date</th><th>Unit</th><th>Part or service</th><th>Reason it was replaced</th><th>Found by</th><th class="num">Cost</th></tr></thead>
+      <tbody>
+      ${all.map(r=>{const a=asset(r.asset_id);return `<tr>
+        <td class="mono">${esc(r.ref)}<div class="tiny muted">${esc(r.quarter)}</div></td>
+        <td class="tiny">${fdate(r.date)}</td>
+        <td class="tiny"><a href="#/asset/${a.id}">${esc(a.code)}</a><div class="muted">${esc(bldg(a.building_id).code)}</div></td>
+        <td>${esc(r.part)}<div class="tiny muted">${esc(r.spec)}</div></td>
+        <td class="tiny">${esc(r.why)}</td>
+        <td class="tiny">${esc(r.found_by)}</td>
+        <td class="num">${php(r.cost)}</td>
+      </tr>`}).join("")}
+      </tbody>
+    </table></div>`
+  : `<div class="empty">${IC.ok}<div>No parts replaced and no repairs logged in this scope.</div></div>`;
+
+  return section(3,"Which units have a history of parts replacement or repair?",answer,body,false);
+}
+
+/* --- Q4: savings from preventive diagnostics ---------------------- */
+function q4(qk){
+  const S=savings(qk);
+  const Q=QMAP[qk];
+  const qLabel=S.qs.map(k=>"Q"+QMAP[k].q).join(", ");
+
+  const answer=`<b style="color:${BANDS.a.color}">${php(S.total)}</b> avoided so far in ${S.year} — `+
+    `<b>${php(S.verified)}</b> of that is invoice-verifiable, ${php(S.modelled)} is modelled from stated assumptions. `+
+    `Against ${php(S.spent+S.fees)} spent on the contract and parts, that is a net <b>${php(S.net)}</b>.`;
+
+  if(!S.reps.length){
+    return section(4,`How much have I saved from preventive diagnostics this year?`,
+      `No corrective work has been needed in ${S.year} yet, so there is nothing to compare against.`,
+      `<div class="empty">${IC.ok}<div>Nothing to report — no interventions this year.</div></div>`,false);
+  }
+
+  /* (a) */
+  const aBody=`
+    <p style="margin-top:0">Each of these parts was replaced <b>before it failed</b>, because a PULSE™ checklist item, a DRIFT™ alert or an instrument reading caught it during a scheduled visit. The saving is the difference between doing it on a planned visit and doing it as an emergency after the part let go.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Date</th><th>Unit</th><th>Part</th><th>What happens if it fails in service</th><th class="num">Planned</th><th class="num">If emergency</th><th class="num">Avoided</th></tr></thead>
+      <tbody>
+      ${S.a_items.map(({r,avoided})=>{const a=asset(r.asset_id);return `<tr>
+        <td class="tiny">${fdate(r.date)}</td>
+        <td class="tiny"><a href="#/asset/${a.id}">${esc(a.code)}</a></td>
+        <td class="tiny">${esc(r.part)}</td>
+        <td class="tiny muted">${esc(r.ifFailed)}</td>
+        <td class="num">${php(r.cost)}</td>
+        <td class="num muted">${php(r.emergency_equivalent)}</td>
+        <td class="num"><b style="color:${BANDS.a.color}">${php(avoided)}</b></td>
+      </tr>`}).join("")}
+      </tbody>
+      <tfoot><tr><td colspan="6">Total avoided</td><td class="num" style="color:${BANDS.a.color}">${php(S.a_total)}</td></tr></tfoot>
+    </table></div>
+    <div class="assume"><b>How the emergency figure is set:</b> after-hours callout, expedited parts at list price, and the collateral damage that part typically causes when it fails — for a terminal block that is a full compressor loss, for a condensate pump it is a ceiling repair in the tenant space below. These are AIRLOGIC's own historical emergency invoices for the same part on the same equipment class, not an industry average.</div>`;
+
+  /* (b) */
+  const bBody=`
+    <p style="margin-top:0">A fouled coil or an undercharged circuit does not stop the unit — it makes it draw more power for the same cooling. Restoring it to the manufacturer's target band gives that power back for the rest of the year.</p>
+    <div class="calc">input kW      = capacity kW ÷ COP (${COP} assumed)
+run hours     = ${RUN_HOURS_QTR} h per quarter (10 h/day × 26 days × 3 months)
+kWh recovered = input kW × run hours × efficiency regained
+<b>value         = kWh recovered × ₱${KWH_RATE.toFixed(2)}/kWh</b></div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Unit</th><th>What was fixed</th><th class="num">Input kW</th><th class="num">Eff. regained</th><th class="num">Hours run since fix</th><th class="num">kWh</th><th class="num">Value</th></tr></thead>
+      <tbody>
+      ${S.b_items.map(x=>`<tr>
+        <td class="tiny"><a href="#/asset/${x.asset.id}">${esc(x.asset.code)}</a><div class="muted">${esc(cat(x.asset).capacity_hp)} HP</div></td>
+        <td class="tiny">${esc(x.r.part)}</td>
+        <td class="num">${x.inputKw.toFixed(1)}</td>
+        <td class="num">${(x.r.eff_gain*100).toFixed(0)}%</td>
+        <td class="num">${x.hours.toLocaleString()}</td>
+        <td class="num">${Math.round(x.kwh).toLocaleString()}</td>
+        <td class="num"><b>${php(x.value)}</b></td>
+      </tr>`).join("")}
+      </tbody>
+      <tfoot><tr><td colspan="6">Total energy recovered</td><td class="num">${php(S.b_total)}</td></tr></tfoot>
+    </table></div>
+    <div class="assume"><b>Assumptions you can challenge:</b> COP of ${COP} is a fleet average, not measured per unit; ${RUN_HOURS_QTR} h/quarter assumes normal office occupancy; ₱${KWH_RATE.toFixed(2)}/kWh is the current Meralco commercial rate. Efficiency regained comes from the published penalty for each fault type — ${(PARTMAP.coil_clean.effGain*100).toFixed(0)}% for a fouled coil, ${(PARTMAP.refrigerant.effGain*100).toFixed(0)}% for an undercharged circuit. Change any of these and the number moves; that is why it is separated from the verified column.</div>`;
+
+  /* (c) */
+  const cBody=`
+    <p style="margin-top:0">Catching an electrical or charge fault early does not just avoid one repair — it stops the damage that shortens the whole unit's life. This values that life extension against what the unit would cost to replace.</p>
+    <div class="calc">value = replacement cost × (years of life regained ÷ ${S.EXPECTED_LIFE}-year expected life)</div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Unit</th><th>What was caught</th><th class="num">Replacement cost</th><th class="num">Years regained</th><th class="num">Value</th></tr></thead>
+      <tbody>
+      ${S.c_items.map(x=>`<tr>
+        <td class="tiny"><a href="#/asset/${x.asset.id}">${esc(x.asset.code)}</a><div class="muted">${esc(cat(x.asset).brand)} ${esc(cat(x.asset).model_no)}</div></td>
+        <td class="tiny">${esc(x.r.part)}</td>
+        <td class="num">${php(x.replace)}</td>
+        <td class="num">${x.years}</td>
+        <td class="num"><b>${php(x.value)}</b></td>
+      </tr>`).join("")}
+      </tbody>
+      <tfoot><tr><td colspan="4">Total deferred capex</td><td class="num">${php(S.c_total)}</td></tr></tfoot>
+    </table></div>
+    <div class="assume"><b>This is the softest number on the page.</b> Life extension cannot be measured directly, only inferred from the fault that was corrected — a terminal block caught before burn-out is worth ${PARTMAP.terminal_block.lifeYears} years, a charge correction ${PARTMAP.refrigerant.lifeYears}. We show it because it is real, and we keep it out of the verified column because you cannot put it on an invoice.</div>`;
+
+  /* (d) */
+  const dBody=`
+    <p style="margin-top:0">Most manufacturer warranties require documented scheduled maintenance. Every PULSE™ visit is timestamped, GPS-verified and QR-matched to the unit, which is what a manufacturer asks for when a claim is filed. These units still have cover that would be at risk without that record.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Unit</th><th>Model</th><th>Cover ends</th><th class="num">Exposure preserved</th></tr></thead>
+      <tbody>
+      ${S.d_items.slice(0,12).map(x=>`<tr>
+        <td class="tiny"><a href="#/asset/${x.asset.id}">${esc(x.asset.code)}</a></td>
+        <td class="tiny">${esc(cat(x.asset).brand)} ${esc(cat(x.asset).model_no)}</td>
+        <td class="tiny">${fdate(x.asset.warranty_expiry)}</td>
+        <td class="num">${php(x.exposure)}</td>
+      </tr>`).join("")}
+      ${S.d_items.length>12?`<tr><td colspan="4" class="tiny muted">+ ${S.d_items.length-12} more units under cover</td></tr>`:""}
+      </tbody>
+      <tfoot><tr><td colspan="3">Total exposure under cover</td><td class="num">${php(S.d_total)}</td></tr></tfoot>
+    </table></div>
+    <div class="assume"><b>Not counted in the savings total.</b> This is risk removed, not money saved — it only becomes a real number if a claim is actually filed and honoured. Exposure is the compressor and coil share of unit value, taken at 35%.</div>`;
+
+  const body=`
+    <div class="grid g-4" style="margin-bottom:4px">
+      <div class="tile"><div class="lbl">Verified savings</div><div class="val" style="color:${BANDS.a.color};font-size:21px">${php(S.verified)}</div><div class="foot">from actual repair invoices</div></div>
+      <div class="tile"><div class="lbl">Modelled savings</div><div class="val" style="font-size:21px">${php(S.modelled)}</div><div class="foot">energy + deferred capex</div></div>
+      <div class="tile"><div class="lbl">What you spent</div><div class="val" style="font-size:21px">${php(S.spent+S.fees)}</div><div class="foot">${php(S.fees)} contract + ${php(S.spent)} parts</div></div>
+      <div class="tile"><div class="lbl">Net position</div><div class="val" style="color:${S.net>0?BANDS.a.color:BANDS.d.color};font-size:21px">${S.net>0?"+":""}${php(S.net)}</div><div class="foot">${S.year} through ${qLabel}</div></div>
+    </div>
+    <div class="note" style="margin-bottom:14px">Open each line to see the arithmetic and the assumptions behind it.</div>
+
+    <details class="sub"><summary><span class="lbl">a · Emergency breakdowns avoided</span><span class="amt" style="color:${BANDS.a.color}">${php(S.a_total)}</span><span class="cv">${CHEV}</span></summary><div class="sub-body">${aBody}</div></details>
+    <details class="sub"><summary><span class="lbl">b · Energy recovered from restored efficiency</span><span class="amt">${php(S.b_total)}</span><span class="cv">${CHEV}</span></summary><div class="sub-body">${bBody}</div></details>
+    <details class="sub"><summary><span class="lbl">c · Replacement capex deferred</span><span class="amt">${php(S.c_total)}</span><span class="cv">${CHEV}</span></summary><div class="sub-body">${cBody}</div></details>
+    <details class="sub"><summary><span class="lbl">d · Warranty cover kept alive</span><span class="amt muted">${php(S.d_total)} at risk</span><span class="cv">${CHEV}</span></summary><div class="sub-body">${dBody}</div></details>
+
+    <div class="hr"></div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Running total, ${S.year} through ${qLabel}</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        <tr><td>a · Emergency breakdowns avoided <span class="pill pill-grn">verified</span></td><td class="num">${php(S.a_total)}</td></tr>
+        <tr><td>b · Energy recovered <span class="pill">modelled</span></td><td class="num">${php(S.b_total)}</td></tr>
+        <tr><td>c · Replacement capex deferred <span class="pill">modelled</span></td><td class="num">${php(S.c_total)}</td></tr>
+        <tr><td class="muted">Less: contract fees (${S.qs.length} ${plural(S.qs.length,"quarter")} × ${scopedAssets().length} units × ${php(CONTRACT.price_per_asset)})</td><td class="num muted">−${php(S.fees)}</td></tr>
+        <tr><td class="muted">Less: parts and corrective labour</td><td class="num muted">−${php(S.spent)}</td></tr>
+      </tbody>
+      <tfoot><tr><td>Net benefit</td><td class="num" style="color:${S.net>0?BANDS.a.color:BANDS.d.color}">${S.net>0?"+":""}${php(S.net)}</td></tr></tfoot>
+    </table></div>
+    <div class="note">Warranty exposure (d) is deliberately excluded from this total — see the note under that line.</div>`;
+
+  return section(4,`How much have I saved from preventive diagnostics this year?`,answer,body,false);
+}
+
+/* --- Q5: what happens next ---------------------------------------- */
+function q5(qk){
+  const as=scopedAssets();
+  const next=new Date(Math.min(...as.map(a=>a.next_pm_date.getTime())));
+  const dueSoon=as.filter(a=>a.warranty_expiry>TODAY&&(a.warranty_expiry-TODAY)/86400000<90);
+  const fee=as.length*CONTRACT.price_per_asset;
+  const answer=`Next PM visit starts <b>${fdate(next)}</b>. `+
+    `${as.length} units at ${php(CONTRACT.price_per_asset)} each — <b>${php(fee)}</b> for the quarter.`;
+  const body=`
+    <div class="grid g-2">
+      <div>
+        <div class="sec-lbl">Your contract</div>
+        <dl class="kv">
+          <dt>Agreement</dt><dd class="mono">${CONTRACT.name}</dd>
+          <dt>Status</dt><dd style="color:${BANDS.a.color};text-transform:capitalize">${CONTRACT.state}</dd>
+          <dt>Cadence</dt><dd style="text-transform:capitalize">${CONTRACT.frequency}</dd>
+          <dt>Term</dt><dd>${fdate(CONTRACT.date_start)} → ${fdate(CONTRACT.date_end)}</dd>
+          <dt>Units covered</dt><dd>${as.length}</dd>
+          <dt>Rate per unit</dt><dd>${php(CONTRACT.price_per_asset)}</dd>
+          <dt>This quarter</dt><dd><b>${php(fee)}</b></dd>
+          <dt>Next invoice</dt><dd>${fdate(CONTRACT.next_invoice_date)}</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="sec-lbl">What each band obliges us to do</div>
+        <div class="tblwrap"><table>
+          <thead><tr><th>Band</th><th>Committed action</th><th class="num">Units</th></tr></thead>
+          <tbody>${["a","b","c","d"].map(k=>{
+            const n=snapshotOfQuarter(qk).counts[k];
+            return `<tr><td>${bandTag(k)}</td><td class="tiny">${BANDS[k].action}</td><td class="num"><b>${n}</b></td></tr>`
+          }).join("")}</tbody>
+        </table></div>
+      </div>
+    </div>
+    ${dueSoon.length?`<div class="sec-lbl">Warranties expiring within 90 days</div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Unit</th><th>Model</th><th>Location</th><th>Cover ends</th><th class="num">Days left</th></tr></thead>
+        <tbody>${dueSoon.sort((a,b)=>a.warranty_expiry-b.warranty_expiry).map(a=>`<tr class="clk" onclick="go('#/asset/${a.id}')">
+          <td class="tiny"><b>${esc(a.code)}</b></td>
+          <td class="tiny">${esc(cat(a).brand)} ${esc(cat(a).model_no)}</td>
+          <td class="tiny">${esc(bldg(a.building_id).code)} · ${esc(a.floor)}</td>
+          <td class="tiny">${fdate(a.warranty_expiry)}</td>
+          <td class="num">${Math.round((a.warranty_expiry-TODAY)/86400000)}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+      <div class="note">Worth deciding before cover lapses: any deferred work on these units is cheaper inside the warranty than outside it.</div>`:""}
+
+    <div class="sec-lbl">The five gates every visit has to pass</div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>Phase</th><th>What the technician must produce before moving on</th></tr></thead>
+      <tbody>
+        <tr><td><b>P1</b> Prepare</td><td class="tiny">GPS check-in recorded, and the QR sticker scanned must match the unit on the work order</td></tr>
+        <tr><td><b>P2</b> Unit check</td><td class="tiny">All 11 checklist items answered, at least one "before" photo</td></tr>
+        <tr><td><b>P3</b> Live capture</td><td class="tiny">Instrument readings imported from the Fieldpiece meter — manual entry requires a written reason</td></tr>
+        <tr><td><b>P4</b> Score</td><td class="tiny">A-Score™ computed and stored, permanently, against this quarter</td></tr>
+        <tr><td><b>P5</b> Evidence</td><td class="tiny">"After" photo, a recommendation for every failed item, and your signature</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note">The gates are enforced in software, not by policy. A report cannot be produced without complete evidence, which is what makes the quarter-on-quarter comparison on this page trustworthy.</div>`;
+  return section(5,"What happens at the next PM visit, and what am I paying for?",answer,body,false);
+}
+
+/* ============================================================
+   5. PAGES
+   ============================================================ */
+function pageMain(){
+  const qk=VIEW.quarter, Q=QMAP[qk];
+  const V=snapshotOfQuarter(qk);
+  const scopeName=VIEW.building==="all"?"All properties":bldg(+VIEW.building).name;
+  const visits=JOBS.filter(j=>j.quarter===qk&&j.job_type==="pm"&&
+    (VIEW.building==="all"||j.building_id===+VIEW.building));
+  const lastVisit=visits.length?new Date(Math.max(...visits.map(v=>v.scheduled_date.getTime()))):null;
+
+  const verdict = V.counts.d ? {t:`${V.counts.d} ${plural(V.counts.d,"unit needs","units need")} attention now`,c:BANDS.d.color}
+    : V.counts.c ? {t:`${V.counts.c} ${plural(V.counts.c,"unit","units")} to schedule, nothing critical`,c:BANDS.c.color}
+    : {t:"Everything is inside its target band",c:BANDS.a.color};
+
+  return `
+  <div class="scope">
+    <div class="fld">
+      <label for="selB">Property</label>
+      <select class="sel" id="selB" onchange="setScope('building',this.value)">
+        <option value="all"${VIEW.building==="all"?" selected":""}>All properties — ${ASSETS.length} units</option>
+        ${BUILDINGS.map(b=>`<option value="${b.id}"${String(VIEW.building)===String(b.id)?" selected":""}>${esc(b.name)} — ${b.n} units</option>`).join("")}
+      </select>
+    </div>
+    <div class="fld">
+      <label for="selQ">PM visit</label>
+      <select class="sel" id="selQ" onchange="setScope('quarter',this.value)">
+        ${QUARTERS.map((q,i)=>`<option value="${q.key}"${q.key===qk?" selected":""}>${q.label}${i===0?" — current":""}</option>`).join("")}
+      </select>
+    </div>
+    <div class="spacer">
+      ${lastVisit?`<span class="visit-tag">Visit completed <b>${fdate(lastVisit)}</b></span>`:""}
+      <span class="visit-tag"><b>${visits.length}</b> units inspected</span>
+      <button class="btn" onclick="dl('AIRLOGIC_${esc(VIEW.building==="all"?"Portfolio":bldg(+VIEW.building).code)}_${qk}.pdf')">${IC.down} Download this review</button>
+    </div>
+  </div>
+
+  <div class="headline">
+    <div class="lead">
+      <h1>${esc(scopeName)} — ${Q.label} review</h1>
+      <p>${V.total} units inspected under the PULSE™ protocol · contract ${CONTRACT.name} · ${CONTRACT.frequency} cadence</p>
+      <span class="verdict"><span style="width:9px;height:9px;border-radius:50%;background:${verdict.c};display:inline-block"></span>${esc(verdict.t)}</span>
+    </div>
+    ${donut(["a","b","c","d"].map(k=>({label:"Band "+BANDS[k].label,value:V.counts[k],color:BANDS[k].color})),112,17,
+      `<span style="color:#fff">${V.score}</span>`,`<span style="color:#a9c0d1">A-Score™</span>`)}
+  </div>
+
+  ${q1(qk)}
+  ${q2(qk)}
+  ${q3(qk)}
+  ${q4(qk)}
+  ${q5(qk)}`;
+}
+
+/* --- asset detail (the evidence layer behind every claim above) --- */
+function pageAsset(id){
+  const a=asset(id);
+  if(!a)return `<div class="card"><div class="empty">${IC.warn}<div>That unit is not in your portal scope.</div></div></div>`;
+  const b=bldg(a.building_id), c=cat(a);
+  const snaps=SNAPS.filter(s=>s.asset_id===a.id).sort((x,y)=>y.date-x.date);
+  const latest=snaps[0], prev=snaps[1];
+  const delta=prev?Math.round((latest.score_overall-prev.score_overall)*10)/10:0;
+  const reps=REPAIRS.filter(r=>r.asset_id===a.id).sort((x,y)=>y.date-x.date);
+  const alerts=ALERTS.filter(x=>x.asset_id===a.id);
+  const jobs=JOBS.filter(j=>j.asset_id===a.id).sort((x,y)=>y.scheduled_date-x.scheduled_date);
+  const trend=SNAPS.filter(s=>s.asset_id===a.id).map(s=>({label:"Q"+QMAP[s.quarter].q+" '"+String(QMAP[s.quarter].y).slice(2),score:s.score_overall}));
+
+  return `
+  <div class="crumbs"><a href="#/">${esc(b.name)}</a><span class="sep">/</span><span class="cur">${esc(a.code)}</span></div>
+  <div class="headline" style="align-items:flex-start">
+    <div class="lead">
+      <h1>${esc(a.code)} — ${esc(c.brand)} ${esc(c.model_no)}</h1>
+      <p>${esc(b.name)} · ${esc(a.floor)} · ${esc(a.room)}<br>${EQ_LABEL[c.equipment_type]} · ${c.capacity_kw} kW / ${c.capacity_hp} HP · ${REF_LABEL[c.refrigerant]}</p>
+      <span class="verdict"><span style="width:9px;height:9px;border-radius:50%;background:${BANDS[latest.band].color};display:inline-block"></span>
+        Band ${BANDS[latest.band].label} — ${BANDS[latest.band].word}${delta?` · ${delta>0?"up":"down"} ${Math.abs(delta)} since last quarter`:""}</span>
+    </div>
+    ${donut([{label:"score",value:latest.score_overall,color:BANDS[latest.band].color},{label:"gap",value:100-latest.score_overall,color:"rgba(255,255,255,.13)"}],112,17,
+      `<span style="color:#fff">${latest.score_overall}</span>`,`<span style="color:#a9c0d1">A-Score™</span>`)}
+  </div>
+
+  ${latest.hard_capped?`<div class="why" style="margin-bottom:16px">
+    <div class="hd"><b>Score capped at 49 by the safety rule</b></div>
+    <div class="rsn">A safety-critical checklist item — electrical terminals or insulation resistance — failed at the last inspection. Under the A-Score™ hard-cap rule the overall score cannot rise above 49 while that item is failing, no matter how well the other five sub-scores read. Clear that item and the score returns to its computed value.</div>
+  </div>`:""}
+
+  <div class="card">
+    <div class="card-h"><h3>What the six sub-scores say</h3><span class="sub">${esc(latest.algorithm_version)} · measured ${fdate(latest.date)}</span></div>
+    <div class="card-b">
+      ${SUBS.map(s=>{const v=latest["score_"+s.k],col=BANDS[bandOf(v)].color;
+        return `<div class="sub-bar">
+          <div class="row"><span><b>${s.n}</b><span class="w">${s.w}% of score</span></span><span class="v" style="color:${col}">${v}</span></div>
+          <div class="track"><i style="width:${v}%;background:${col}"></i></div>
+          <div class="tiny muted" style="margin-top:4px">${s.plain}</div>
+        </div>`}).join("")}
+      <div class="hr"></div>
+      <div style="font-size:13.5px;color:var(--text-2)">${esc(latest.ai_summary)}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h3>Score across every quarterly visit</h3></div>
+    <div class="card-b">${trendChart(trend,180)}</div>
+  </div>
+
+  ${alerts.length?`<div class="card">
+    <div class="card-h"><h3>DRIFT™ — this unit against its own history</h3></div>
+    <div class="card-b flush"><div class="tblwrap"><table>
+      <thead><tr><th>Ref</th><th>Metric</th><th class="num">Now</th><th class="num">Its normal</th><th class="num">z</th><th>What it means</th></tr></thead>
+      <tbody>${alerts.map(al=>{const M=METRICS[al.metric];return `<tr>
+        <td class="mono">${esc(al.name)}</td><td class="tiny">${esc(M.n)}</td>
+        <td class="num"><b>${al.value}</b> ${M.u}</td>
+        <td class="num muted">${al.baseline_mean} ± ${al.baseline_std}</td>
+        <td class="num"><b style="color:${al.severity==="critical"?BANDS.d.color:BANDS.c.color}">${al.z_score}</b></td>
+        <td class="tiny">${esc(M.plain)}</td>
+      </tr>`}).join("")}</tbody>
+    </table></div></div>
+  </div>`:""}
+
+  ${reps.length?`<div class="card">
+    <div class="card-h"><h3>Parts replaced on this unit</h3><span class="sub">${reps.length} ${plural(reps.length,"event")} · ${php(reps.reduce((s,r)=>s+r.cost,0))} total</span></div>
+    <div class="card-b flush"><div class="tblwrap"><table>
+      <thead><tr><th>Date</th><th>Part</th><th>Why</th><th>Found by</th><th class="num">Cost</th></tr></thead>
+      <tbody>${reps.map(r=>`<tr>
+        <td class="tiny">${fdate(r.date)}</td>
+        <td>${esc(r.part)}<div class="tiny muted">${esc(r.spec)}</div></td>
+        <td class="tiny">${esc(r.why)}</td>
+        <td class="tiny">${esc(r.found_by)}</td>
+        <td class="num">${php(r.cost)}</td>
+      </tr>`).join("")}</tbody>
+    </table></div></div>
+  </div>`:""}
+
+  <div class="grid g-2">
+    <div class="card">
+      <div class="card-h"><h3>Unit record</h3></div>
+      <div class="card-b">
+        <dl class="kv">
+          <dt>Asset code</dt><dd class="mono">${esc(a.code)}</dd>
+          <dt>Serial</dt><dd class="mono">${esc(a.serial_no)}</dd>
+          <dt>Rated load</dt><dd>${c.rla_amps} A</dd>
+          <dt>Rated capacitor</dt><dd>${c.rated_capacitor_uf} µF</dd>
+          <dt>Target superheat</dt><dd>${c.target_superheat_k} K</dd>
+          <dt>Target split ΔT</dt><dd>${c.dt_min}–${c.dt_max} °C</dd>
+          <dt>Installed</dt><dd>${fdate(a.install_date)}</dd>
+          <dt>Warranty ends</dt><dd>${fdate(a.warranty_expiry)}</dd>
+          <dt>Replacement cost</dt><dd>${php(c.replace_cost)}</dd>
+          <dt>Next PM</dt><dd><b>${fdate(a.next_pm_date)}</b></dd>
+        </dl>
+        <div class="hr"></div>
+        <div style="display:flex;gap:14px;align-items:center">
+          <div class="qr">${qrSvg(a.qr_token,92)}</div>
+          <div style="font-size:12.5px;color:var(--text-2)">
+            <b style="color:var(--text)">Sticker on the unit</b><br>Scanning it opens this page.<br>
+            <span class="mono tiny">/al/a/${esc(a.qr_token.slice(0,13))}…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>Every visit to this unit</h3></div>
+      <div class="card-b"><div class="tl">
+        ${jobs.slice(0,10).map(j=>{
+          const sn=j.snapshot_id?SNAPS.find(s=>s.id===j.snapshot_id):null;
+          const col=sn?BANDS[sn.band].color:"var(--al-cyan)";
+          return `<div class="tli">
+            <div class="knob" style="background:${col}"></div>
+            <div class="hd"><b>${j.job_type==="pm"?"Quarterly PM visit":"Corrective repair"}</b>
+              ${sn?bandTag(sn.band):`<span class="pill pill-cy">repair</span>`}
+              <span class="dt">${fdate(j.scheduled_date)}</span></div>
+            <div class="bd"><span class="mono">${esc(j.name)}</span> · ${esc(j.technician)} · ${j.duration_minutes} min
+              ${sn?` · score ${j.score_before!==null?j.score_before+" → ":""}<b style="color:${col}">${sn.score_overall}</b>`:""}
+              <button class="btn btn-sm" style="margin-left:6px;padding:2px 8px" onclick="dl('${j.name}.pdf')">PDF</button></div>
+          </div>`}).join("")}
+      </div></div>
+    </div>
+  </div>
+  <div style="margin-top:16px"><a class="btn" href="#/">← Back to the quarterly review</a></div>`;
+}
+
+/* ============================================================
+   6. ROUTER
+   ============================================================ */
+function go(h){location.hash=h}
+function dl(f){alert("Downloading "+f+"\n\nIn Odoo this streams the QWeb report (spec §9) from /my/airlogic/report/…")}
+function setScope(k,v){VIEW[k]=v;render()}
+function approveAsset(id){
+  const rs=RECS.filter(r=>r.asset_id===id&&r.state==="proposed");
+  rs.forEach(r=>r.state="approved");
+  alert(`${rs.length} ${plural(rs.length,"recommendation")} approved for ${asset(id).code}.\n\nbase.automation 8.5 fires → action_create_quote() raises a sale.order for ${CONTRACT.partner}. Your dispatcher is notified.`);
+  render();
+}
+function render(){
+  const h=location.hash.replace(/^#/,"")||"/";
+  const m=h.match(/^\/asset\/(\d+)$/);
+  $("#app").innerHTML = m ? pageAsset(+m[1]) : pageMain();
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",render);
+render();
+</script>
+</body>
+</html>
