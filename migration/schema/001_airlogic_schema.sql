@@ -49,19 +49,19 @@ create table sublocations (
 -- ---------- equipment catalogue ---------------------------------------------
 create table equipment_brands (
   id uuid primary key default gen_random_uuid(),
-  name text not null unique,
+  name text not null unique
 );
 create table equipment_categories (
   id uuid primary key default gen_random_uuid(),
-  name text not null unique,
+  name text not null unique
 );
 create table equipment_hp (
   id uuid primary key default gen_random_uuid(),
-  label text not null unique,       -- e.g. "1 HP", "2.5 HP"
+  label text not null unique       -- e.g. "1 HP", "2.5 HP"
 );
 create table history_tags (
   id uuid primary key default gen_random_uuid(),
-  name text not null unique,
+  name text not null unique
 );
 create table measurement_fields (
   id uuid primary key default gen_random_uuid(),
@@ -69,7 +69,7 @@ create table measurement_fields (
   name text not null,
   unit text,
   standard text,
-  sequence integer not null default 10,
+  sequence integer not null default 10
 );
 
 -- ---------- equipment --------------------------------------------------------
@@ -132,7 +132,7 @@ create table dispatch_zones (
   name text not null,
   city text,
   sequence integer not null default 10,
-  active boolean not null default true,
+  active boolean not null default true
 );
 alter table clients add constraint clients_zone_fk foreign key (zone_id) references dispatch_zones(id);
 
@@ -207,7 +207,7 @@ create table reading_lines (
   job_id uuid not null references service_jobs(id) on delete cascade,
   measurement_field_id uuid references measurement_fields(id),
   value text,
-  is_out_of_range boolean not null default false,
+  is_out_of_range boolean not null default false
 );
 
 create table checklist_lines (
@@ -217,7 +217,7 @@ create table checklist_lines (
   key text not null,
   label text,
   value text,
-  note text,
+  note text
 );
 
 create table job_revisions (
@@ -225,7 +225,7 @@ create table job_revisions (
   job_id uuid not null references service_jobs(id) on delete cascade,
   reason text,
   created_by uuid references profiles(id),
-  created_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
 );
 
 -- ---------- parts & consumables ---------------------------------------------

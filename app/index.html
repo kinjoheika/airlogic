@@ -336,7 +336,7 @@
     render(current);
   }
 
-  // ---------- auth ----------
+  // ---------- sign-in ----------
   async function enter() {
     const profile = await q.profile();
     $("#who-name").textContent = profile ? `${profile.full_name || ""}${profile.role ? " · " + profile.role.replace(/_/g, " ") : ""}` : "";
