@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipment Registry — Mockup</title>
+<style>
+  :root {
+    --navy: #0f1d33; --navy-2: #17294a; --bg: #f4f6f9; --panel: #ffffff;
+    --ink: #1b2435; --ink-soft: #5f6b7e; --line: #e2e7ee;
+    --teal: #0f8a86; --teal-soft: #e3f4f3; --amber: #d9961b; --amber-soft: #fdf3e1;
+    --amber-line: #efd9a8; --green: #1e8a5a; --red: #c0392b; --grey: #eef1f5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 "Inter", "Segoe UI", system-ui, sans-serif; }
+
+  /* top navigation */
+  .topnav { background: var(--navy); color: #cfd8e8; height: 56px; display: flex; align-items: stretch;
+            padding: 0 24px; gap: 4px; position: sticky; top: 0; z-index: 5; }
+  .wordmark { color: #fff; font-weight: 800; font-size: 17px; letter-spacing: .01em; display: flex; align-items: center; margin-right: 18px; }
+  .wordmark i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); margin-right: 8px; }
+  .tab { display: flex; align-items: center; padding: 0 12px; color: #aebbd2; font-size: 13.5px; position: relative; white-space: nowrap; }
+  .tab.active { color: #fff; }
+  .tab.active::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 0; height: 3px; background: var(--amber); border-radius: 3px 3px 0 0; }
+  .profile { margin-left: auto; display: flex; align-items: center; gap: 10px; color: #fff; font-size: 13px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: #2c4470; display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+  .role { font-size: 11px; color: #8fa0bf; }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 22px 24px 40px; }
+
+  /* page header */
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  h1 { font-size: 22px; margin: 0 0 2px; letter-spacing: -.01em; }
+  .page-head p { margin: 0; color: var(--ink-soft); font-size: 13px; }
+  .btn-teal { background: var(--teal); color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 600; font-size: 13.5px; cursor: pointer; }
+
+  /* summary */
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--panel); border: 1px solid var(--line);
+             border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+  .sum { padding: 14px 18px; border-right: 1px solid var(--line); }
+  .sum:last-child { border-right: 0; }
+  .sum b { display: block; font-size: 24px; letter-spacing: -.01em; }
+  .sum span { color: var(--ink-soft); font-size: 12.5px; }
+  .sum.t b { color: var(--navy-2); }
+  .sum.a b { color: var(--green); }
+  .sum.p b { color: var(--amber); }
+  .sum.d b { color: var(--red); }
+
+  /* pending approvals */
+  .pending { background: var(--amber-soft); border: 1px solid var(--amber-line); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .pending-hd { font-weight: 700; color: #7a5210; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+  .pa-row { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; background: #fff; border: 1px solid var(--amber-line);
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .pa-row:last-child { margin-bottom: 0; }
+  .pa-equip { font-weight: 700; }
+  .pa-meta { color: var(--ink-soft); font-size: 12.5px; margin-top: 2px; }
+  .pa-reason { font-size: 12.5px; margin-top: 4px; }
+  .pa-actions { display: flex; gap: 8px; }
+  .btn { font-weight: 600; font-size: 13px; border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+  .btn.approve { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .btn.reject { color: var(--red); border-color: #f0c9c4; }
+
+  /* toolbar */
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .search { flex: 1; min-width: 240px; max-width: 360px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+            background: #fff; font: inherit; color: var(--ink); }
+  .select { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: #fff; font: inherit; color: var(--ink); min-width: 170px; }
+  .count-note { margin-left: auto; color: var(--ink-soft); font-size: 12.5px; }
+
+  /* table card */
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft);
+       font-weight: 700; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--line); }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  tr.client td { background: var(--navy-2); color: #fff; font-weight: 700; padding: 8px 14px; font-size: 13px; }
+  tr.client td small { color: #aebbd2; font-weight: 500; margin-left: 6px; }
+  tr.subloc td { background: #fafbfd; color: var(--teal); font-weight: 700; font-size: 12px; padding: 6px 14px 6px 28px; }
+  tr.item td:first-child { padding-left: 28px; }
+  tr:last-child td { border-bottom: 0; }
+  .muted { color: var(--ink-soft); }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .b-active { background: #e4f5ec; color: var(--green); }
+  .b-pending { background: var(--amber-soft); color: #9a6410; border: 1px solid var(--amber-line); }
+  .b-dec { background: #fbe7e4; color: var(--red); }
+  .row-btn { font-weight: 600; font-size: 12px; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 9px; cursor: pointer; color: var(--ink); margin-right: 4px; }
+  .row-btn.dim { color: var(--ink-soft); }
+  .row-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  @media (max-width: 900px) {
+    .summary { grid-template-columns: repeat(2, 1fr); }
+    .sum:nth-child(2) { border-right: 0; }
+    .sum:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .pa-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wordmark"><i></i>Airlogic</div>
+  <div class="tab">Jobs</div>
+  <div class="tab active">Equipment</div>
+  <div class="tab">Service Report</div>
+  <div class="tab">Invoice</div>
+  <div class="tab">Client Portal</div>
+  <div class="tab">Field Entry</div>
+  <div class="tab">PDF Templates</div>
+  <div class="profile">
+    <div style="text-align:right"><div>Maria Santos</div><div class="role">Senior Technician</div></div>
+    <div class="avatar">MS</div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-head">
+    <div>
+      <h1>Equipment Registry</h1>
+      <p>All client equipment, per sublocation. Decommission requests require Senior Technician approval.</p>
+    </div>
+    <button class="btn-teal">+ Register Equipment</button>
+  </div>
+
+  <div class="summary">
+    <div class="sum t"><b>18</b><span>Total Equipment</span></div>
+    <div class="sum a"><b>15</b><span>Active</span></div>
+    <div class="sum p"><b>2</b><span>Pending Decommission</span></div>
+    <div class="sum d"><b>1</b><span>Decommissioned</span></div>
+  </div>
+
+  <section class="pending">
+    <div class="pending-hd">Senior Technician Review Required</div>
+
+    <div class="pa-row">
+      <div>
+        <div class="pa-equip">Daikin VRV IV · S/N ···3456</div>
+        <div class="pa-meta">Metro Pacific Offices · Server Room, 19th Floor · Requested by Carlo Reyes</div>
+        <div class="pa-reason"><b>Reason:</b> Compressor failure beyond economic repair. Age: 6 years.</div>
+      </div>
+      <div class="pa-actions">
+        <button class="btn approve">Approve</button>
+        <button class="btn reject">Reject</button>
+      </div>
+    </div>
+
+    <div class="pa-row">
+      <div>
+        <div class="pa-equip">Carrier 38XHC009 · S/N ···9012</div>
+        <div class="pa-meta">Blue Ridge Mall · Retail Unit 12 · Requested by Juan dela Cruz</div>
+        <div class="pa-reason"><b>Reason:</b> Unit replaced by client. New unit installed 2026-07-20.</div>
+      </div>
+      <div class="pa-actions">
+        <button class="btn approve">Approve</button>
+        <button class="btn reject">Reject</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <input class="search" type="search" placeholder="Search model, serial, client, sublocation">
+    <select class="select">
+      <option>All statuses</option>
+      <option>Active</option>
+      <option>Pending Decommission</option>
+      <option>Decommissioned</option>
+    </select>
+    <div class="count-note">Showing 18 of 18</div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Brand / Model</th><th>Last 4 Serial</th><th>Year</th><th>Last Service</th>
+          <th>Technician</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="client"><td colspan="7">Green Valley Residences <small>Muntinlupa</small></td></tr>
+        <tr class="subloc"><td colspan="7">Compressor Room · Unit 4B</td></tr>
+        <tr class="item"><td><b>Daikin FTKF50TV</b></td><td>···5678</td><td>2021</td><td>2026-08-07</td><td>Juan dela Cruz</td><td><span class="badge b-active">Active</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim">Decommission</button></td></tr>
+        <tr class="subloc"><td colspan="7">Lobby · Main Entrance</td></tr>
+        <tr class="item"><td><b>LG S4-Q12JA3AA</b></td><td>···1234</td><td>2022</td><td>2026-05-10</td><td>Carlo Reyes</td><td><span class="badge b-active">Active</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim">Decommission</button></td></tr>
+        <tr class="subloc"><td colspan="7">Conference Room A · 3rd Floor</td></tr>
+        <tr class="item"><td><b>Daikin FTXS35G</b></td><td>···8901</td><td>2020</td><td>2026-07-02</td><td>Juan dela Cruz</td><td><span class="badge b-active">Active</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim">Decommission</button></td></tr>
+
+        <tr class="client"><td colspan="7">Metro Pacific Offices <small>BGC</small></td></tr>
+        <tr class="subloc"><td colspan="7">Server Room · 19th Floor</td></tr>
+        <tr class="item"><td><b>Daikin VRV IV</b></td><td>···3456</td><td>2020</td><td>2026-08-03</td><td>Carlo Reyes</td><td><span class="badge b-pending">Pending Approval</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim" disabled>Decommission</button></td></tr>
+        <tr class="subloc"><td colspan="7">Executive Office · 20th Floor</td></tr>
+        <tr class="item"><td><b>Mitsubishi MXZ-4D83VA</b></td><td>···7890</td><td>2022</td><td>2026-06-15</td><td>Mark Ignacio</td><td><span class="badge b-active">Active</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim">Decommission</button></td></tr>
+
+        <tr class="client"><td colspan="7">Blue Ridge Mall <small>Pasig</small></td></tr>
+        <tr class="subloc"><td colspan="7">Retail Unit 12 · Ground Floor</td></tr>
+        <tr class="item"><td><b>Carrier 38XHC009</b></td><td>···9012</td><td>2018</td><td>2026-08-05</td><td>Juan dela Cruz</td><td><span class="badge b-pending">Pending Approval</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim" disabled>Decommission</button></td></tr>
+        <tr class="item"><td><b>Samsung AR09BSHCAWKNFA</b></td><td>···3456</td><td>2024</td><td>2026-08-05</td><td>Juan dela Cruz</td><td><span class="badge b-active">Active</span></td><td><button class="row-btn">Edit</button><button class="row-btn dim">Decommission</button></td></tr>
+        <tr class="item"><td><b>Carrier 40MBFQ09</b></td><td>···4411</td><td>2015</td><td>2025-11-20</td><td>Mark Ignacio</td><td><span class="badge b-dec">Decommissioned</span></td><td><button class="row-btn">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="muted" style="font-size:12px;margin-top:12px">Design preview with sample data only. Not connected to Odoo or Supabase. Action buttons are visual; no behavior yet.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirLogic on Supabase — Mockup</title>
+<style>
+  :root {
+    --bg: #f5f7fa; --panel: #ffffff; --ink: #1d2433; --muted: #6b7587;
+    --line: #e3e8ef; --brand: #1f6feb; --side: #13203a; --side-ink: #c9d3e6;
+    --ok: #1a7f4b; --warn: #b7791f; --info: #2b6cb0; --bad: #c53030; --chip: #eef2f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1420; --panel: #161e2e; --ink: #e6ebf3; --muted: #94a0b5;
+      --line: #263248; --brand: #5b9bff; --side: #0a1020; --side-ink: #9fb0cc;
+      --chip: #1f2a3f; --ok: #48bb78; --warn: #ecc94b; --info: #63b3ed; --bad: #fc8181;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1420; --panel: #161e2e; --ink: #e6ebf3; --muted: #94a0b5;
+    --line: #263248; --brand: #5b9bff; --side: #0a1020; --side-ink: #9fb0cc;
+    --chip: #1f2a3f; --ok: #48bb78; --warn: #ecc94b; --info: #63b3ed; --bad: #fc8181;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+  aside { background: var(--side); color: var(--side-ink); padding: 18px 12px; }
+  .brand { color: #fff; font-weight: 700; font-size: 16px; padding: 6px 10px 18px; }
+  .brand small { display: block; font-weight: 500; color: #7f93b5; font-size: 11px; }
+  nav { display: flex; flex-direction: column; }
+  nav button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+          padding: 9px 10px; border-radius: 8px; color: var(--side-ink); margin-bottom: 2px; }
+  nav button.active, nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .count { font-size: 11px; background: rgba(255,255,255,.12); padding: 1px 7px; border-radius: 10px; }
+  .sb-foot { margin-top: 24px; font-size: 11px; color: #7f93b5; padding: 0 10px; }
+  main { padding: 22px 26px; min-width: 0; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 15px; margin: 18px 0 8px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .btn { background: var(--brand); color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font-weight: 600; cursor: pointer; font: inherit; }
+  .btn.ghost { background: var(--chip); color: var(--ink); }
+  .search { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; min-width: 220px; color: var(--ink); font: inherit; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .kpi b { display: block; font-size: 22px; }
+  .kpi span { color: var(--muted); font-size: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+  .card-head { padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 600; display: flex; justify-content: space-between; gap: 10px; }
+  .pad { padding: 14px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 640px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: var(--chip); }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); }
+  .b-ok { color: var(--ok); } .b-warn { color: var(--warn); } .b-info { color: var(--info); } .b-bad { color: var(--bad); }
+  .tag { font-size: 11px; color: var(--muted); border: 1px dashed var(--line); padding: 1px 6px; border-radius: 6px; font-family: ui-monospace, Consolas, monospace; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+  .field div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); }
+  .back { color: var(--brand); cursor: pointer; font-size: 13px; margin-bottom: 8px; display: inline-block; }
+  .steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .steps span { padding: 4px 10px; border-radius: 999px; background: var(--chip); font-size: 12px; color: var(--muted); }
+  .steps span.done { background: var(--ok); color: #fff; }
+  .steps span.now { background: var(--brand); color: #fff; }
+  .note { margin-top: 12px; font-size: 12px; color: var(--muted); }
+  .view { display: none; } .view.show { display: block; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; }
+    aside { padding: 12px; }
+    nav { flex-direction: row; overflow-x: auto; gap: 4px; }
+    nav button { white-space: nowrap; margin: 0; }
+    .sb-foot { display: none; }
+    main { padding: 16px; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">AirLogic<small>Supabase build · MOCKUP</small></div>
+    <nav id="nav">
+      <button data-view="dash" class="active">Dashboard</button>
+      <button data-view="clients">Clients <span class="count">5</span></button>
+      <button data-view="equip">Equipment <span class="count">8</span></button>
+      <button data-view="visits">Service visits <span class="count">6</span></button>
+      <button data-view="dispatch">Dispatch <span class="count">3</span></button>
+      <button data-view="contracts">Contracts <span class="count">2</span></button>
+      <button data-view="parts">Parts requests <span class="count">4</span></button>
+      <button data-view="files">Reports & files <span class="count">7</span></button>
+    </nav>
+    <div class="sb-foot">Sample data only. Not from Odoo.</div>
+  </aside>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <section class="view show" id="v-dash">
+      <header>
+        <div><h1>Dashboard</h1><div class="sub">Service overview · sample data for layout review</div></div>
+        <button class="btn" data-go="newvisit">+ New service visit</button>
+      </header>
+      <div class="kpis">
+        <div class="kpi"><b>6</b><span>Visits this month</span></div>
+        <div class="kpi"><b>3</b><span>Open dispatch requests</span></div>
+        <div class="kpi"><b>2</b><span>Contracts due in 30 days</span></div>
+        <div class="kpi"><b>4</b><span>Parts awaiting approval</span></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span>Recent service visits</span><span class="tag">service_visits</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Reference</th><th>Date</th><th>Client</th><th>Site</th><th>Technician</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr class="click" data-go="visit"><td>SV-2026-0001</td><td>2026-08-07</td><td>Client A (sample)</td><td>Lobby AHU</td><td>Technician 1</td><td><span class="badge b-warn">Awaiting review</span></td></tr>
+            <tr class="click" data-go="visit"><td>SV-2026-0002</td><td>2026-08-06</td><td>Client B (sample)</td><td>Penthouse</td><td>Technician 2</td><td><span class="badge b-ok">Approved</span></td></tr>
+            <tr class="click" data-go="visit"><td>SV-2026-0003</td><td>2026-08-05</td><td>Client C (sample)</td><td>Retail unit 12</td><td>Technician 1</td><td><span class="badge b-info">Invoiced</span></td></tr>
+            <tr class="click" data-go="visit"><td>SV-2026-0004</td><td>2026-08-04</td><td>Client D (sample)</td><td>Rooftop</td><td>Technician 3</td><td><span class="badge">Draft</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- CLIENTS -->
+    <section class="view" id="v-clients">
+      <header>
+        <div><h1>Clients</h1><div class="sub">Client records and their zones</div></div>
+        <button class="btn" data-go="newclient">+ New client</button>
+      </header>
+      <div class="toolbar"><input class="search" placeholder="Search clients (mockup, not wired)"></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Client</th><th>Address</th><th>Contact</th><th>Zone</th><th>Equipment</th></tr></thead>
+        <tbody>
+          <tr class="click" data-go="client"><td>Client A (sample)</td><td>Makati City</td><td>contact@client-a.example</td><td>Zone North</td><td>3</td></tr>
+          <tr class="click" data-go="client"><td>Client B (sample)</td><td>Pasay City</td><td>contact@client-b.example</td><td>Zone South</td><td>2</td></tr>
+          <tr class="click" data-go="client"><td>Client C (sample)</td><td>Taguig City</td><td>contact@client-c.example</td><td>Zone South</td><td>1</td></tr>
+          <tr class="click" data-go="client"><td>Client D (sample)</td><td>Quezon City</td><td>contact@client-d.example</td><td>Zone North</td><td>2</td></tr>
+          <tr class="click" data-go="client"><td>Client E (sample)</td><td>Marikina City</td><td>contact@client-e.example</td><td>Zone East</td><td>0</td></tr>
+        </tbody>
+      </table></div></div>
+      <div class="note">Table name in Supabase: <span class="tag">clients</span></div>
+    </section>
+
+    <!-- CLIENT DETAIL -->
+    <section class="view" id="v-client">
+      <span class="back" data-go="clients">← Back to clients</span>
+      <header><div><h1>Client A (sample)</h1><div class="sub">Makati City · Zone North</div></div><button class="btn ghost">Edit</button></header>
+      <div class="grid2">
+        <div class="card"><div class="card-head">Details</div><div class="pad">
+          <div class="field"><label>Address</label><div>Makati City (sample)</div></div>
+          <div class="field"><label>Contact email</label><div>contact@client-a.example</div></div>
+          <div class="field"><label>Zone</label><div>Zone North</div></div>
+        </div></div>
+        <div class="card"><div class="card-head">Equipment<span class="tag">equipment</span></div><div class="table-wrap"><table>
+          <thead><tr><th>Model</th><th>Location</th><th>Last service</th></tr></thead>
+          <tbody>
+            <tr class="click" data-go="equip"><td>AHU-01 (sample)</td><td>Lobby</td><td>2026-08-07</td></tr>
+            <tr class="click" data-go="equip"><td>FCU-04 (sample)</td><td>Office 4F</td><td>2026-07-12</td></tr>
+            <tr class="click" data-go="equip"><td>Split-07 (sample)</td><td>Penthouse</td><td>2026-06-02</td></tr>
+          </tbody>
+        </table></div></div>
+      </div>
+    </section>
+
+    <!-- EQUIPMENT -->
+    <section class="view" id="v-equip">
+      <header><div><h1>Equipment</h1><div class="sub">Units installed at client sites</div></div></header>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Unit</th><th>Category</th><th>Client</th><th>Location</th><th>Next service</th></tr></thead>
+        <tbody>
+          <tr class="click" data-go="equip"><td>AHU-01 (sample)</td><td>Air handler</td><td>Client A</td><td>Lobby</td><td>2026-11-07</td></tr>
+          <tr class="click" data-go="equip"><td>FCU-04 (sample)</td><td>Fan coil</td><td>Client A</td><td>Office 4F</td><td>2026-10-12</td></tr>
+          <tr class="click" data-go="equip"><td>Split-07 (sample)</td><td>Split unit</td><td>Client A</td><td>Penthouse</td><td>2026-12-02</td></tr>
+          <tr class="click" data-go="equip"><td>Chiller-02 (sample)</td><td>Chiller</td><td>Client B</td><td>Rooftop</td><td>2026-09-18</td></tr>
+        </tbody>
+      </table></div></div>
+      <div class="note">Table name in Supabase: <span class="tag">equipment</span></div>
+    </section>
+
+    <!-- VISITS -->
+    <section class="view" id="v-visits">
+      <header>
+        <div><h1>Service visits</h1><div class="sub">Visit workflow: draft → review → approved → invoiced</div></div>
+        <button class="btn" data-go="newvisit">+ New service visit</button>
+      </header>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Reference</th><th>Date</th><th>Client</th><th>Technician</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr class="click" data-go="visit"><td>SV-2026-0001</td><td>2026-08-07</td><td>Client A (sample)</td><td>Technician 1</td><td><span class="badge b-warn">Awaiting review</span></td></tr>
+          <tr class="click" data-go="visit"><td>SV-2026-0002</td><td>2026-08-06</td><td>Client B (sample)</td><td>Technician 2</td><td><span class="badge b-ok">Approved</span></td></tr>
+          <tr class="click" data-go="visit"><td>SV-2026-0003</td><td>2026-08-05</td><td>Client C (sample)</td><td>Technician 1</td><td><span class="badge b-info">Invoiced</span></td></tr>
+          <tr class="click" data-go="visit"><td>SV-2026-0004</td><td>2026-08-04</td><td>Client D (sample)</td><td>Technician 3</td><td><span class="badge">Draft</span></td></tr>
+          <tr class="click" data-go="visit"><td>SV-2026-0005</td><td>2026-08-03</td><td>Client E (sample)</td><td>Technician 2</td><td><span class="badge b-bad">Needs revision</span></td></tr>
+        </tbody>
+      </table></div></div>
+    </section>
+
+    <!-- VISIT DETAIL -->
+    <section class="view" id="v-visit">
+      <span class="back" data-go="visits">← Back to visits</span>
+      <header>
+        <div><h1>SV-2026-0001 · Client A (sample)</h1><div class="sub">Lobby AHU · 2026-08-07 · Technician 1</div></div>
+        <div style="display:flex;gap:8px"><button class="btn ghost">Save draft</button><button class="btn">Submit for review</button></div>
+      </header>
+      <div class="steps"><span class="done">Draft</span><span class="now">Awaiting review</span><span>Approved</span><span>Invoiced</span></div>
+      <div class="grid2">
+        <div class="card"><div class="card-head">Readings<span class="tag">visit_readings</span></div><div class="table-wrap"><table>
+          <thead><tr><th>Measurement</th><th>Value</th><th>Normal range</th></tr></thead>
+          <tbody>
+            <tr><td>Supply air temp</td><td>12.4 °C</td><td>10–14 °C</td></tr>
+            <tr><td>Return air temp</td><td>24.1 °C</td><td>22–26 °C</td></tr>
+            <tr><td>Filter condition</td><td><span class="badge b-warn">Dirty</span></td><td>Clean</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="card"><div class="card-head">Checklist<span class="tag">checklist_lines</span></div><div class="pad">
+          <div class="field"><label>☑ Coil cleaned</label></div>
+          <div class="field"><label>☑ Drain line checked</label></div>
+          <div class="field"><label>☐ Filter replaced</label></div>
+          <div class="field"><label>☐ Refrigerant pressure logged</label></div>
+        </div></div>
+        <div class="card"><div class="card-head">Parts used<span class="tag">parts_requests</span></div><div class="table-wrap"><table>
+          <thead><tr><th>Part</th><th>Qty</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Air filter 24×24 (sample)</td><td>2</td><td><span class="badge b-warn">Pending approval</span></td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="card"><div class="card-head">Files<span class="tag">files</span></div><div class="pad">
+          <div class="field"><label>Service report (PDF)</label><div>sv-2026-0001.pdf · generated on submit (sample)</div></div>
+          <div class="field"><label>Photos</label><div>3 images attached (sample)</div></div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- NEW VISIT -->
+    <section class="view" id="v-newvisit">
+      <span class="back" data-go="visits">← Back to visits</span>
+      <header><div><h1>New service visit</h1><div class="sub">Fields mirror the service_visits table (sample form)</div></div></header>
+      <div class="card"><div class="pad grid2">
+        <div class="field"><label>Client</label><div>Client A (sample) ▾</div></div>
+        <div class="field"><label>Equipment</label><div>AHU-01 (sample) ▾</div></div>
+        <div class="field"><label>Visit date</label><div>2026-11-19</div></div>
+        <div class="field"><label>Technician</label><div>Technician 1 ▾</div></div>
+        <div class="field"><label>Visit type</label><div>Preventive maintenance ▾</div></div>
+        <div class="field"><label>Notes</label><div>&nbsp;</div></div>
+      </div></div>
+      <div style="display:flex;gap:8px"><button class="btn ghost" data-go="visits">Cancel</button><button class="btn">Create visit</button></div>
+    </section>
+
+    <!-- DISPATCH -->
+    <section class="view" id="v-dispatch">
+      <header><div><h1>Dispatch</h1><div class="sub">Open requests routed by zone and priority</div></div></header>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Request</th><th>Client</th><th>Zone</th><th>Priority</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>DR-0101</td><td>Client B (sample)</td><td>Zone South</td><td><span class="badge b-bad">Urgent</span></td><td>Open</td></tr>
+          <tr><td>DR-0102</td><td>Client D (sample)</td><td>Zone North</td><td><span class="badge b-warn">High</span></td><td>Assigned</td></tr>
+          <tr><td>DR-0103</td><td>Client E (sample)</td><td>Zone East</td><td>Normal</td><td>Open</td></tr>
+        </tbody>
+      </table></div></div>
+      <div class="note">Tables: <span class="tag">dispatch_requests</span> <span class="tag">dispatch_zones</span></div>
+    </section>
+
+    <!-- CONTRACTS -->
+    <section class="view" id="v-contracts">
+      <header><div><h1>Service contracts</h1><div class="sub">Recurring maintenance agreements</div></div></header>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Contract</th><th>Client</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>CT-2026-01</td><td>Client A (sample)</td><td>2026-01-01</td><td>2026-12-31</td><td><span class="badge b-warn">Due in 30 days</span></td></tr>
+          <tr><td>CT-2026-02</td><td>Client B (sample)</td><td>2026-03-01</td><td>2027-02-28</td><td><span class="badge b-ok">Active</span></td></tr>
+        </tbody>
+      </table></div></div>
+      <div class="note">Table name in Supabase: <span class="tag">service_contracts</span></div>
+    </section>
+
+    <!-- PARTS -->
+    <section class="view" id="v-parts">
+      <header><div><h1>Parts requests</h1><div class="sub">Approval queue for parts and consumables</div></div></header>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Request</th><th>Visit</th><th>Part</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>PR-0041</td><td>SV-2026-0001</td><td>Air filter 24×24 (sample)</td><td>2</td><td><span class="badge b-warn">Pending approval</span></td></tr>
+          <tr><td>PR-0042</td><td>SV-2026-0002</td><td>Refrigerant R410A (sample)</td><td>1</td><td><span class="badge b-ok">Approved</span></td></tr>
+          <tr><td>PR-0043</td><td>SV-2026-0005</td><td>Drain pump (sample)</td><td>1</td><td><span class="badge b-bad">Rejected</span></td></tr>
+          <tr><td>PR-0044</td><td>SV-2026-0004</td><td>Capacitor 35 µF (sample)</td><td>2</td><td><span class="badge b-warn">Pending approval</span></td></tr>
+        </tbody>
+      </table></div></div>
+    </section>
+
+    <!-- FILES -->
+    <section class="view" id="v-files">
+      <header><div><h1>Reports & files</h1><div class="sub">PDFs and photos stored in Supabase Storage</div></div></header>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Type</th><th>Linked to</th><th>Uploaded</th></tr></thead>
+        <tbody>
+          <tr><td>sv-2026-0002.pdf</td><td>Service report</td><td>SV-2026-0002</td><td>2026-08-06</td></tr>
+          <tr><td>ahu-01-lobby.jpg</td><td>Photo</td><td>SV-2026-0001</td><td>2026-08-07</td></tr>
+          <tr><td>contract-ct-2026-01.pdf</td><td>Contract</td><td>CT-2026-01</td><td>2026-01-01</td></tr>
+        </tbody>
+      </table></div></div>
+      <div class="note">Table name in Supabase: <span class="tag">files</span> · the bytes live in Storage, the row holds the path.</div>
+    </section>
+
+    <p class="note">Mockup only: nothing here is connected to Supabase or Odoo. All names are sample data. Table names are drafts to be checked against the Odoo models.</p>
+  </main>
+</div>
+
+<script>
+  const views = ['dash','clients','client','equip','visits','visit','newvisit','dispatch','contracts','parts','files'];
+  const navMap = { dash:'dash', clients:'clients', client:'clients', equip:'equip', visits:'visits', visit:'visits', newvisit:'visits', dispatch:'dispatch', contracts:'contracts', parts:'parts', files:'files' };
+  function show(name) {
+    if (!views.includes(name)) return;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
+    document.getElementById('v-' + name).classList.add('show');
+    document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === navMap[name]));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('#nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.view)));
+  document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => show(el.dataset.go)));
+  const pick = { 'newvisit': 'newvisit' };
+  document.querySelectorAll('[data-go]').forEach(el => {
+    if (el.tagName === 'TR' && el.dataset.go === 'visit') el.dataset.go = 'visit';
+  });
+</script>
+</body>
+</html>
