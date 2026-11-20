@@ -572,7 +572,8 @@
       body = `<div class="notice"><b>Could not show this tab.</b><div class="muted">${esc(err.message)}</div></div>`;
     }
     const fromVisits = target === "#page";
-    $(target).innerHTML = `
+    const host = $(target);
+    host.innerHTML = `
       ${fromVisits ? '<span class="back" data-back-visits>← Back to visits</span>' : ""}
       <div class="rpt-hd">
         <div><div class="rpt-kicker">Service report</div><h1>Draft review</h1>
