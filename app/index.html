@@ -293,9 +293,8 @@
       if (!rows.length) return `<h1>Service Report</h1><div class="sub">No visits yet. Create a visit in Jobs first.</div>`;
       const options = rows.map((v) => `<option value="${esc(v.id)}">${esc(v.reference)} · ${esc(v.clients?.name)}</option>`).join("");
       return `
-        <h1>Service Report</h1><div class="sub">Choose a visit to review its report</div>
-        <div class="toolbar"><select id="report-pick" class="search">${options}</select></div>
-        <div id="report-area"></div>`;
+        <h1>Service Report</h1><div class="sub">Open a visit from Jobs to review its report.</div>
+        <div class="toolbar"><button class="btn primary" data-jobs>Go to Jobs</button></div>`;
     },
 
     async clients() {
@@ -523,6 +522,7 @@
     }));
     document.querySelectorAll("[data-decide]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.decide, b.dataset.act)));
     document.querySelectorAll("[data-visit]").forEach((r) => r.addEventListener("click", () => openReport(r.dataset.visit)));
+    document.querySelectorAll("[data-jobs]").forEach((b) => b.addEventListener("click", () => render("visits")));
     const pick = $("#report-pick");
     if (pick) {
       const load = () => openReport(pick.value, "info", "#report-area");
