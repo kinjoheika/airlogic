@@ -225,6 +225,16 @@
   .room-row:last-child { border-bottom: 0; }
   .room-unit { font-size: 13px; font-weight: 600; color: #0f2a47; }
   .room-unit .muted { font-size: 11.5px; font-weight: 400; margin-top: 2px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip-btn { border: 1px solid #dfe4ec; background: #fff; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; color: #374151; cursor: pointer; }
+  .chip-btn span { color: #6b7587; margin-left: 6px; font-weight: 600; }
+  .chip-btn:hover { border-color: #0f8a86; }
+  .chip-btn.on { background: #0f8a86; border-color: #0f8a86; color: #fff; }
+  .chip-btn.on span { color: #d7f0ee; }
+  .btn.small { padding: 6px 12px; font-size: 12.5px; }
+  .reg-card td.r { text-align: right; }
+  .spill.s-info { color: #2b6cb0; background: #e8f0fb; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -394,38 +404,37 @@
       const { data, error } = await q.visits();
       if (error) throw error;
       const rows = data || [];
-      const count = (s) => rows.filter((v) => v.state === s).length;
+      const count = (st) => rows.filter((v) => v.state === st).length;
       const action = { draft: "Continue", review: "Review", approved: "Invoice", invoiced: "View", rejected: "Revise", cancelled: "View" };
-      const tone = { draft: "t-draft", review: "t-review", approved: "t-ok", invoiced: "t-sent", rejected: "t-bad", cancelled: "t-muted" };
-      const label = (s) => String(s || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+      const tone = { draft: "s-off", review: "s-warn", approved: "s-ok", invoiced: "s-info", rejected: "s-off", cancelled: "s-off" };
+      const label = (st) => String(st || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+      const chips = [["all", "All", rows.length], ["draft", "Draft", count("draft")], ["review", "Review", count("review")], ["approved", "Approved", count("approved")], ["invoiced", "Invoiced", count("invoiced")]];
       return `
-        <div class="head">
-          <div><h1>Service visits</h1><div class="sub">All technician visits — track status from draft to invoiced</div></div>
+        <div class="page-hd">
+          <div><h1>Service visits</h1><div class="sub">Track every technician visit from draft to invoice</div></div>
           <button class="btn primary" data-add="visit">+ New visit</button>
         </div>
-        <div class="kpis">
-          <div class="kpi"><span>Total visits</span><b>${rows.length}</b></div>
-          <div class="kpi k-review"><span>Awaiting review</span><b>${count("review")}</b></div>
-          <div class="kpi k-warn"><span>Pending invoice</span><b>${count("approved")}</b></div>
-          <div class="kpi k-ok"><span>Invoiced</span><b>${count("invoiced")}</b></div>
+        <div class="kpi-row">
+          <div class="kpi-card"><span>Total visits</span><b>${rows.length}</b></div>
+          <div class="kpi-card k-warn"><span>Awaiting review</span><b>${count("review")}</b></div>
+          <div class="kpi-card"><span>Pending invoice</span><b>${count("approved")}</b></div>
+          <div class="kpi-card k-ok"><span>Invoiced</span><b>${count("invoiced")}</b></div>
         </div>
-        <div class="card visits">
-          <div class="card-hd"><span>Visit log</span><span class="muted">${rows.length} records</span></div>
-          <div style="overflow-x:auto"><table>
-            <thead><tr><th>Job reference</th><th>Date</th><th>Client</th><th>Sublocation</th><th>Technician</th><th>Templates</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-              ${rows.length ? rows.map((v) => `<tr class="click" data-visit="${esc(v.id)}">
-                <td><b class="ref">${esc(v.reference)}</b></td>
-                <td class="muted">${fmtDate(v.visit_date)}</td>
-                <td><b>${esc(v.clients?.name)}</b></td>
-                <td>${esc(v.sublocation)}</td>
-                <td>${esc(v.technician_name)}</td>
-                <td><span class="chip">Owner</span> <span class="chip muted-chip">PM/Tech</span></td>
-                <td><span class="pill ${tone[v.state] || ""}">${esc(label(v.state))}</span></td>
-                <td><button class="act">${esc(action[v.state] || "View")} →</button></td>
-              </tr>`).join("") : `<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">No visits yet.</td></tr>`}
-            </tbody>
-          </table></div>
+        <div class="list-tools">
+          <div class="chips">${chips.map(([k, t, n]) => `<button class="chip-btn ${k === "all" ? "on" : ""}" data-chip="${k}">${t}<span>${n}</span></button>`).join("")}</div>
+          <input class="search" id="visit-search" placeholder="Search reference, client, technician">
+        </div>
+        <div class="reg-card" id="list">
+          ${rows.length ? `<table><thead><tr><th>Reference</th><th>Date</th><th>Client</th><th>Technician</th><th>Status</th><th></th></tr></thead><tbody>
+            ${rows.map((v) => `<tr class="click" data-visit="${esc(v.id)}" data-state="${esc(v.state)}" data-filter="${esc(v.reference)} ${esc(v.clients?.name)} ${esc(v.technician_name)} ${esc(v.sublocation)}">
+              <td><span class="serial">${esc(v.reference)}</span></td>
+              <td class="muted">${fmtDate(v.visit_date)}</td>
+              <td><div class="unit">${esc(v.clients?.name)}</div><div class="muted">${esc(v.sublocation)}</div></td>
+              <td>${esc(v.technician_name)}</td>
+              <td><span class="spill ${tone[v.state] || "s-off"}">${esc(label(v.state))}</span></td>
+              <td class="r"><button class="btn ghost small">${esc(action[v.state] || "View")} →</button></td>
+            </tr>`).join("")}
+          </tbody></table>` : `<div class="empty">No visits yet. Click + New visit to add one.</div>`}
         </div>`;
     },
 
@@ -541,6 +550,22 @@
         r.style.display = r.dataset.filter.toLowerCase().includes(term) ? "" : "none";
       });
     });
+    const vs = $("#visit-search");
+    if (vs) {
+      let chip = "all";
+      const apply = () => {
+        const term = vs.value.toLowerCase();
+        document.querySelectorAll("#list tr[data-state]").forEach((r) => {
+          r.hidden = !((chip === "all" || r.dataset.state === chip) && r.dataset.filter.toLowerCase().includes(term));
+        });
+      };
+      vs.addEventListener("input", apply);
+      document.querySelectorAll("[data-chip]").forEach((c) => c.addEventListener("click", () => {
+        chip = c.dataset.chip;
+        document.querySelectorAll("[data-chip]").forEach((x) => x.classList.toggle("on", x === c));
+        apply();
+      }));
+    }
     document.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => openForm(b.dataset.add)));
     document.querySelectorAll("[data-open-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = b.dataset.openInvoice; render("invoices"); }));
     document.querySelectorAll("[data-back-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = null; render("invoices"); }));
