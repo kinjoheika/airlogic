@@ -62,6 +62,9 @@
   .fld div { background: #f8fafc; border: 1px solid var(--line, #e3e8ef); border-radius: 8px; padding: 9px 11px; min-height: 38px; }
   .progress { display: flex; gap: 22px; flex-wrap: wrap; padding: 14px 16px; font-size: 13px; }
   .progress .ok { color: #1a7f4b; } .progress .wait { color: #7a5a00; }
+  .sec2 { border-top: 3px solid #1f3a5f; }
+  .count-badge { background: #fff7e0; color: #8a6d00; border: 1px solid #f1d98a; border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+  .sec2-foot { padding: 0 16px 14px; }
   .empty { padding: 16px; color: #6b7587; }
   .scroll { overflow-x: auto; }
   .scroll table { min-width: 900px; }
@@ -556,6 +559,8 @@
       ${body}
       <div class="actions" style="margin-top:16px;text-align:right"><button class="btn primary" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button></div>`;
     if (tab === "equip") bindEquip(host);
+    const refresh = host.querySelector("[data-refresh]");
+    if (refresh) refresh.onclick = () => openReport(id, tab, target);
     const approve = host.querySelector("[data-approve]");
     if (approve) approve.onclick = async () => {
       if (!confirm("Approve this visit?")) return;
@@ -574,10 +579,16 @@
         ${f("Job reference", v.reference)}${f("Client name", v.clients?.name)}${f("Sublocation", v.sublocation)}
         ${f("Technician", v.technician_name)}${f("Visit date", fmtDate(v.visit_date))}${f("Job started", "")}${f("Job finished", "")}
       </div></div>
-      <div class="panel"><div class="panel-hd">Section 2 — Field entry progress</div><div class="progress">
-        <span>Client: <b>${esc(v.clients?.name)}</b></span><span>Units: <b>${total}</b></span>
-        <span class="ok">✓ Logged: <b>${logged}</b></span><span class="wait">⏳ Pending: <b>${total - logged}</b></span>
-      </div></div>`;
+      <div class="panel sec2"><div class="panel-hd">Section 2 — Field entry progress
+          <span class="count-badge">${logged}/${total} logged</span></div>
+        <div class="progress">
+          <span>Client: <b>${esc(v.clients?.name)}</b></span>
+          <span class="ok">✓ Logged: <b>${logged}</b></span>
+          <span class="wait">⏳ Pending: <b>${total - logged}</b></span>
+          <span>Total: <b>${total}</b></span>
+        </div>
+        <div class="sec2-foot"><button class="btn ghost" data-refresh>↻ Refresh from Field Entry</button></div>
+      </div>`;
   }
 
   function equipTab(list) {
