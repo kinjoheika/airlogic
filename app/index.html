@@ -404,7 +404,7 @@
       <a class="back" data-back-invoice>← Back to all invoices</a>
       <div class="head">
         <div><h1>Invoice #${esc(inv.number)}</h1><div class="sub">${esc(inv.clients?.name)}${period ? " · " + esc(period) : ""}</div></div>
-        <div class="actions"><button class="btn ghost">↓ Download PDF</button> <button class="btn primary">✉ Send to client</button> <button class="btn ghost">✔ Mark as paid</button></div>
+        <div class="actions"><button class="btn ghost" data-inv-print>↓ Download PDF</button> <button class="btn primary" data-inv-send>✉ Send to client</button> <button class="btn ghost" data-inv-paid="${esc(inv.id)}" ${inv.status === "paid" ? "disabled" : ""}>✔ Mark as paid</button></div>
       </div>
       <div class="inv card">
         <div class="inv-top">
@@ -446,6 +446,13 @@
     document.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => openForm(b.dataset.add)));
     document.querySelectorAll("[data-open-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = b.dataset.openInvoice; render("invoices"); }));
     document.querySelectorAll("[data-back-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = null; render("invoices"); }));
+    document.querySelectorAll("[data-inv-print]").forEach((b) => b.addEventListener("click", () => window.print()));
+    document.querySelectorAll("[data-inv-send]").forEach((b) => b.addEventListener("click", () => alert("Email sending is not set up yet. Download the PDF and send it manually for now.")));
+    document.querySelectorAll("[data-inv-paid]").forEach((b) => b.addEventListener("click", async () => {
+      const { error } = await db.from("invoices").update({ status: "paid" }).eq("id", b.dataset.invPaid);
+      if (error) { alert(error.message); return; }
+      render("invoices");
+    }));
     document.querySelectorAll("[data-decide]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.decide, b.dataset.act)));
     document.querySelectorAll("[data-visit]").forEach((r) => r.addEventListener("click", () => openReport(r.dataset.visit)));
     const pick = $("#report-pick");
@@ -481,8 +488,15 @@
         Auto-populated from field entry. Review, correct if needed, then approve to generate client PDFs.</div>
       <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
       ${body}
-      <div class="actions" style="margin-top:16px;text-align:right"><button class="btn" disabled title="Coming next">Approve &amp; generate PDFs (coming next)</button></div>`;
+      <div class="actions" style="margin-top:16px;text-align:right"><button class="btn primary" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button></div>`;
     if (tab === "equip") bindEquip(host);
+    const approve = host.querySelector("[data-approve]");
+    if (approve) approve.onclick = async () => {
+      if (!confirm("Approve this visit?")) return;
+      const { error } = await db.from("service_visits").update({ state: "approved" }).eq("id", id);
+      if (error) { alert(error.message); return; }
+      openReport(id, tab, target);
+    };
     const back = document.querySelector("[data-back-visits]");
     if (back) back.onclick = () => render("visits");
     document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
@@ -642,6 +656,30 @@
         });
         if (error) { $("#f-err").textContent = error.message; return; }
         closeDialog(); render("equipment");
+      };
+    } else if (kind === "visit") {
+      const { data: clients } = await q.clients();
+      const opts = (clients || []).map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+      const today = new Date().toISOString().slice(0, 10);
+      openDialog(`<h1>New visit</h1>
+        <label>Client</label><select id="f-client">${opts}</select>
+        <label>Visit date</label><input id="f-date" type="date" value="${today}">
+        <label>Sublocation</label><input id="f-sub" placeholder="e.g. Lobby AHU">
+        <label>Technician</label><input id="f-tech" placeholder="e.g. Juan dela Cruz">
+        <div class="err" id="f-err"></div>
+        <div class="row"><button class="btn ghost" id="f-cancel">Cancel</button><button class="btn primary" id="f-save">Save</button></div>`);
+      $("#f-cancel").onclick = closeDialog;
+      $("#f-save").onclick = async () => {
+        const client_id = $("#f-client").value;
+        const date = $("#f-date").value;
+        if (!client_id || !date) { $("#f-err").textContent = "Client and visit date are required."; return; }
+        const reference = "CP-" + date.replace(/-/g, "").slice(2) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+        const { error } = await db.from("service_visits").insert({
+          reference, client_id, visit_date: date, state: "draft",
+          sublocation: $("#f-sub").value || null, technician_name: $("#f-tech").value || null
+        });
+        if (error) { $("#f-err").textContent = error.message; return; }
+        closeDialog(); render("visits");
       };
     }
   }
