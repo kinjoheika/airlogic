@@ -564,7 +564,13 @@
     const logged = list.filter((j) => (j.reading_lines || []).length).length;
     const label = String(v.state || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
     const rtab = (key, text) => `<button class="rtab ${tab === key ? "on" : ""}" data-rtab="${key}">${text}</button>`;
-    const body = tab === "equip" ? equipTab(list) : infoTab(v, list.length, logged);
+    let body;
+    try {
+      body = tab === "equip" ? equipTab(list) : infoTab(v, list.length, logged);
+    } catch (err) {
+      console.error("Report tab error:", err);
+      body = `<div class="notice"><b>Could not show this tab.</b><div class="muted">${esc(err.message)}</div></div>`;
+    }
     const fromVisits = target === "#page";
     $(target).innerHTML = `
       ${fromVisits ? '<span class="back" data-back-visits>← Back to visits</span>' : ""}
