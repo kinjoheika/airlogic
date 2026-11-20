@@ -218,6 +218,13 @@
   .rtabs .rtab { cursor: pointer; user-select: none; }
   .rtabs .rtab:hover { color: #0f8a86; }
   .rtabs .rtab:focus-visible { outline: 2px solid #0f8a86; outline-offset: 2px; }
+  .rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; padding: 4px 16px 14px; }
+  .room { border: 1px solid #e3e8ef; border-radius: 12px; overflow: hidden; background: #fff; }
+  .room-hd { background: #f5f7fb; padding: 9px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: #374151; border-bottom: 1px solid #e3e8ef; }
+  .room-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid #f0f3f8; }
+  .room-row:last-child { border-bottom: 0; }
+  .room-unit { font-size: 13px; font-weight: 600; color: #0f2a47; }
+  .room-unit .muted { font-size: 11.5px; font-weight: 400; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -561,12 +568,11 @@
       .select("id, equipment(name, model, serial_number, sublocations(name), equipment_brands(name)), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence)), checklist_lines(phase, key, label, value)")
       .eq("visit_id", id);
     const list = jobs || [];
-    const logged = list.filter((j) => (j.reading_lines || []).length).length;
     const label = String(v.state || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
     const rtab = (key, text) => `<button class="rtab ${tab === key ? "on" : ""}" data-rtab="${key}">${text}</button>`;
     let body;
     try {
-      body = tab === "equip" ? equipTab(list) : infoTab(v, list.length, logged);
+      body = tab === "equip" ? equipTab(list) : infoTab(v, list);
     } catch (err) {
       console.error("Report tab error:", err);
       body = `<div class="notice"><b>Could not show this tab.</b><div class="muted">${esc(err.message)}</div></div>`;
@@ -598,8 +604,26 @@
     document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
   }
 
-  function infoTab(v, total, logged) {
+  function infoTab(v, list) {
+    const total = list.length;
+    const isLogged = (j) => (j.reading_lines || []).length > 0 || (j.checklist_lines || []).length > 0;
+    const logged = list.filter(isLogged).length;
     const f = (l, val) => `<div class="fld"><label>${l}</label><div>${esc(val) || "—"}</div></div>`;
+    const groups = new Map();
+    list.forEach((j) => {
+      const sub = j.equipment?.sublocations?.name || "Unassigned";
+      if (!groups.has(sub)) groups.set(sub, []);
+      groups.get(sub).push(j);
+    });
+    const cards = [...groups.entries()].map(([sub, jobs]) => `
+      <div class="room">
+        <div class="room-hd">${esc(sub)}</div>
+        ${jobs.map((j) => `<div class="room-row">
+          <div class="room-unit"><div>${esc(j.equipment?.name)}</div>
+            <div class="muted">${esc(j.equipment?.equipment_brands?.name)} ${esc(j.equipment?.model)} · ${esc(j.equipment?.serial_number)}</div></div>
+          <span class="spill ${isLogged(j) ? "s-ok" : "s-warn"}">${isLogged(j) ? "Logged" : "Pending"}</span>
+        </div>`).join("")}
+      </div>`).join("");
     return `<div class="panel"><div class="panel-hd">Job information</div><div class="fields">
         ${f("Job reference", v.reference)}${f("Client name", v.clients?.name)}${f("Sublocation", v.sublocation)}
         ${f("Technician", v.technician_name)}${f("Visit date", fmtDate(v.visit_date))}${f("Job started", "")}${f("Job finished", "")}
@@ -612,6 +636,7 @@
           <span class="wait">⏳ Pending: <b>${total - logged}</b></span>
           <span>Total: <b>${total}</b></span>
         </div>
+        <div class="rooms">${cards}</div>
         <div class="sec2-foot"><button class="btn ghost" data-refresh>↻ Refresh from Field Entry</button></div>
       </div>`;
   }
