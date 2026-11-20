@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Report — Draft Review (Mockup)</title>
+<style>
+  :root {
+    --bg: #f3f5f9; --panel: #ffffff; --ink: #1d2433; --muted: #6b7587; --line: #dfe4ec;
+    --nav: #111a2e; --gold: #e0b43c; --teal: #0f8a86; --teal-soft: #d9f2f0;
+    --amber-bg: #fdf6e3; --amber-ink: #7a5a00; --ok: #1a7f4b; --bad: #b42323; --bad-bg: #fde8e8;
+    --head: #0f2a47; --sub: #f7f9fc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .top { background: var(--nav); color: #c9d3e6; display: flex; align-items: center; gap: 22px;
+         padding: 0 22px; height: 52px; border-bottom: 3px solid var(--gold); overflow-x: auto; }
+  .top .logo { color: #fff; font-weight: 800; white-space: nowrap; }
+  .top .logo span { color: var(--gold); }
+  .top a { color: #c9d3e6; text-decoration: none; white-space: nowrap; padding: 16px 0; }
+  .top a.on { color: var(--gold); border-bottom: 3px solid var(--gold); margin-bottom: -3px; }
+  .top .me { margin-left: auto; white-space: nowrap; font-size: 13px; }
+  .wrap { padding: 20px 26px 40px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+  h1 { font-size: 22px; margin: 0; }
+  .ref { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .chip { background: var(--teal-soft); color: var(--teal); font-weight: 600; padding: 6px 12px; border-radius: 8px; font-size: 13px; }
+  .notice { background: var(--amber-bg); border: 1px solid #f0dc9a; color: var(--amber-ink); border-radius: 10px;
+            padding: 12px 16px; margin: 18px 0; }
+  .notice b { display: block; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 3px; }
+  .tabs { display: flex; gap: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tabs button { all: unset; cursor: pointer; padding: 12px 22px; color: var(--muted); font-weight: 600; }
+  .tabs button.on { color: var(--teal); border-bottom: 2px solid var(--teal); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin-top: 16px; overflow: hidden; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px;
+                border-bottom: 1px solid var(--line); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: #374151; }
+  .btn { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .btn.teal { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 600; }
+  .empty { padding: 16px; color: var(--muted); }
+  .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .filters label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+  .filters select { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; min-width: 150px; }
+  .filters .clear { margin-left: auto; color: var(--bad); font-weight: 600; cursor: pointer; font-size: 13px; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 1100px; font-size: 12.5px; }
+  th, td { border: 1px solid var(--line); padding: 7px 8px; text-align: center; white-space: nowrap; }
+  th { background: var(--sub); font-weight: 700; color: #374151; }
+  tr.sub th { background: var(--head); color: #fff; font-size: 11.5px; }
+  tr.unit th { background: #f1f4f9; }
+  .std { color: var(--muted); font-size: 11px; font-weight: 600; }
+  .act { font-weight: 700; }
+  .item { text-align: left; color: #1b4f8a; font-weight: 600; background: #fff; position: sticky; left: 0; min-width: 210px; }
+  .item small { display: block; color: var(--muted); font-weight: 500; }
+  .bad { color: var(--bad); background: var(--bad-bg); }
+  .ok { color: var(--ok); }
+  .dash { color: #b7bec9; }
+  .foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+  .foot p { margin: 0; color: var(--muted); font-size: 12.5px; max-width: 640px; }
+  .approve { background: var(--teal); color: #fff; border: 0; border-radius: 10px; padding: 12px 18px; font: inherit; font-weight: 700; cursor: pointer; }
+  .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .tabs button.on { color: var(--teal); box-shadow: inset 0 -2px 0 var(--teal); }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 16px; padding: 16px; }
+  .fld label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; margin-bottom: 5px; }
+  .fld div { background: var(--sub); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-height: 38px; color: var(--ink); }
+  .fld div.dim { color: var(--muted); }
+  .progress { display: flex; gap: 22px; flex-wrap: wrap; padding: 14px 16px; font-size: 13px; }
+  .progress .ok { color: var(--ok); }
+  .progress .wait { color: var(--amber-ink); }
+  [hidden] { display: none !important; }
+  @media (max-width: 760px) { .wrap { padding: 16px; } .tabs button { padding: 10px 14px; } }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo">Standard <span>Airlogic</span></div>
+  <a>Jobs</a>
+  <a>Equipment</a>
+  <a class="on">Service Report</a>
+  <a>Invoice</a>
+  <a>Client Portal</a>
+  <a>Field Entry</a>
+  <a>PDF Templates</a>
+  <div class="me">Admin · Maria Santos</div>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Service Report — Draft Review</h1>
+      <div class="ref">CP-2026-0807-JDC · Green Valley Residences · 2026-08-07</div>
+    </div>
+    <span class="chip">Awaiting Review</span>
+  </div>
+
+  <div class="notice">
+    <b>✦ AI-generated draft — please review before approving</b>
+    Auto-populated from the Fieldpiece JobLink PDF and technician field entry. Review, correct if needed, then approve to generate both client PDFs.
+  </div>
+
+  <div class="tabs">
+    <button id="t-info" class="on" onclick="showTab('info')">Report &amp; Info</button>
+    <button id="t-equip" onclick="showTab('equip')">Equipment Data</button>
+  </div>
+
+  <div id="tab-info">
+    <div class="panel">
+      <div class="panel-head">Job information</div>
+      <div class="fields">
+        <div class="fld"><label>Job reference</label><div>CP-2026-0807-JDC</div></div>
+        <div class="fld"><label>Client name</label><div>Green Valley Residences</div></div>
+        <div class="fld"><label>On-site contact</label><div>Mr. Roberto Tan · 0917-555-0148 (sample)</div></div>
+        <div class="fld"><label>Sublocation</label><div>Compressor Room — Unit 4B</div></div>
+        <div class="fld"><label>Technician</label><div>Juan dela Cruz</div></div>
+        <div class="fld"><label>Visit date</label><div>2026-08-07</div></div>
+        <div class="fld"><label>Job started</label><div class="dim">—</div></div>
+        <div class="fld"><label>Job finished</label><div class="dim">—</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">Section 2 — Field entry progress <span class="btn" style="cursor:default">Loading…</span></div>
+      <div class="progress">
+        <span>Client: <b>Green Valley Residences</b></span>
+        <span class="ok">✓ Logged: <b>4</b></span>
+        <span class="wait">⏳ Pending: <b>1</b></span>
+        <span>Total: <b>5</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-equip" hidden>
+  <div class="panel">
+    <div class="panel-head">Recently logged — Field Entry app <button class="btn">↻ Sync</button></div>
+    <div class="empty">No devices logged yet — start a visit in Field Entry. (Sample state)</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">Equipment readings — all units this visit <span class="btn" style="cursor:default">Fieldpiece + Field Entry per device</span></div>
+    <div class="filters">
+      <div><label>Sublocation</label><br><select><option>All</option><option>Management Office — 4F</option><option>Residential Units 101–103</option></select></div>
+      <div><label>Brand</label><br><select><option>All</option><option>Daikin</option><option>Carrier</option></select></div>
+      <span class="clear">✕ Clear</span>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr class="sub">
+            <th rowspan="2" style="text-align:left">Inspection item</th>
+            <th colspan="2">Management Office — 4F</th>
+            <th colspan="6">Residential Units 101–103</th>
+          </tr>
+          <tr class="unit">
+            <th colspan="2">Daikin FTKF50TV<br><small>…5678 · Compressor Room — Unit 4B</small></th>
+            <th colspan="2">Daikin FTKF35TV<br><small>…1204 · Unit 101</small></th>
+            <th colspan="2">Daikin FTKF35TV<br><small>…1207 · Unit 102</small></th>
+            <th colspan="2">Carrier 38XHC009<br><small>…9012 · Unit 103</small></th>
+          </tr>
+          <tr>
+            <th class="item">&nbsp;</th>
+            <th class="std">MFR STD</th><th>ACTUAL</th>
+            <th class="std">MFR STD</th><th>ACTUAL</th>
+            <th class="std">MFR STD</th><th>ACTUAL</th>
+            <th class="std">MFR STD</th><th>ACTUAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="item">Liquid line pressure<small>psi</small></td>
+            <td class="std">220–260</td><td class="act ok">238</td>
+            <td class="std">220–260</td><td class="act ok">244</td>
+            <td class="std">220–260</td><td class="act ok">251</td>
+            <td class="std">210–250</td><td class="act bad">268</td>
+          </tr>
+          <tr>
+            <td class="item">Suction line pressure<small>psi</small></td>
+            <td class="std">110–125</td><td class="act ok">118</td>
+            <td class="std">110–125</td><td class="act ok">116</td>
+            <td class="std">110–125</td><td class="act ok">121</td>
+            <td class="std">100–115</td><td class="act ok">108</td>
+          </tr>
+          <tr>
+            <td class="item">Supply air temp<small>°C</small></td>
+            <td class="std">10–14</td><td class="act ok">12.4</td>
+            <td class="std">10–14</td><td class="act ok">12.9</td>
+            <td class="std">10–14</td><td class="act ok">13.1</td>
+            <td class="std">10–14</td><td class="act ok">12.2</td>
+          </tr>
+          <tr>
+            <td class="item">Return air temp<small>°C</small></td>
+            <td class="std">22–26</td><td class="act ok">24.1</td>
+            <td class="std">22–26</td><td class="act ok">24.6</td>
+            <td class="std">22–26</td><td class="act ok">25.0</td>
+            <td class="std">22–26</td><td class="act ok">24.4</td>
+          </tr>
+          <tr>
+            <td class="item">Superheat<small>°C</small></td>
+            <td class="std">5–10</td><td class="act ok">7</td>
+            <td class="std">5–10</td><td class="act ok">6</td>
+            <td class="std">5–10</td><td class="act ok">8</td>
+            <td class="std">5–10</td><td class="act bad">12</td>
+          </tr>
+          <tr>
+            <td class="item">Subcooling<small>°C</small></td>
+            <td class="std">4–8</td><td class="act ok">6</td>
+            <td class="std">4–8</td><td class="act ok">5</td>
+            <td class="std">4–8</td><td class="act ok">6</td>
+            <td class="std">4–8</td><td class="act ok">5</td>
+          </tr>
+          <tr>
+            <td class="item">Compressor amps<small>A</small></td>
+            <td class="std">≤ 12.5</td><td class="act ok">10.8</td>
+            <td class="std">≤ 8.0</td><td class="act ok">6.9</td>
+            <td class="std">≤ 8.0</td><td class="act ok">7.1</td>
+            <td class="std">≤ 10.5</td><td class="act bad">11.2</td>
+          </tr>
+          <tr>
+            <td class="item">Capacitor<small>µF</small></td>
+            <td class="std">35 ±6</td><td class="act ok">35.4</td>
+            <td class="std">25 ±5</td><td class="act ok">24.8</td>
+            <td class="std">25 ±5</td><td class="act ok">25.6</td>
+            <td class="std">30 ±5</td><td class="act ok">29.7</td>
+          </tr>
+          <tr>
+            <td class="item">Supply voltage<small>V</small></td>
+            <td class="std">220–240</td><td class="act ok">231</td>
+            <td class="std">220–240</td><td class="act ok">229</td>
+            <td class="std">220–240</td><td class="act ok">230</td>
+            <td class="std">220–240</td><td class="act ok">228</td>
+          </tr>
+          <tr>
+            <td class="item">Filter condition<small>visual</small></td>
+            <td class="std">Clean</td><td class="act bad">Dirty</td>
+            <td class="std">Clean</td><td class="act ok">Clean</td>
+            <td class="std">Clean</td><td class="act ok">Clean</td>
+            <td class="std">Clean</td><td class="act ok">Clean</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </div>
+
+  <div class="foot">
+    <p>Red = actual reading outside the manufacturer's standard. Review those before approving. Approving generates both client PDFs.</p>
+    <button class="approve">Approve &amp; generate PDFs</button>
+  </div>
+  <div class="note">Mockup only: the readings and units are sample values, not from Fieldpiece or Supabase. The Sublocation and Brand filters are not wired yet.</div>
+</div>
+
+<script>
+  function showTab(name) {
+    document.getElementById('tab-info').hidden = name !== 'info';
+    document.getElementById('tab-equip').hidden = name !== 'equip';
+    document.getElementById('t-info').classList.toggle('on', name === 'info');
+    document.getElementById('t-equip').classList.toggle('on', name === 'equip');
+  }
+  showTab('info');
+</script>
+</body>
+</html>
