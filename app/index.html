@@ -215,6 +215,9 @@
   .progress .ok { background: #e8f6ee; } .progress .wait { background: #fdf3d8; }
   .count-badge { border-radius: 999px; }
   .panel { border-radius: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .rtabs .rtab { cursor: pointer; user-select: none; }
+  .rtabs .rtab:hover { color: #0f8a86; }
+  .rtabs .rtab:focus-visible { outline: 2px solid #0f8a86; outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -570,8 +573,6 @@
           <div class="sub">${esc(v.reference)} · ${esc(v.clients?.name)} · ${fmtDate(v.visit_date)}</div></div>
         <span class="spill ${v.state === "review" ? "s-warn" : v.state === "approved" || v.state === "invoiced" ? "s-ok" : "s-off"}">${esc(label)}</span>
       </div>
-      <div class="ai-note"><span class="spark">✦</span><div><b>AI-generated draft — review before approving</b>
-        Auto-populated from field entry. Review, correct if needed, then approve to generate client PDFs.</div></div>
       <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
       ${body}
       <div class="actions" style="margin-top:16px;text-align:right"><button class="btn primary" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button></div>`;
