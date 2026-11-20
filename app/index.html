@@ -432,7 +432,7 @@
               <td><div class="unit">${esc(v.clients?.name)}</div><div class="muted">${esc(v.sublocation)}</div></td>
               <td>${esc(v.technician_name)}</td>
               <td><span class="spill ${tone[v.state] || "s-off"}">${esc(label(v.state))}</span></td>
-              <td class="r"><button class="btn ghost small">${esc(action[v.state] || "View")} →</button></td>
+              <td class="r"><button class="btn ghost small" ${["approved", "invoiced"].includes(v.state) ? "data-goto-invoices" : ""}>${esc(action[v.state] || "View")} →</button></td>
             </tr>`).join("")}
           </tbody></table>` : `<div class="empty">No visits yet. Click + New visit to add one.</div>`}
         </div>`;
@@ -550,6 +550,7 @@
         r.style.display = r.dataset.filter.toLowerCase().includes(term) ? "" : "none";
       });
     });
+    document.querySelectorAll("[data-goto-invoices]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); render("invoices"); }));
     const vs = $("#visit-search");
     if (vs) {
       let chip = "all";
