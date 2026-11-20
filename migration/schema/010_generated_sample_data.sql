@@ -6,6 +6,9 @@
 -- Safe to run twice: skips rows that already exist.
 -- =============================================================================
 
+-- Real sites have several units per room, so drop the one-unit-per-room rule
+alter table equipment drop constraint if exists equipment_client_id_sublocation_id_key;
+
 -- Brands
 insert into equipment_brands (name)
 select b.name from (values ('Daikin'), ('Carrier'), ('LG')) as b(name)
