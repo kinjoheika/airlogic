@@ -146,6 +146,39 @@
   input, select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; font: inherit; background: #fff; color: var(--ink); }
   .err { color: var(--red); font-size: 13px; min-height: 18px; margin-top: 8px; }
   .hidden { display: none !important; }
+  /* ---- Equipment Registry (modern) ---- */
+  .page-hd { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-hd h1 { margin: 0 0 4px; letter-spacing: -.01em; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .kpi-card span { display: block; font-size: 12px; color: #6b7587; letter-spacing: .02em; }
+  .kpi-card b { display: block; font-size: 28px; margin-top: 6px; letter-spacing: -.02em; color: #0f2a47; }
+  .kpi-card.k-ok b { color: #1a7f4b; } .kpi-card.k-warn b { color: #9a6b00; } .kpi-card.k-off b { color: #7a1f1f; }
+  .decom { background: #fff; border: 1px solid #f1d6a5; border-radius: 14px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .decom-hd { display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: #fffaf0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: #7a5a00; }
+  .dot-warn { width: 8px; height: 8px; border-radius: 50%; background: #d69e2e; display: inline-block; }
+  .decom-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; border-top: 1px solid #f3efe3; }
+  .decom-title { font-weight: 600; }
+  .decom-act { display: flex; gap: 8px; }
+  .decom-act .btn { border-radius: 999px; padding: 7px 16px; }
+  .list-tools { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .list-tools .search { min-width: 320px; border-radius: 999px; padding: 9px 16px; }
+  .reg-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .reg-card table { min-width: 720px; }
+  .reg-card th { background: #f8fafc; font-size: 11px; letter-spacing: .06em; color: #6b7587; padding: 12px 16px; position: sticky; top: 0; }
+  .reg-card td { padding: 13px 16px; border-bottom: 1px solid #eef1f6; vertical-align: middle; }
+  .reg-card tbody tr:hover td { background: #f7fbfb; }
+  .reg-card tr:last-child td { border-bottom: 0; }
+  .reg-card .unit { font-weight: 600; color: #0f2a47; }
+  .reg-card .muted { font-size: 12px; margin-top: 2px; }
+  .serial { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #374151; background: #f1f4f9; padding: 2px 7px; border-radius: 6px; }
+  .reg-card td.num { font-variant-numeric: tabular-nums; color: #374151; }
+  .spill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px; }
+  .spill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .spill.s-ok { color: #1a7f4b; background: #e8f6ee; }
+  .spill.s-warn { color: #8a5d00; background: #fdf3d8; }
+  .spill.s-off { color: #7a1f1f; background: #fbe9e9; }
+
   .dialog-back { position: fixed; inset: 0; background: rgba(10,16,30,.45); display: grid; place-items: center; z-index: 10; }
   .dialog { background: var(--panel); border-radius: 14px; padding: 20px; width: min(460px, 92vw); }
   .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
@@ -280,16 +313,51 @@
     async equipment() {
       const { data, error } = await q.equipment();
       if (error) throw error;
-      const rows = (data || []).map((e) => `<tr data-filter="${esc(e.name)} ${esc(e.model)} ${esc(e.serial_number)} ${esc(e.clients?.name)}">
-        <td><b>${esc(e.name)}</b><div class="muted">${esc(e.equipment_brands?.name)} ${esc(e.model)}</div></td>
-        <td>${esc(e.clients?.name)}</td><td>${esc(e.sublocations?.name)}</td>
-        <td>${esc(e.serial_number)}</td><td>${esc(e.install_year)}</td>
-        <td>${badge(e.status)}</td></tr>`);
+      const all = data || [];
+      const count = (st) => all.filter((e) => e.status === st).length;
+      const pending = all.filter((e) => e.status === "pending_decommission");
+      const statusPill = (st) => {
+        const map = { active: ["s-ok", "Active"], pending_decommission: ["s-warn", "Pending decommission"], decommissioned: ["s-off", "Decommissioned"] };
+        const [cls, text] = map[st] || ["s-off", esc(st)];
+        return `<span class="spill ${cls}">${text}</span>`;
+      };
+      const pendingCards = pending.length ? `
+        <section class="decom">
+          <div class="decom-hd"><span class="dot-warn"></span>Pending decommission · Senior Technician review</div>
+          ${pending.map((e) => `<div class="decom-row">
+            <div class="decom-info">
+              <div class="decom-title">${esc(e.name)} <span class="serial">${esc(e.serial_number)}</span></div>
+              <div class="muted">${esc(e.clients?.name)} · ${esc(e.sublocations?.name)}</div>
+            </div>
+            <div class="decom-act">
+              <button class="btn approve" data-decide="${esc(e.id)}" data-act="approve">Approve</button>
+              <button class="btn reject" data-decide="${esc(e.id)}" data-act="reject">Reject</button>
+            </div></div>`).join("")}
+        </section>` : "";
+      const rows = all.map((e) => `<tr data-filter="${esc(e.name)} ${esc(e.model)} ${esc(e.serial_number)} ${esc(e.clients?.name)}">
+        <td><div class="unit">${esc(e.name)}</div><div class="muted">${esc(e.equipment_brands?.name)} ${esc(e.model)}</div></td>
+        <td>${esc(e.clients?.name)}</td>
+        <td>${esc(e.sublocations?.name)}</td>
+        <td><span class="serial">${esc(e.serial_number)}</span></td>
+        <td class="num">${esc(e.install_year)}</td>
+        <td>${statusPill(e.status)}</td></tr>`);
       return `
-        <div class="head"><div><h1>Equipment Registry</h1><div class="sub">All client equipment, per sublocation. Decommission requests require Senior Technician approval.</div></div>
-          <button class="btn primary" data-add="equipment">+ Register Equipment</button></div>
-        <div class="toolbar"><input class="search" id="filter" placeholder="Search model, serial, client"></div>
-        <div class="card" id="list">${table(["Unit", "Client", "Sublocation", "Serial", "Year", "Status"], rows, "No equipment yet.")}</div>`;
+        <div class="page-hd">
+          <div><h1>Equipment Registry</h1><div class="sub">All client equipment, per sublocation. Decommission needs Senior Technician approval.</div></div>
+          <button class="btn primary" data-add="equipment">+ Register equipment</button>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card"><span>Total equipment</span><b>${all.length}</b></div>
+          <div class="kpi-card k-ok"><span>Active</span><b>${count("active")}</b></div>
+          <div class="kpi-card k-warn"><span>Pending decommission</span><b>${count("pending_decommission")}</b></div>
+          <div class="kpi-card k-off"><span>Decommissioned</span><b>${count("decommissioned")}</b></div>
+        </div>
+        ${pendingCards}
+        <div class="list-tools">
+          <input class="search" id="filter" placeholder="Search unit, model, serial or client">
+          <span class="muted">${all.length} units</span>
+        </div>
+        <div class="reg-card" id="list">${table(["Unit", "Client", "Sublocation", "Serial", "Year", "Status"], rows, "No equipment yet.")}</div>`;
     },
 
     async visits() {
