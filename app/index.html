@@ -484,8 +484,6 @@
       <div class="head"><div><h1>Service Report — Draft Review</h1>
         <div class="sub">${esc(v.reference)} · ${esc(v.clients?.name)} · ${fmtDate(v.visit_date)}</div></div>
         <span class="pill">${esc(label)}</span></div>
-      <div class="notice"><b>AI-generated draft — review before approving</b>
-        Auto-populated from field entry. Review, correct if needed, then approve to generate client PDFs.</div>
       <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
       ${body}
       <div class="actions" style="margin-top:16px;text-align:right"><button class="btn primary" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button></div>`;
