@@ -15,8 +15,11 @@
   body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 "Inter", "Segoe UI", system-ui, sans-serif; }
   a { color: inherit; }
   .topnav { background: var(--navy); color: #cfd8e8; height: 56px; display: flex; align-items: stretch; padding: 0 20px; gap: 4px; position: sticky; top: 0; z-index: 5; }
-  .wordmark { color: #fff; font-weight: 800; font-size: 17px; display: flex; align-items: center; margin-right: 16px; }
-  .wordmark i { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); margin-right: 8px; display: inline-block; }
+  .wordmark { color: #fff; font-weight: 700; font-size: 17px; display: flex; align-items: center; margin-right: 22px; white-space: nowrap; }
+  .wordmark span { color: var(--amber); font-weight: 800; margin-left: 4px; }
+  .topnav .tab { color: #c9d3e6; font-size: 14px; }
+  .topnav .tab.active { color: var(--amber); font-weight: 600; }
+  .topnav .tab.active::after { background: var(--amber); }
   .tab { display: flex; align-items: center; padding: 0 12px; color: #aebbd2; font-size: 13.5px; background: none; border: 0; cursor: pointer; position: relative; font: inherit; }
   .tab.active { color: #fff; }
   .tab.active::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 0; height: 3px; background: var(--amber); border-radius: 3px 3px 0 0; }
@@ -38,6 +41,62 @@
   .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
   .stat b { display: block; font-size: 24px; }
   .stat span { color: var(--ink-soft); font-size: 12.5px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi span { display: block; color: var(--ink-soft); font-size: 12.5px; margin-bottom: 6px; }
+  .kpi b { font-size: 26px; letter-spacing: -.02em; color: var(--navy-2); }
+  .kpi.k-review { background: #f0f7ff; border-color: #cfe2f7; } .kpi.k-review b { color: #1d5fa8; }
+  .kpi.k-warn { background: var(--amber-soft); border-color: var(--amber-line); } .kpi.k-warn b { color: #9a6410; }
+  .kpi.k-ok { background: #eef9f3; border-color: #cdeedb; } .kpi.k-ok b { color: var(--green); }
+  .visits .card-hd { background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+  .visits td { vertical-align: middle; }
+  tr.click { cursor: pointer; }
+  .back { color: var(--brand, #0f8a86); cursor: pointer; font-size: 13px; display: inline-block; margin-bottom: 8px; }
+  .rtabs { display: flex; background: #fff; border: 1px solid var(--line, #e3e8ef); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+  .rtab { all: unset; cursor: pointer; padding: 12px 20px; color: #6b7587; font-weight: 600; }
+  .rtab.on { color: #0f8a86; box-shadow: inset 0 -2px 0 #0f8a86; }
+  .panel { background: #fff; border: 1px solid var(--line, #e3e8ef); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  .panel-hd { padding: 12px 16px; border-bottom: 1px solid var(--line, #e3e8ef); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: #374151; background: #f8fafc; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 16px; padding: 16px; }
+  .fld label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7587; font-weight: 700; margin-bottom: 5px; }
+  .fld div { background: #f8fafc; border: 1px solid var(--line, #e3e8ef); border-radius: 8px; padding: 9px 11px; min-height: 38px; }
+  .progress { display: flex; gap: 22px; flex-wrap: wrap; padding: 14px 16px; font-size: 13px; }
+  .progress .ok { color: #1a7f4b; } .progress .wait { color: #7a5a00; }
+  .empty { padding: 16px; color: #6b7587; }
+  .scroll { overflow-x: auto; }
+  .scroll table { min-width: 900px; }
+  .scroll th, .scroll td { border: 1px solid var(--line, #e3e8ef); padding: 7px 8px; text-align: center; white-space: nowrap; }
+  .scroll th { background: #f8fafc; }
+  .scroll td.item, .scroll th.item { text-align: left; color: #1b4f8a; font-weight: 600; }
+  .scroll td.item small { display: block; color: #6b7587; font-weight: 500; }
+  .scroll .std { color: #6b7587; font-size: 11px; font-weight: 600; }
+  .scroll td.bad { color: #b42323; background: #fde8e8; }
+  .scroll td.dash { color: #b7bec9; }
+  tr.click:hover td { background: #f1f7f6; }
+  .ref { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+  .chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; background: #e0f5f4; color: #0c6b68; border: 1px solid #bfe7e4; margin-right: 4px; }
+  .chip.muted-chip { background: #f1f3f6; color: var(--ink-soft); border-color: var(--line); }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #eef1f5; color: var(--ink-soft); white-space: nowrap; }
+  .pill.t-review { background: #e6f1fc; color: #1d5fa8; }
+  .pill.t-ok { background: #e4f5ec; color: var(--green); }
+  .pill.t-sent { background: #fbe7e4; color: var(--red); }
+  .pill.t-draft { background: var(--amber-soft); color: #9a6410; }
+  .pill.t-bad { background: #fbe7e4; color: var(--red); }
+  .act { font: inherit; font-size: 12.5px; font-weight: 600; background: #fff; color: var(--teal); border: 1px solid #bfe0de; border-radius: 8px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+  .act:hover { background: var(--teal-soft, #e3f4f3); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .r { text-align: right; }
+  .inv { padding: 0; }
+  .inv-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 22px; border-top: 3px solid var(--amber); }
+  .inv-title { font-family: Georgia, "Times New Roman", serif; font-size: 22px; color: #7a1f2b; font-weight: 700; }
+  .inv-meta { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+  .inv-parties { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .inv-parties > div { padding: 16px 22px; }
+  .inv-parties > div + div { border-left: 1px solid var(--line); }
+  .inv-parties label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin-bottom: 4px; }
+  .inv-total { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: #f8fafc; border-top: 1px solid var(--line); }
+  .inv-total b { font-size: 20px; }
+  @media (max-width: 760px) { .inv-parties { grid-template-columns: 1fr; } .inv-parties > div + div { border-left: 0; border-top: 1px solid var(--line); } }
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid var(--line); }
   td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
@@ -95,14 +154,11 @@
 <!-- APP -->
 <div id="app-view" class="hidden">
   <nav class="topnav">
-    <div class="wordmark"><i></i>AirLogic</div>
-    <button class="tab" data-route="dashboard">Dashboard</button>
-    <button class="tab" data-route="clients">Clients</button>
+    <div class="wordmark">Standard&nbsp;<span>Airlogic</span></div>
+    <button class="tab" data-route="visits">Jobs</button>
     <button class="tab" data-route="equipment">Equipment</button>
-    <button class="tab" data-route="visits">Service visits</button>
-    <button class="tab" data-route="dispatch">Dispatch</button>
-    <button class="tab" data-route="contracts">Contracts</button>
-    <button class="tab" data-route="parts">Parts</button>
+    <button class="tab" data-route="dashboard">Service Report</button>
+    <button class="tab" data-route="invoices">Invoice</button>
     <div class="spacer"></div>
     <div class="who"><span id="who-name"></span> <button class="btn ghost" id="logout-btn" style="color:#fff;border-color:#2c4470">Sign out</button></div>
   </nav>
@@ -138,7 +194,7 @@
   const q = {
     clients: () => db.from("clients").select("id,name,address,email,phone").order("name"),
     equipment: () => db.from("equipment").select("id,name,model,serial_number,install_year,status,client_id,sublocation_id,clients(name),sublocations(name),equipment_brands(name)").order("name"),
-    visits: () => db.from("service_visits").select("id,reference,visit_date,state,clients(name),profiles!service_visits_technician_id_fkey(full_name)").order("visit_date", { ascending: false }).limit(200),
+    visits: () => db.from("service_visits").select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").order("visit_date", { ascending: false }).limit(200),
     dispatch: () => db.from("dispatch_requests").select("id,reference,urgency,state,requested_date,clients(name),dispatch_zones(name)").order("requested_date", { ascending: false }).limit(200),
     contracts: () => db.from("service_contracts").select("id,name,billing_period,price,currency,state,start_date,next_billing_date,clients(name)").order("start_date", { ascending: false }),
     parts: () => db.from("part_requests").select("id,part_name,quantity,state,created_at,service_jobs(reference)").order("created_at", { ascending: false }).limit(200),
@@ -184,7 +240,7 @@
         </div>` : ""}
         <div class="card"><div class="card-hd">Recent service visits</div>
           ${table(["Reference", "Date", "Client", "Technician", "Status"],
-            (vi.data || []).slice(0, 6).map((v) => `<tr><td>${esc(v.reference)}</td><td>${fmtDate(v.visit_date)}</td><td>${esc(v.clients?.name)}</td><td>${esc(v.profiles?.full_name)}</td><td>${badge(v.state)}</td></tr>`),
+            (vi.data || []).slice(0, 6).map((v) => `<tr><td>${esc(v.reference)}</td><td>${fmtDate(v.visit_date)}</td><td>${esc(v.clients?.name)}</td><td>${esc(v.technician_name)}</td><td>${badge(v.state)}</td></tr>`),
             "No visits yet.")}
         </div>`;
     },
@@ -219,10 +275,40 @@
     async visits() {
       const { data, error } = await q.visits();
       if (error) throw error;
-      return `<div class="head"><div><h1>Service visits</h1><div class="sub">Draft → review → approved → invoiced</div></div></div>
-        <div class="card">${table(["Reference", "Date", "Client", "Technician", "Status"],
-          (data || []).map((v) => `<tr><td>${esc(v.reference)}</td><td>${fmtDate(v.visit_date)}</td><td>${esc(v.clients?.name)}</td><td>${esc(v.profiles?.full_name)}</td><td>${badge(v.state)}</td></tr>`),
-          "No visits yet.")}</div>`;
+      const rows = data || [];
+      const count = (s) => rows.filter((v) => v.state === s).length;
+      const action = { draft: "Continue", review: "Review", approved: "Invoice", invoiced: "View", rejected: "Revise", cancelled: "View" };
+      const tone = { draft: "t-draft", review: "t-review", approved: "t-ok", invoiced: "t-sent", rejected: "t-bad", cancelled: "t-muted" };
+      const label = (s) => String(s || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+      return `
+        <div class="head">
+          <div><h1>Service visits</h1><div class="sub">All technician visits — track status from draft to invoiced</div></div>
+          <button class="btn primary" data-add="visit">+ New visit</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><span>Total visits</span><b>${rows.length}</b></div>
+          <div class="kpi k-review"><span>Awaiting review</span><b>${count("review")}</b></div>
+          <div class="kpi k-warn"><span>Pending invoice</span><b>${count("approved")}</b></div>
+          <div class="kpi k-ok"><span>Invoiced</span><b>${count("invoiced")}</b></div>
+        </div>
+        <div class="card visits">
+          <div class="card-hd"><span>Visit log</span><span class="muted">${rows.length} records</span></div>
+          <div style="overflow-x:auto"><table>
+            <thead><tr><th>Job reference</th><th>Date</th><th>Client</th><th>Sublocation</th><th>Technician</th><th>Templates</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              ${rows.length ? rows.map((v) => `<tr class="click" data-visit="${esc(v.id)}">
+                <td><b class="ref">${esc(v.reference)}</b></td>
+                <td class="muted">${fmtDate(v.visit_date)}</td>
+                <td><b>${esc(v.clients?.name)}</b></td>
+                <td>${esc(v.sublocation)}</td>
+                <td>${esc(v.technician_name)}</td>
+                <td><span class="chip">Owner</span> <span class="chip muted-chip">PM/Tech</span></td>
+                <td><span class="pill ${tone[v.state] || ""}">${esc(label(v.state))}</span></td>
+                <td><button class="act">${esc(action[v.state] || "View")} →</button></td>
+              </tr>`).join("") : `<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">No visits yet.</td></tr>`}
+            </tbody>
+          </table></div>
+        </div>`;
     },
 
     async dispatch() {
@@ -250,11 +336,73 @@
         <div class="card">${table(["Part", "Qty", "Job", "Requested", "Status"],
           (data || []).map((p) => `<tr><td>${esc(p.part_name)}</td><td>${esc(p.quantity)}</td><td>${esc(p.service_jobs?.reference)}</td><td>${fmtDate(p.created_at)}</td><td>${badge(p.state)}</td></tr>`),
           "No parts requests yet.")}</div>`;
-    }
+    },
+
+    async invoices() {
+      if (openInvoiceId) return invoiceDetail(openInvoiceId);
+      const { data, error } = await db.from("invoices")
+        .select("id,number,issue_date,due_date,status,clients(name)")
+        .order("issue_date", { ascending: false });
+      if (error) throw error;
+      const rows = data || [];
+      return `
+        <div class="head"><div><h1>Invoices</h1><div class="sub">Client billing for service periods</div></div></div>
+        <div class="card visits"><div style="overflow-x:auto"><table>
+          <thead><tr><th>Invoice</th><th>Client</th><th>Issued</th><th>Due</th><th>Status</th><th></th></tr></thead>
+          <tbody>${rows.length ? rows.map((i) => `<tr>
+            <td><b class="ref">${esc(i.number)}</b></td><td>${esc(i.clients?.name)}</td>
+            <td class="muted">${fmtDate(i.issue_date)}</td><td class="muted">${fmtDate(i.due_date)}</td>
+            <td><span class="pill ${i.status === "paid" ? "t-ok" : i.status === "unpaid" ? "t-sent" : "t-draft"}">${esc(i.status)}</span></td>
+            <td><button class="act" data-open-invoice="${i.id}">View →</button></td></tr>`).join("")
+            : `<tr><td colspan="6" class="muted" style="padding:24px;text-align:center">No invoices yet.</td></tr>`}</tbody>
+        </table></div></div>`;
+    },
+
+    async "soon-field"() { return comingSoon("Field Entry"); },
+    async "soon-pdf"() { return comingSoon("PDF Templates"); }
   };
+
+  function comingSoon(name) {
+    return `<div class="head"><div><h1>${esc(name)}</h1><div class="sub">Coming soon</div></div></div>
+      <div class="card"><div class="pad muted">This screen isn't built yet.</div></div>`;
+  }
 
   // ---------- routing ----------
   let current = "dashboard";
+  let openInvoiceId = null;
+
+  async function invoiceDetail(id) {
+    const [{ data: inv, error }, { data: lines }] = await Promise.all([
+      db.from("invoices").select("id,number,issue_date,due_date,period_start,period_end,status,from_name,from_address,vat_reg,clients(name,address,email)").eq("id", id).single(),
+      db.from("invoice_lines").select("*").eq("invoice_id", id).order("id")
+    ]);
+    if (error) throw error;
+    const total = (lines || []).reduce((s, l) => s + Number(l.amount || 0), 0);
+    const money = (n) => Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const period = inv.period_start ? `${fmtDate(inv.period_start)} – ${fmtDate(inv.period_end)}` : "";
+    return `
+      <a class="back" data-back-invoice>← Back to all invoices</a>
+      <div class="head">
+        <div><h1>Invoice #${esc(inv.number)}</h1><div class="sub">${esc(inv.clients?.name)}${period ? " · " + esc(period) : ""}</div></div>
+        <div class="actions"><button class="btn ghost">↓ Download PDF</button> <button class="btn primary">✉ Send to client</button> <button class="btn ghost">✔ Mark as paid</button></div>
+      </div>
+      <div class="inv card">
+        <div class="inv-top">
+          <div><div class="inv-title">Invoice #${esc(inv.number)}</div>
+            <div class="inv-meta">Issue: <b>${fmtDate(inv.issue_date)}</b> &nbsp; Due: <b>${fmtDate(inv.due_date)}</b> &nbsp; Period: <b>${esc(period)}</b></div></div>
+          <span class="pill ${inv.status === "paid" ? "t-ok" : inv.status === "unpaid" ? "t-sent" : "t-draft"}">${esc(inv.status)}</span>
+        </div>
+        <div class="inv-parties">
+          <div><label>From</label><b>${esc(inv.from_name)}</b><div class="muted">${esc(inv.from_address)}</div><div class="muted">VAT Reg: ${esc(inv.vat_reg)}</div></div>
+          <div><label>Bill to</label><b>${esc(inv.clients?.name)}</b><div class="muted">${esc(inv.clients?.address)}</div><div class="muted">${esc(inv.clients?.email)}</div></div>
+        </div>
+        <div style="overflow-x:auto"><table>
+          <thead><tr><th>Service type</th><th>Equipment</th><th class="r">Visits</th><th class="r">Unit rate</th><th class="r">Subtotal (₱)</th></tr></thead>
+          <tbody>${(lines || []).map((l) => `<tr><td>${esc(l.service_type)}</td><td>${esc(l.equipment_label)}</td><td class="r">${esc(l.visits)}</td><td class="r">${money(l.unit_rate)}</td><td class="r">${money(l.amount)}</td></tr>`).join("")}</tbody>
+        </table></div>
+        <div class="inv-total"><span>Total due</span><b>₱ ${money(total)}</b></div>
+      </div>`;
+  }
   async function render(route) {
     current = route;
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.route === route));
@@ -276,11 +424,70 @@
       });
     });
     document.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => openForm(b.dataset.add)));
+    document.querySelectorAll("[data-open-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = b.dataset.openInvoice; render("invoices"); }));
+    document.querySelectorAll("[data-back-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = null; render("invoices"); }));
     document.querySelectorAll("[data-decide]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.decide, b.dataset.act)));
+    document.querySelectorAll("[data-visit]").forEach((r) => r.addEventListener("click", () => openReport(r.dataset.visit)));
   }
 
   // ---------- forms ----------
   function openDialog(html) { $("#dialog").innerHTML = html; $("#dialog-back").classList.remove("hidden"); }
+  // ---------- service report (opened from a visit) ----------
+  async function openReport(id, tab = "info") {
+    const { data: v, error } = await db.from("service_visits")
+      .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
+    if (error) { $("#page").innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
+    const { data: jobs } = await db.from("service_jobs")
+      .select("id, equipment(name, model, serial_number), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence))")
+      .eq("visit_id", id);
+    const list = jobs || [];
+    const logged = list.filter((j) => (j.reading_lines || []).length).length;
+    const label = String(v.state || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+    const rtab = (key, text) => `<button class="rtab ${tab === key ? "on" : ""}" data-rtab="${key}">${text}</button>`;
+    const body = tab === "equip" ? equipTab(list) : infoTab(v, list.length, logged);
+    $("#page").innerHTML = `
+      <span class="back" data-back-visits>← Back to visits</span>
+      <div class="head"><div><h1>Service Report — Draft Review</h1>
+        <div class="sub">${esc(v.reference)} · ${esc(v.clients?.name)} · ${fmtDate(v.visit_date)}</div></div>
+        <span class="pill">${esc(label)}</span></div>
+      <div class="notice"><b>AI-generated draft — review before approving</b>
+        Auto-populated from field entry. Review, correct if needed, then approve to generate client PDFs.</div>
+      <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
+      ${body}
+      <div class="actions" style="margin-top:16px;text-align:right"><button class="btn" disabled title="Coming next">Approve &amp; generate PDFs (coming next)</button></div>`;
+    document.querySelector("[data-back-visits]").onclick = () => render("visits");
+    document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab));
+  }
+
+  function infoTab(v, total, logged) {
+    const f = (l, val) => `<div class="fld"><label>${l}</label><div>${esc(val) || "—"}</div></div>`;
+    return `<div class="panel"><div class="panel-hd">Job information</div><div class="fields">
+        ${f("Job reference", v.reference)}${f("Client name", v.clients?.name)}${f("Sublocation", v.sublocation)}
+        ${f("Technician", v.technician_name)}${f("Visit date", fmtDate(v.visit_date))}${f("Job started", "")}${f("Job finished", "")}
+      </div></div>
+      <div class="panel"><div class="panel-hd">Section 2 — Field entry progress</div><div class="progress">
+        <span>Client: <b>${esc(v.clients?.name)}</b></span><span>Units: <b>${total}</b></span>
+        <span class="ok">✓ Logged: <b>${logged}</b></span><span class="wait">⏳ Pending: <b>${total - logged}</b></span>
+      </div></div>`;
+  }
+
+  function equipTab(list) {
+    if (!list.length) return `<div class="panel"><div class="empty">No equipment on this visit yet.</div></div>`;
+    const seen = new Map();
+    list.forEach((j) => (j.reading_lines || []).forEach((r) => {
+      const m = r.measurement_fields;
+      if (m && !seen.has(m.name)) seen.set(m.name, m);
+    }));
+    const fieldsSorted = [...seen.values()].sort((a, b) => (a.section || "").localeCompare(b.section || "") || (a.sequence ?? 0) - (b.sequence ?? 0));
+    const head = list.map((j) => `<th>${esc(j.equipment?.name)}<br><small>${esc(j.equipment?.serial_number)}</small></th>`).join("");
+    const rows = fieldsSorted.map((m) => `<tr><td class="item">${esc(m.name)}<small>${esc(m.unit)}</small></td>${list.map((j) => {
+      const r = (j.reading_lines || []).find((x) => x.measurement_fields?.name === m.name);
+      if (!r) return `<td class="dash">—</td>`;
+      return `<td class="${r.is_out_of_range ? "bad" : ""}"><div class="std">${esc(m.standard) || ""}</div><b>${esc(r.value) || "—"}</b></td>`;
+    }).join("")}</tr>`).join("");
+    return `<div class="panel"><div class="scroll"><table><thead><tr><th class="item">Inspection item</th>${head}</tr></thead><tbody>${rows}</tbody></table></div></div>
+      <p class="muted" style="font-size:12px">Red = reading outside the manufacturer's standard.</p>`;
+  }
   function closeDialog() { $("#dialog-back").classList.add("hidden"); }
   $("#dialog-back").addEventListener("click", (e) => { if (e.target.id === "dialog-back") closeDialog(); });
 
