@@ -256,6 +256,7 @@
   .u-table .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #1a7f4b; margin-right: 7px; vertical-align: middle; }
   .u-table td.act.bad .dot { background: #b42323; }
   .u-table td.act.empty .dot { display: none; }
+  .u-table tr.u-sub td { background: #fbfcfe; color: #1b4f8a; font-size: 12px; font-weight: 700; padding-top: 14px; }
   .u-table tr.u-sec td { background: #f1f5fa; color: #0f2a47; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
   .lg:not(.ok):not(.bad) { background: #e3e8ef; }
 </style>
@@ -614,7 +615,7 @@
       .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
     if (error) { $(target).innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
     const { data: jobs } = await db.from("service_jobs")
-      .select("id, equipment(name, model, serial_number, sublocations(name), equipment_brands(name)), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence)), checklist_lines(phase, key, label, value)")
+      .select("id, equipment(name, model, serial_number, sublocations(name), equipment_brands(name)), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence)), checklist_lines(phase, key, label, value, section, standard)")
       .eq("visit_id", id);
     const list = jobs || [];
     const label = String(v.state || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
@@ -655,7 +656,7 @@
 
   function infoTab(v, list) {
     const total = list.length;
-    const isLogged = (j) => (j.reading_lines || []).length > 0 || (j.checklist_lines || []).length > 0;
+    const isLogged = (j) => (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null);
     const logged = list.filter(isLogged).length;
     const f = (l, val) => `<div class="fld"><label>${l}</label><div>${esc(val) || "—"}</div></div>`;
     const groups = new Map();
@@ -699,7 +700,7 @@
       serial: j.equipment?.serial_number || "",
       sub: j.equipment?.sublocations?.name || "—",
       brand: j.equipment?.equipment_brands?.name || "—",
-      logged: (j.reading_lines || []).length > 0 || (j.checklist_lines || []).length > 0,
+      logged: (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null),
     }));
     const subs = [...new Set(units.map((u) => u.sub))];
     const brands = [...new Set(units.map((u) => u.brand))];
@@ -716,7 +717,7 @@
     // Every inspection item used on this visit (all units)
     const chk = new Map();
     list.forEach((j) => (j.checklist_lines || []).forEach((c) => { if (!chk.has(c.key)) chk.set(c.key, c); }));
-    const chkRows = [...chk.values()].sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0));
+    const chkRows = [...chk.values()].sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0) || String(a.key).localeCompare(String(b.key)));
 
     const card = (u) => {
       const j = u.job;
@@ -727,13 +728,16 @@
           <td class="std">${esc(m.standard) || "—"}</td>
           <td class="act ${st}">${r ? `<span class="dot"></span>${esc(r.value)}` : "—"}</td></tr>`;
       }).join("");
+      let lastSection = null;
       const chkBody = chkRows.map((c) => {
         const r = (j.checklist_lines || []).find((x) => x.key === c.key);
-        const v = r ? (r.value || "—") : null;
-        const st = !r ? "empty" : (/^normal$/i.test(v) || v === "—" ? "ok" : "bad");
-        return `<tr><td class="ri-name">${esc(c.label)}</td>
-          <td class="std">Normal</td>
-          <td class="act ${st}">${r ? `<span class="dot"></span>${esc(v)}` : "—"}</td></tr>`;
+        const v = r ? r.value : null;
+        const st = v == null ? "empty" : (/^normal$/i.test(v) || v === "—" ? "ok" : "bad");
+        const head = c.section !== lastSection ? `<tr class="u-sub"><td colspan="3">${esc(c.section)}</td></tr>` : "";
+        lastSection = c.section;
+        return `${head}<tr><td class="ri-name">${esc(c.label)}</td>
+          <td class="std">${esc(c.standard) || "—"}</td>
+          <td class="act ${st}">${v != null ? `<span class="dot"></span>${esc(v)}` : "—"}</td></tr>`;
       }).join("");
       return `<details class="u-card" open data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}">
         <summary class="u-head">
