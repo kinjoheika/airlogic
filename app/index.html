@@ -72,6 +72,37 @@
   .scroll .std { color: #6b7587; font-size: 11px; font-weight: 600; }
   .scroll td.bad { color: #b42323; background: #fde8e8; }
   .scroll td.dash { color: #b7bec9; }
+  .eq-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 10px 0 12px; }
+  .eq-filters label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7587; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+  .eq-filters select { font: inherit; text-transform: none; letter-spacing: 0; padding: 8px 10px; border: 1px solid #dfe4ec; border-radius: 10px; background: #fff; min-width: 170px; }
+  .eq-filters .link { background: none; border: 0; color: #b42323; font-weight: 600; cursor: pointer; }
+  .eq-count { margin-left: auto; color: #6b7587; font-size: 12px; }
+  .eq-wrap { background: #fff; border: 1px solid #dfe4ec; border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .eq-wrap .scroll { overflow: auto; max-height: 70vh; border-radius: 14px; }
+  table.eq { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: 12.5px; }
+  table.eq th, table.eq td { padding: 9px 10px; border-bottom: 1px solid #eef1f6; white-space: nowrap; text-align: center; }
+  table.eq thead th { position: sticky; top: 0; z-index: 2; }
+  table.eq th.item, table.eq td.item { position: sticky; left: 0; z-index: 1; background: #fff; text-align: left; min-width: 220px; border-right: 1px solid #dfe4ec; }
+  table.eq thead th.item { z-index: 3; background: #f8fafc; color: #374151; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .unit-hd { background: linear-gradient(135deg, #0f2a47, #0f5f63) !important; color: #fff; text-align: left !important; padding: 12px 14px !important; min-width: 210px; }
+  .unit-name { font-weight: 700; font-size: 13px; }
+  .unit-meta { font-size: 11px; opacity: .8; margin-top: 2px; }
+  .sub-hd { background: #f8fafc; font-size: 10.5px; letter-spacing: .06em; color: #6b7587; font-weight: 700; }
+  .sub-hd.act-hd { color: #0f8a86; }
+  .std-c { color: #8a94a6; font-size: 12px; background: #fbfcfe; }
+  .act-c { font-weight: 700; color: #1d2433; }
+  .act-c .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #1a7f4b; margin-right: 6px; vertical-align: middle; }
+  .act-c.bad { color: #b42323; background: #fde8e8; }
+  .act-c.bad .dot { background: #b42323; }
+  .act-c.empty { color: #b7bec9; font-weight: 400; }
+  .act-c.empty .dot { display: none; }
+  .item-name { font-weight: 600; color: #1b4f8a; }
+  .item-unit { font-size: 11px; color: #8a94a6; }
+  tr.section td { background: #f1f5fa; color: #0f2a47; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 8px 12px; position: sticky; left: 0; }
+  .legend { font-size: 12px; color: #6b7587; margin: 10px 2px; }
+  .lg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 6px 0 14px; vertical-align: middle; }
+  .lg.ok { background: #1a7f4b; } .lg.bad { background: #b42323; }
+  table.eq td[hidden], table.eq th[hidden] { display: none; }
   tr.click:hover td { background: #f1f7f6; }
   .ref { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
   .chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; background: #e0f5f4; color: #0c6b68; border: 1px solid #bfe7e4; margin-right: 4px; }
@@ -433,7 +464,7 @@
       .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
     if (error) { $(target).innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
     const { data: jobs } = await db.from("service_jobs")
-      .select("id, equipment(name, model, serial_number), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence))")
+      .select("id, equipment(name, model, serial_number, sublocations(name), equipment_brands(name)), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence)), checklist_lines(phase, key, label, value)")
       .eq("visit_id", id);
     const list = jobs || [];
     const logged = list.filter((j) => (j.reading_lines || []).length).length;
@@ -451,6 +482,7 @@
       <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
       ${body}
       <div class="actions" style="margin-top:16px;text-align:right"><button class="btn" disabled title="Coming next">Approve &amp; generate PDFs (coming next)</button></div>`;
+    if (tab === "equip") bindEquip(host);
     const back = document.querySelector("[data-back-visits]");
     if (back) back.onclick = () => render("visits");
     document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
@@ -470,20 +502,103 @@
 
   function equipTab(list) {
     if (!list.length) return `<div class="panel"><div class="empty">No equipment on this visit yet.</div></div>`;
-    const seen = new Map();
+    const units = list.map((j, i) => ({
+      i,
+      name: j.equipment?.name || "Unit",
+      model: j.equipment?.model || "",
+      serial: j.equipment?.serial_number || "",
+      sub: j.equipment?.sublocations?.name || "—",
+      brand: j.equipment?.equipment_brands?.name || "—",
+    }));
+    const subs = [...new Set(units.map((u) => u.sub))];
+    const brands = [...new Set(units.map((u) => u.brand))];
+
+    // Measurement rows (numeric readings vs manufacturer standard)
+    const meas = new Map();
     list.forEach((j) => (j.reading_lines || []).forEach((r) => {
       const m = r.measurement_fields;
-      if (m && !seen.has(m.name)) seen.set(m.name, m);
+      if (m && !meas.has(m.name)) meas.set(m.name, m);
     }));
-    const fieldsSorted = [...seen.values()].sort((a, b) => (a.section || "").localeCompare(b.section || "") || (a.sequence ?? 0) - (b.sequence ?? 0));
-    const head = list.map((j) => `<th>${esc(j.equipment?.name)}<br><small>${esc(j.equipment?.serial_number)}</small></th>`).join("");
-    const rows = fieldsSorted.map((m) => `<tr><td class="item">${esc(m.name)}<small>${esc(m.unit)}</small></td>${list.map((j) => {
-      const r = (j.reading_lines || []).find((x) => x.measurement_fields?.name === m.name);
-      if (!r) return `<td class="dash">—</td>`;
-      return `<td class="${r.is_out_of_range ? "bad" : ""}"><div class="std">${esc(m.standard) || ""}</div><b>${esc(r.value) || "—"}</b></td>`;
-    }).join("")}</tr>`).join("");
-    return `<div class="panel"><div class="scroll"><table><thead><tr><th class="item">Inspection item</th>${head}</tr></thead><tbody>${rows}</tbody></table></div></div>
-      <p class="muted" style="font-size:12px">Red = reading outside the manufacturer's standard.</p>`;
+    const measRows = [...meas.values()]
+      .sort((a, b) => (a.section || "").localeCompare(b.section || "") || (a.sequence ?? 0) - (b.sequence ?? 0))
+      .map((m) => ({
+        label: m.name, unit: m.unit, std: m.standard || "—",
+        cell: (job) => {
+          const r = (job.reading_lines || []).find((x) => x.measurement_fields?.name === m.name);
+          return r ? { value: r.value, state: r.is_out_of_range ? "bad" : "ok" } : null;
+        },
+      }));
+
+    // Inspection rows (checklist: Normal / issue)
+    const chk = new Map();
+    list.forEach((j) => (j.checklist_lines || []).forEach((c) => { if (!chk.has(c.key)) chk.set(c.key, c); }));
+    const chkRows = [...chk.values()]
+      .sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0))
+      .map((c) => ({
+        label: c.label || c.key, unit: "", std: "Normal",
+        cell: (job) => {
+          const r = (job.checklist_lines || []).find((x) => x.key === c.key);
+          if (!r) return null;
+          const v = r.value || "—";
+          return { value: v, state: /^normal$/i.test(v) || v === "—" ? "ok" : "bad" };
+        },
+      }));
+
+    const unitHead = units.map((u) => `
+      <th colspan="2" data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}" class="unit-hd">
+        <div class="unit-name">${esc(u.name)}</div>
+        <div class="unit-meta">${esc(u.model)}${u.serial ? " · " + esc(u.serial) : ""}</div>
+        <div class="unit-meta">${esc(u.brand)} · ${esc(u.sub)}</div>
+      </th>`).join("");
+    const subHead = units.map((u) => `<th data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}" class="sub-hd">MFR STD</th><th data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}" class="sub-hd act-hd">ACTUAL</th>`).join("");
+
+    const rowHtml = (row) => `<tr>
+      <td class="item"><div class="item-name">${esc(row.label)}</div>${row.unit ? `<div class="item-unit">${esc(row.unit)}</div>` : ""}</td>
+      ${list.map((job, i) => {
+        const c = row.cell(job);
+        const attrs = `data-u="${i}" data-sub="${esc(units[i].sub)}" data-brand="${esc(units[i].brand)}"`;
+        const std = `<td ${attrs} class="std-c">${esc(row.std)}</td>`;
+        const act = c
+          ? `<td ${attrs} class="act-c ${c.state}"><span class="dot"></span>${esc(c.value)}</td>`
+          : `<td ${attrs} class="act-c empty">—</td>`;
+        return std + act;
+      }).join("")}
+    </tr>`;
+
+    const measBody = measRows.map(rowHtml).join("");
+    const chkBody = chkRows.map(rowHtml).join("");
+    const section = (title, body) => body ? `<tr class="section"><td colspan="${1 + units.length * 2}">${title}</td></tr>${body}` : "";
+
+    return `
+      <div class="eq-filters">
+        <label>Sublocation <select id="eq-sub"><option value="">All</option>${subs.map((s) => `<option>${esc(s)}</option>`).join("")}</select></label>
+        <label>Brand <select id="eq-brand"><option value="">All</option>${brands.map((b) => `<option>${esc(b)}</option>`).join("")}</select></label>
+        <button class="link" id="eq-clear" type="button">Clear</button>
+        <span class="eq-count">${units.length} units</span>
+      </div>
+      <div class="eq-wrap"><div class="scroll"><table class="eq">
+        <thead>
+          <tr><th class="item" rowspan="2">Inspection item</th>${unitHead}</tr>
+          <tr>${subHead}</tr>
+        </thead>
+        <tbody>${section("Measurements", measBody)}${section("Inspection", chkBody)}</tbody>
+      </table></div></div>
+      <p class="legend"><span class="lg ok"></span>Within standard <span class="lg bad"></span>Outside standard</p>`;
+  }
+
+  function bindEquip(host) {
+    const sub = host.querySelector("#eq-sub");
+    const brand = host.querySelector("#eq-brand");
+    const clear = host.querySelector("#eq-clear");
+    if (!sub || !brand) return;
+    const apply = () => {
+      host.querySelectorAll("[data-u]").forEach((el) => {
+        el.hidden = !((!sub.value || el.dataset.sub === sub.value) && (!brand.value || el.dataset.brand === brand.value));
+      });
+    };
+    sub.addEventListener("change", apply);
+    brand.addEventListener("change", apply);
+    clear.addEventListener("click", () => { sub.value = ""; brand.value = ""; apply(); });
   }
   function closeDialog() { $("#dialog-back").classList.add("hidden"); }
   $("#dialog-back").addEventListener("click", (e) => { if (e.target.id === "dialog-back") closeDialog(); });
