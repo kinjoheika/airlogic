@@ -157,7 +157,7 @@
     <div class="wordmark">Standard&nbsp;<span>Airlogic</span></div>
     <button class="tab" data-route="visits">Jobs</button>
     <button class="tab" data-route="equipment">Equipment</button>
-    <button class="tab" data-route="dashboard">Service Report</button>
+    <button class="tab" data-route="report">Service Report</button>
     <button class="tab" data-route="invoices">Invoice</button>
     <div class="spacer"></div>
     <div class="who"><span id="who-name"></span> <button class="btn ghost" id="logout-btn" style="color:#fff;border-color:#2c4470">Sign out</button></div>
@@ -222,27 +222,16 @@
 
   // ---------- pages ----------
   const pages = {
-    async dashboard() {
-      const [cl, eq, vi, dr] = await Promise.all([q.clients(), q.equipment(), q.visits(), q.dispatch()]);
-      const open = (dr.data || []).filter((d) => !["fulfilled", "cancelled"].includes(d.state)).length;
-      const pending = (eq.data || []).filter((e) => e.status === "pending_decommission");
+    async report() {
+      const { data, error } = await q.visits();
+      if (error) throw error;
+      const rows = data || [];
+      if (!rows.length) return `<h1>Service Report</h1><div class="sub">No visits yet. Create a visit in Jobs first.</div>`;
+      const options = rows.map((v) => `<option value="${esc(v.id)}">${esc(v.reference)} · ${esc(v.clients?.name)}</option>`).join("");
       return `
-        <h1>Dashboard</h1><div class="sub">Live counts from Supabase</div>
-        <div class="stats">
-          <div class="stat"><b>${(cl.data || []).length}</b><span>Clients</span></div>
-          <div class="stat"><b>${(eq.data || []).length}</b><span>Equipment</span></div>
-          <div class="stat"><b>${(vi.data || []).length}</b><span>Service visits</span></div>
-          <div class="stat"><b>${open}</b><span>Open dispatch requests</span></div>
-        </div>
-        ${pending.length ? `<div class="pa"><b>Senior Technician Review Required</b>
-          ${pending.map((e) => `<div class="pa-row"><div><b>${esc(e.name)}</b><div class="muted">${esc(e.clients?.name)}</div></div>
-          <div><button class="btn approve" data-decide="${e.id}" data-act="approve">Approve</button> <button class="btn reject" data-decide="${e.id}" data-act="reject">Reject</button></div></div>`).join("")}
-        </div>` : ""}
-        <div class="card"><div class="card-hd">Recent service visits</div>
-          ${table(["Reference", "Date", "Client", "Technician", "Status"],
-            (vi.data || []).slice(0, 6).map((v) => `<tr><td>${esc(v.reference)}</td><td>${fmtDate(v.visit_date)}</td><td>${esc(v.clients?.name)}</td><td>${esc(v.technician_name)}</td><td>${badge(v.state)}</td></tr>`),
-            "No visits yet.")}
-        </div>`;
+        <h1>Service Report</h1><div class="sub">Choose a visit to review its report</div>
+        <div class="toolbar"><select id="report-pick" class="search">${options}</select></div>
+        <div id="report-area"></div>`;
     },
 
     async clients() {
@@ -368,7 +357,7 @@
   }
 
   // ---------- routing ----------
-  let current = "dashboard";
+  let current = "visits";
   let openInvoiceId = null;
 
   async function invoiceDetail(id) {
@@ -428,15 +417,21 @@
     document.querySelectorAll("[data-back-invoice]").forEach((b) => b.addEventListener("click", () => { openInvoiceId = null; render("invoices"); }));
     document.querySelectorAll("[data-decide]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.decide, b.dataset.act)));
     document.querySelectorAll("[data-visit]").forEach((r) => r.addEventListener("click", () => openReport(r.dataset.visit)));
+    const pick = $("#report-pick");
+    if (pick) {
+      const load = () => openReport(pick.value, "info", "#report-area");
+      pick.addEventListener("change", load);
+      load();
+    }
   }
 
   // ---------- forms ----------
   function openDialog(html) { $("#dialog").innerHTML = html; $("#dialog-back").classList.remove("hidden"); }
   // ---------- service report (opened from a visit) ----------
-  async function openReport(id, tab = "info") {
+  async function openReport(id, tab = "info", target = "#page") {
     const { data: v, error } = await db.from("service_visits")
       .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
-    if (error) { $("#page").innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
+    if (error) { $(target).innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
     const { data: jobs } = await db.from("service_jobs")
       .select("id, equipment(name, model, serial_number), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence))")
       .eq("visit_id", id);
@@ -445,8 +440,9 @@
     const label = String(v.state || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
     const rtab = (key, text) => `<button class="rtab ${tab === key ? "on" : ""}" data-rtab="${key}">${text}</button>`;
     const body = tab === "equip" ? equipTab(list) : infoTab(v, list.length, logged);
-    $("#page").innerHTML = `
-      <span class="back" data-back-visits>← Back to visits</span>
+    const fromVisits = target === "#page";
+    $(target).innerHTML = `
+      ${fromVisits ? '<span class="back" data-back-visits>← Back to visits</span>' : ""}
       <div class="head"><div><h1>Service Report — Draft Review</h1>
         <div class="sub">${esc(v.reference)} · ${esc(v.clients?.name)} · ${fmtDate(v.visit_date)}</div></div>
         <span class="pill">${esc(label)}</span></div>
@@ -455,8 +451,9 @@
       <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
       ${body}
       <div class="actions" style="margin-top:16px;text-align:right"><button class="btn" disabled title="Coming next">Approve &amp; generate PDFs (coming next)</button></div>`;
-    document.querySelector("[data-back-visits]").onclick = () => render("visits");
-    document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab));
+    const back = document.querySelector("[data-back-visits]");
+    if (back) back.onclick = () => render("visits");
+    document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
   }
 
   function infoTab(v, total, logged) {
