@@ -6,6 +6,10 @@
 -- added. Run after 004_sample_visits.sql and 008_equipment_from_registry.sql.
 -- =============================================================================
 
+-- The schema allowed only one unit per client + sublocation, but the real
+-- sites have several units in the same room (see screenshot). Drop that rule.
+alter table equipment drop constraint if exists equipment_client_id_sublocation_id_key;
+
 -- Client and sublocations
 insert into clients (name)
 select 'Green Valley Residences'
