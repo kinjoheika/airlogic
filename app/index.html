@@ -235,6 +235,29 @@
   .reg-card td.r { text-align: right; }
   .spill.s-info { color: #2b6cb0; background: #e8f0fb; }
   [hidden] { display: none !important; }
+
+  /* ---- Equipment Data (cards) ---- */
+  .u-list { display: grid; gap: 12px; }
+  .u-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .u-head { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; background: #f8fafc; }
+  .u-head::-webkit-details-marker { display: none; }
+  .u-name { font-weight: 700; color: #0f2a47; font-size: 15px; }
+  .u-meta { font-size: 12px; color: #6b7587; margin-top: 3px; }
+  .u-body { padding: 4px 18px 14px; }
+  .u-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .u-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6b7587; padding: 10px 8px; border-bottom: 1px solid #eef1f6; }
+  .u-table td { padding: 10px 8px; border-bottom: 1px solid #f3f5f9; }
+  .u-table td.ri-name { font-weight: 600; color: #1b4f8a; }
+  .u-table td.ri-name small { display: block; color: #8a94a6; font-weight: 500; font-size: 11.5px; }
+  .u-table td.std { color: #8a94a6; }
+  .u-table td.act { font-weight: 700; color: #1d2433; width: 180px; }
+  .u-table td.act.bad { color: #b42323; background: #fde8e8; }
+  .u-table td.act.empty { color: #b7bec9; font-weight: 400; }
+  .u-table .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #1a7f4b; margin-right: 7px; vertical-align: middle; }
+  .u-table td.act.bad .dot { background: #b42323; }
+  .u-table td.act.empty .dot { display: none; }
+  .u-table tr.u-sec td { background: #f1f5fa; color: #0f2a47; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+  .lg:not(.ok):not(.bad) { background: #e3e8ef; }
 </style>
 </head>
 <body>
@@ -670,87 +693,75 @@
   function equipTab(list) {
     if (!list.length) return `<div class="panel"><div class="empty">No equipment on this visit yet.</div></div>`;
     const units = list.map((j, i) => ({
-      i,
+      i, job: j,
       name: j.equipment?.name || "Unit",
       model: j.equipment?.model || "",
       serial: j.equipment?.serial_number || "",
       sub: j.equipment?.sublocations?.name || "—",
       brand: j.equipment?.equipment_brands?.name || "—",
+      logged: (j.reading_lines || []).length > 0 || (j.checklist_lines || []).length > 0,
     }));
     const subs = [...new Set(units.map((u) => u.sub))];
     const brands = [...new Set(units.map((u) => u.brand))];
 
-    // Measurement rows (numeric readings vs manufacturer standard)
+    // Every measurement used on this visit (all units)
     const meas = new Map();
     list.forEach((j) => (j.reading_lines || []).forEach((r) => {
       const m = r.measurement_fields;
       if (m && !meas.has(m.name)) meas.set(m.name, m);
     }));
     const measRows = [...meas.values()]
-      .sort((a, b) => (a.section || "").localeCompare(b.section || "") || (a.sequence ?? 0) - (b.sequence ?? 0))
-      .map((m) => ({
-        label: m.name, unit: m.unit, std: m.standard || "—",
-        cell: (job) => {
-          const r = (job.reading_lines || []).find((x) => x.measurement_fields?.name === m.name);
-          return r ? { value: r.value, state: r.is_out_of_range ? "bad" : "ok" } : null;
-        },
-      }));
+      .sort((a, b) => (a.section || "").localeCompare(b.section || "") || (a.sequence ?? 0) - (b.sequence ?? 0));
 
-    // Inspection rows (checklist: Normal / issue)
+    // Every inspection item used on this visit (all units)
     const chk = new Map();
     list.forEach((j) => (j.checklist_lines || []).forEach((c) => { if (!chk.has(c.key)) chk.set(c.key, c); }));
-    const chkRows = [...chk.values()]
-      .sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0))
-      .map((c) => ({
-        label: c.label || c.key, unit: "", std: "Normal",
-        cell: (job) => {
-          const r = (job.checklist_lines || []).find((x) => x.key === c.key);
-          if (!r) return null;
-          const v = r.value || "—";
-          return { value: v, state: /^normal$/i.test(v) || v === "—" ? "ok" : "bad" };
-        },
-      }));
+    const chkRows = [...chk.values()].sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0));
 
-    const unitHead = units.map((u) => `
-      <th colspan="2" data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}" class="unit-hd">
-        <div class="unit-name">${esc(u.name)}</div>
-        <div class="unit-meta">${esc(u.model)}${u.serial ? " · " + esc(u.serial) : ""}</div>
-        <div class="unit-meta">${esc(u.brand)} · ${esc(u.sub)}</div>
-      </th>`).join("");
-    const subHead = units.map((u) => `<th data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}" class="sub-hd">MFR STD</th><th data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}" class="sub-hd act-hd">ACTUAL</th>`).join("");
-
-    const rowHtml = (row) => `<tr>
-      <td class="item"><div class="item-name">${esc(row.label)}</div>${row.unit ? `<div class="item-unit">${esc(row.unit)}</div>` : ""}</td>
-      ${list.map((job, i) => {
-        const c = row.cell(job);
-        const attrs = `data-u="${i}" data-sub="${esc(units[i].sub)}" data-brand="${esc(units[i].brand)}"`;
-        const std = `<td ${attrs} class="std-c">${esc(row.std)}</td>`;
-        const act = c
-          ? `<td ${attrs} class="act-c ${c.state}"><span class="dot"></span>${esc(c.value)}</td>`
-          : `<td ${attrs} class="act-c empty">—</td>`;
-        return std + act;
-      }).join("")}
-    </tr>`;
-
-    const measBody = measRows.map(rowHtml).join("");
-    const chkBody = chkRows.map(rowHtml).join("");
-    const section = (title, body) => body ? `<tr class="section"><td colspan="${1 + units.length * 2}">${title}</td></tr>${body}` : "";
+    const card = (u) => {
+      const j = u.job;
+      const measBody = measRows.map((m) => {
+        const r = (j.reading_lines || []).find((x) => x.measurement_fields?.name === m.name);
+        const st = !r ? "empty" : r.is_out_of_range ? "bad" : "ok";
+        return `<tr><td class="ri-name">${esc(m.name)}<small>${esc(m.unit)}</small></td>
+          <td class="std">${esc(m.standard) || "—"}</td>
+          <td class="act ${st}">${r ? `<span class="dot"></span>${esc(r.value)}` : "—"}</td></tr>`;
+      }).join("");
+      const chkBody = chkRows.map((c) => {
+        const r = (j.checklist_lines || []).find((x) => x.key === c.key);
+        const v = r ? (r.value || "—") : null;
+        const st = !r ? "empty" : (/^normal$/i.test(v) || v === "—" ? "ok" : "bad");
+        return `<tr><td class="ri-name">${esc(c.label)}</td>
+          <td class="std">Normal</td>
+          <td class="act ${st}">${r ? `<span class="dot"></span>${esc(v)}` : "—"}</td></tr>`;
+      }).join("");
+      return `<details class="u-card" open data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}">
+        <summary class="u-head">
+          <div><div class="u-name">${esc(u.name)}</div>
+            <div class="u-meta">${esc(u.brand)} ${esc(u.model)} · ${esc(u.serial)} · ${esc(u.sub)}</div></div>
+          <span class="spill ${u.logged ? "s-ok" : "s-warn"}">${u.logged ? "Logged" : "Pending"}</span>
+        </summary>
+        <div class="u-body">
+          <table class="u-table">
+            <thead><tr><th>Item</th><th>Standard</th><th>Actual</th></tr></thead>
+            <tbody>
+              ${measBody ? `<tr class="u-sec"><td colspan="3">Measurements</td></tr>${measBody}` : ""}
+              ${chkBody ? `<tr class="u-sec"><td colspan="3">Inspection</td></tr>${chkBody}` : ""}
+            </tbody>
+          </table>
+        </div>
+      </details>`;
+    };
 
     return `
       <div class="eq-filters">
-        <label>Sublocation <select id="eq-sub"><option value="">All</option>${subs.map((s) => `<option>${esc(s)}</option>`).join("")}</select></label>
-        <label>Brand <select id="eq-brand"><option value="">All</option>${brands.map((b) => `<option>${esc(b)}</option>`).join("")}</select></label>
+        <label>Sublocation <select id="eq-sub"><option value="">All</option>${subs.map((x) => `<option>${esc(x)}</option>`).join("")}</select></label>
+        <label>Brand <select id="eq-brand"><option value="">All</option>${brands.map((x) => `<option>${esc(x)}</option>`).join("")}</select></label>
         <button class="link" id="eq-clear" type="button">Clear</button>
         <span class="eq-count">${units.length} units</span>
       </div>
-      <div class="eq-wrap"><div class="scroll"><table class="eq">
-        <thead>
-          <tr><th class="item" rowspan="2">Inspection item</th>${unitHead}</tr>
-          <tr>${subHead}</tr>
-        </thead>
-        <tbody>${section("Measurements", measBody)}${section("Inspection", chkBody)}</tbody>
-      </table></div></div>
-      <p class="legend"><span class="lg ok"></span>Within standard <span class="lg bad"></span>Outside standard</p>`;
+      <div class="u-list">${units.map(card).join("")}</div>
+      <p class="legend"><span class="lg ok"></span>Within standard <span class="lg bad"></span>Outside standard <span class="lg"></span>Not recorded</p>`;
   }
 
   function bindEquip(host) {
