@@ -267,6 +267,14 @@
   /* hide page scrollbars; content still scrolls with mouse wheel / touch */
   html, body { scrollbar-width: none; }
   ::-webkit-scrollbar { display: none; }
+  /* ---- fixed header area; only the list scrolls ---- */
+  html, body { height: 100%; }
+  body:has(#app-view:not(.hidden)) { overflow: hidden; }
+  #app-view { height: 100vh; display: flex; flex-direction: column; }
+  #app-view > nav.topnav { flex: none; }
+  #app-view > main#page { flex: 1; min-height: 0; overflow-y: auto; }
+  #app-view > main#page.fixed-page { display: flex; flex-direction: column; overflow: hidden; }
+  #app-view > main#page.fixed-page > .reg-card { flex: 1 1 auto; min-height: 0; max-height: none; }
 </style>
 </head>
 <body>
@@ -567,6 +575,7 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.route === route));
     $("#page").innerHTML = '<div class="pad muted">Loading…</div>';
     try {
+      $("#page").classList.toggle("fixed-page", ["equipment", "visits"].includes(route));
       $("#page").innerHTML = await pages[route]();
       wirePage();
     } catch (err) {
