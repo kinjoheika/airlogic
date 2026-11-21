@@ -435,6 +435,12 @@
   .u-body::-webkit-scrollbar-track { background: #eef2f7; border-radius: 6px; }
   .u-body::-webkit-scrollbar-thumb { background: #9aa6b8; border-radius: 6px; }
   .u-body thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
+  /* list-only scrolling on Equipment and Service visits, with a visible scrollbar */
+  #app-view > main#page.fixed-page > .reg-card { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: scroll; scrollbar-width: auto; scrollbar-color: #9aa6b8 #eef2f7; }
+  #app-view > main#page.fixed-page > .reg-card::-webkit-scrollbar { display: block; width: 12px; }
+  #app-view > main#page.fixed-page > .reg-card::-webkit-scrollbar-track { background: #eef2f7; border-radius: 6px; }
+  #app-view > main#page.fixed-page > .reg-card::-webkit-scrollbar-thumb { background: #9aa6b8; border-radius: 6px; }
+  #app-view > main#page.fixed-page > .reg-card thead th { position: sticky; top: 0; z-index: 2; }
 </style>
 </head>
 <body>
@@ -735,7 +741,7 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.route === route));
     $("#page").innerHTML = '<div class="pad muted">Loading…</div>';
     try {
-      $("#page").classList.remove("fixed-page");
+      $("#page").classList.toggle("fixed-page", ["equipment", "visits"].includes(route));
       $("#page").innerHTML = await pages[route]();
       wirePage();
     } catch (err) {
