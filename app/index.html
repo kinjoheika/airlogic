@@ -860,7 +860,7 @@
               <span class="wait">⏳ Pending: <b>${list.length - done}</b></span>
               <span>Total: <b>${list.length}</b></span>
             </div>
-            ${next >= 0 ? `<button class="btn primary small" data-log="${next}">Continue inspection</button>` : `<span class="spill s-ok">All units checked</span>`}
+            ${next < 0 ? `<span class="spill s-ok">All units checked</span>` : ""}
           </div>
           <div class="bar"><span style="width:${pct}%"></span></div>
           <div class="pg-list">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
