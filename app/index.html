@@ -275,6 +275,20 @@
   #app-view > main#page { flex: 1; min-height: 0; overflow-y: auto; }
   #app-view > main#page.fixed-page { display: flex; flex-direction: column; overflow: hidden; }
   #app-view > main#page.fixed-page > .reg-card { flex: 1 1 auto; min-height: 0; max-height: none; }
+  /* ---- Report & Info: two columns (left: info, right: section 3) ---- */
+  #report-area { width: 100%; max-width: 1280px; margin: 0 auto; }
+  .rpt-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .rpt-left, .rpt-right { min-width: 0; }
+  .sec3 { border-top: 3px solid #0f8a86; }
+  .paper { background: #fff; padding: 22px 24px 26px; }
+  .paper-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 2px solid #0f2a47; padding-bottom: 12px; margin-bottom: 14px; }
+  .paper-brand { font-weight: 800; color: #0f2a47; font-size: 16px; letter-spacing: -.01em; }
+  .paper-ref { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: #f1f4f9; padding: 4px 9px; border-radius: 6px; }
+  .paper-kv { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .paper-kv th { text-align: left; color: #6b7587; font-weight: 600; padding: 8px 0; width: 45%; border-bottom: 1px solid #eef1f6; }
+  .paper-kv td { padding: 8px 0; color: #1d2433; font-weight: 600; border-bottom: 1px solid #eef1f6; }
+  .paper-note { margin-top: 16px; font-size: 12.5px; color: #6b7587; background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
+  @media (max-width: 900px) { .rpt-cols { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -639,7 +653,7 @@
     const rtab = (key, text) => `<button class="rtab ${tab === key ? "on" : ""}" data-rtab="${key}">${text}</button>`;
     let body;
     try {
-      body = tab === "equip" ? equipTab(list) : infoTab(v, list);
+      body = tab === "equip" ? equipTab(list) : `<div class="rpt-cols"><div class="rpt-left">${infoTab(v, list)}</div><div class="rpt-right">${section3(v, list)}</div></div>`;
     } catch (err) {
       console.error("Report tab error:", err);
       body = `<div class="notice"><b>Could not show this tab.</b><div class="muted">${esc(err.message)}</div></div>`;
@@ -706,6 +720,34 @@
         <div class="rooms">${cards}</div>
         <div class="sec2-foot"><button class="btn ghost" data-refresh>↻ Refresh from Field Entry</button></div>
       </div>`;
+  }
+
+  function section3(v, list) {
+    const isLogged = (j) => (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null);
+    const logged = list.filter(isLogged).length;
+    const outRange = list.reduce((n, j) =>
+      n + (j.reading_lines || []).filter((r) => r.is_out_of_range).length
+        + (j.checklist_lines || []).filter((c) => c.value && c.value !== "—" && !/^normal$/i.test(c.value)).length, 0);
+    const rooms = new Set(list.map((j) => j.equipment?.sublocations?.name).filter(Boolean)).size;
+    const badge = v.state === "approved" || v.state === "invoiced" ? "Approved" : "Draft";
+    return `<div class="panel sec3">
+      <div class="panel-hd">Section 3 — PDF service report draft <span class="count-badge">${badge}</span></div>
+      <div class="paper">
+        <div class="paper-top">
+          <div><div class="paper-brand">Standard Airlogic</div><div class="muted">Aircon service report</div></div>
+          <div class="paper-ref">${esc(v.reference)}</div>
+        </div>
+        <table class="paper-kv">
+          <tr><th>Client</th><td>${esc(v.clients?.name)}</td></tr>
+          <tr><th>Visit date</th><td>${fmtDate(v.visit_date)}</td></tr>
+          <tr><th>Technician</th><td>${esc(v.technician_name) || "—"}</td></tr>
+          <tr><th>Rooms</th><td>${rooms}</td></tr>
+          <tr><th>Units checked</th><td>${logged} of ${list.length}</td></tr>
+          <tr><th>Items outside standard</th><td>${outRange}</td></tr>
+        </table>
+        <div class="paper-note">The PDF is created after the visit is approved. The client copy and the internal copy will both come from this draft.</div>
+      </div>
+    </div>`;
   }
 
   function equipTab(list) {
