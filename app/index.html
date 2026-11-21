@@ -320,6 +320,37 @@
   .sticky-bottom { position: sticky; bottom: 0; background: var(--bg, #f5f7fa); padding: 12px 0; }
   .rtabs .rtab { min-height: 44px; }
   @media (max-width: 640px) { .bar { width: 100%; } .insp-input { width: 100%; } .unit-row .btn { width: 100%; } }
+  /* ---- Service report: compact one-screen layout ---- */
+  .jobinfo { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 12px 16px; margin: 10px 0 12px;
+             display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 16px; }
+  .jobinfo .fld label { margin-bottom: 2px; font-size: 10.5px; }
+  .jobinfo .fld div { padding: 6px 10px; min-height: 32px; font-size: 13.5px; }
+  .rpt-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 14px; align-items: start; }
+  .rpt-row .pg { max-height: calc(100vh - 290px); min-height: 360px; display: flex; flex-direction: column; overflow: hidden; }
+  .pg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid #eef1f6; }
+  .pg-counts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+  .pg-counts b:first-child { color: #0f2a47; margin-right: 4px; }
+  .pg-counts .ok { color: #1a7f4b; } .pg-counts .wait { color: #7a5a00; }
+  .pg .bar { width: auto; margin: 0; border-radius: 0; height: 4px; }
+  .pg-list { overflow-y: auto; flex: 1; min-height: 0; }
+  .pg .room-block { border: 0; border-radius: 0; margin: 0; }
+  .pg .room-block h3 { padding: 7px 14px; font-size: 12px; }
+  .pg .unit-row { padding: 6px 14px; gap: 10px; }
+  .pg .unit-title { font-size: 13.5px; }
+  .pg .unit-row .muted { font-size: 11.5px; }
+  .btn.small { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+  .rpt-right .pdf { margin: 0; }
+  .rpt-right .paper { padding: 14px 16px 16px; }
+  .rpt-right .paper-top { margin-bottom: 8px; padding-bottom: 8px; }
+  .rpt-right .paper-kv th, .rpt-right .paper-kv td { padding: 5px 0; font-size: 13px; }
+  .rpt-right .paper-note { margin-top: 10px; padding: 8px 10px; font-size: 12px; }
+  .pdf .panel-hd { padding: 10px 14px; }
+  @media (max-width: 900px) {
+    .jobinfo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rpt-row { grid-template-columns: 1fr; }
+    .rpt-row .pg { max-height: none; min-height: 0; }
+    .pg-list { overflow: visible; }
+  }
 </style>
 </head>
 <body>
@@ -756,6 +787,42 @@
     };
   }
 
+  function jobInfo(v, list) {
+    const f = (l, val) => `<div class="fld"><label>${l}</label><div>${esc(val) || "—"}</div></div>`;
+    return `<section class="jobinfo">
+      ${f("Job reference", v.reference)}${f("Client name", v.clients?.name)}${f("On-site contact", "")}${f("Sublocation", v.sublocation)}
+      ${f("Technician", v.technician_name)}${f("Visit date", fmtDate(v.visit_date))}${f("Job started", "")}${f("Job finished", "")}
+    </section>`;
+  }
+
+  function pdfDraft(v, list) {
+    const isLogged = (j) => (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null);
+    const logged = list.filter(isLogged).length;
+    const outRange = list.reduce((n, j) =>
+      n + (j.reading_lines || []).filter((r) => r.is_out_of_range).length
+        + (j.checklist_lines || []).filter((c) => c.value && c.value !== "—" && !/^normal$/i.test(c.value)).length, 0);
+    const rooms = new Set(list.map((j) => j.equipment?.sublocations?.name).filter(Boolean)).size;
+    const badge = v.state === "approved" || v.state === "invoiced" ? "Approved" : "Draft";
+    return `<section class="panel pdf">
+      <div class="panel-hd">PDF service report draft <span class="count-badge">${badge}</span></div>
+      <div class="paper">
+        <div class="paper-top">
+          <div><div class="paper-brand">Standard Airlogic</div><div class="muted">Aircon service report</div></div>
+          <div class="paper-ref">${esc(v.reference)}</div>
+        </div>
+        <table class="paper-kv">
+          <tr><th>Client</th><td>${esc(v.clients?.name)}</td></tr>
+          <tr><th>Visit date</th><td>${fmtDate(v.visit_date)}</td></tr>
+          <tr><th>Technician</th><td>${esc(v.technician_name) || "—"}</td></tr>
+          <tr><th>Rooms</th><td>${rooms}</td></tr>
+          <tr><th>Units checked</th><td>${logged} of ${list.length}</td></tr>
+          <tr><th>Items outside standard</th><td>${outRange}</td></tr>
+        </table>
+        <div class="paper-note">The PDF is created after the visit is approved. The client copy and the internal copy will both come from this draft.</div>
+      </div>
+    </section>`;
+  }
+
   function checksView(v, list) {
     const done = list.filter(jobDone).length;
     const next = list.findIndex((j) => !jobDone(j));
@@ -777,20 +844,29 @@
             <div class="unit-info"><div class="unit-title">${esc(j.equipment?.name)}</div>
               <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.equipment_brands?.name)} ${esc(j.equipment?.model)}</div></div>
             <span class="spill ${d ? "s-ok" : "s-warn"}">${d ? "Completed" : "Pending"}</span>
-            <button class="btn big ${d ? "ghost" : "primary"}" data-log="${i}">${d ? "View inspection" : "Log inspection"}</button>
+            <button class="btn small ${d ? "ghost" : "primary"}" data-log="${i}">${d ? "View inspection" : "Log inspection"}</button>
           </div>`;
         }).join("")}
       </section>`).join("");
     const pending = list.filter((j) => !jobDone(j));
     return `${flash}
-      <div class="check-top">
-        <div><div class="progress-big"><b>${done} of ${list.length}</b> units checked</div>
-          <div class="bar"><span style="width:${pct}%"></span></div></div>
-        ${next >= 0 ? `<button class="btn primary big" data-log="${next}">Continue inspection</button>` : `<span class="spill s-ok">All units checked</span>`}
+      ${jobInfo(v, list)}
+      <div class="rpt-row">
+        <section class="panel pg">
+          <div class="pg-head">
+            <div class="pg-counts">
+              <b>Field entry progress</b>
+              <span class="ok">✓ Logged: <b>${done}</b></span>
+              <span class="wait">⏳ Pending: <b>${list.length - done}</b></span>
+              <span>Total: <b>${list.length}</b></span>
+            </div>
+            ${next >= 0 ? `<button class="btn primary small" data-log="${next}">Continue inspection</button>` : `<span class="spill s-ok">All units checked</span>`}
+          </div>
+          <div class="bar"><span style="width:${pct}%"></span></div>
+          <div class="pg-list">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
+        </section>
+        <div class="rpt-right">${pdfDraft(v, list)}</div>
       </div>
-      <details class="job-more"><summary>View job details</summary>
-        <div class="muted" style="padding:8px 0">Technician: <b>${esc(v.technician_name) || "—"}</b></div></details>
-      <div class="checks">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
       <section class="review-card"><h2>Review</h2>
         <p>${pending.length ? `${pending.length} unit${pending.length > 1 ? "s" : ""} still pending.` : "All units are checked."}</p>
         <p class="muted">The PDF is created after the visit is approved.</p>
