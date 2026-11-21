@@ -162,9 +162,37 @@
       `</div><div class="msg" id="msg"></div>`;
   }
 
+  // ---------- loading feedback ----------
+  const skeletonHTML = `<div class="skeleton"><div class="skel w40"></div><div class="skel h48"></div><div class="skel"></div><div class="skel w60"></div></div>`;
+  // Hides the startup splash once the first screen is ready.
+  function hideSplash() {
+    const s = document.getElementById("boot-splash");
+    if (!s || s.classList.contains("gone")) return;
+    s.classList.add("gone");
+    setTimeout(() => s.remove(), 300);
+  }
+
+  // Disables a button and shows a spinner until the work finishes.
+  function busy(el, label = "Working…") {
+    if (!el || el.dataset.busy) return () => {};
+    const html = el.innerHTML;
+    el.dataset.busy = "1"; el.disabled = true; el.classList.add("is-busy");
+    el.innerHTML = `<span class="spin"></span>${esc(label)}`;
+    return () => {
+      delete el.dataset.busy;
+      if (!el.isConnected) return;
+      el.disabled = false; el.classList.remove("is-busy"); el.innerHTML = html;
+    };
+  }
+  async function withBusy(el, label, fn) {
+    const done = busy(el, label);
+    try { return await fn(); } finally { done(); }
+  }
+
   // ---------- render ----------
   async function render() {
     const visits = await cachedVisits();
+    hideSplash();
     setNav();
     saveBar.hidden = true;
     nav.hidden = false;
@@ -176,7 +204,7 @@
       page.innerHTML = unitForm(visits);
       saveBar.innerHTML = `<button class="btn" data-cancel>Cancel</button><button class="btn teal" id="save">Save inspection</button>`;
       saveBar.querySelector("[data-cancel]").onclick = () => { st.unit = null; render(); };
-      document.getElementById("save").onclick = () => saveUnit(visits);
+      document.getElementById("save").onclick = () => withBusy(document.getElementById("save"), "Saving…", () => saveUnit(visits));
       page.querySelector("[data-back-unit]").onclick = () => { st.unit = null; render(); };
       return;
     }
@@ -208,7 +236,7 @@
     if (doneCount(x) < x.jobs.length) { alert(`${x.jobs.length - doneCount(x)} device(s) still pending.`); return; }
     if (!navigator.onLine) { alert("Connect to the internet to close the job."); return; }
     if (!confirm("Close this job and send it for review?")) return;
-    const { error } = await sb.from("service_visits").update({ state: "review" }).eq("id", x.visit.id);
+    const { error } = await withBusy(document.querySelector("[data-closejob]"), "Closing…", () => sb.from("service_visits").update({ state: "review" }).eq("id", x.visit.id));
     if (error) { alert(error.message); return; }
     x.visit.state = "review";
     await kvSet("visits", visits);
@@ -240,6 +268,7 @@
 
   // ---------- sign in and start ----------
   function loginView() {
+    hideSplash();
     nav.hidden = true; saveBar.hidden = true;
     page.innerHTML = `<div class="login card"><div class="title">Sign in</div>
       <label>Email</label><input id="em" type="email" autocomplete="username">
@@ -247,7 +276,7 @@
       <button class="btn teal" id="go" style="width:100%;margin-top:14px">Sign in</button>
       <div class="msg" id="lm"></div></div>`;
     document.getElementById("go").onclick = async () => {
-      const { error } = await sb.auth.signInWithPassword({ email: document.getElementById("em").value.trim(), password: document.getElementById("pw").value });
+      const { error } = await withBusy(document.getElementById("go"), "Signing in…", () => sb.auth.signInWithPassword({ email: document.getElementById("em").value.trim(), password: document.getElementById("pw").value }));
       if (error) { document.getElementById("lm").textContent = error.message; return; }
       start();
     };
@@ -256,12 +285,16 @@
   async function downloadNow() {
     if (!navigator.onLine) { alert("Connect to the internet to download."); return; }
     syncEl.className = "sync wait"; syncEl.textContent = "Downloading…";
-    try { await downloadAll(); await sendQueue(); } catch (e) { syncEl.className = "sync wait"; syncEl.textContent = "Download failed"; }
+    await withBusy(document.getElementById("dl"), "Syncing…", async () => {
+      try { await downloadAll(); await sendQueue(); } catch (e) { syncEl.className = "sync wait"; syncEl.textContent = "Download failed"; }
+    });
     await showStatus();
     render();
   }
 
   async function start() {
+    page.innerHTML = skeletonHTML;
+    setTimeout(hideSplash, 8000);
     const { data: { session } } = await sb.auth.getSession();
     const cached = await cachedVisits();
     if (!session && navigator.onLine) return loginView();
