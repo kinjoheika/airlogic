@@ -808,13 +808,13 @@
     }
     host.innerHTML = `
       ${fromVisits ? '<span class="back" data-back-visits>← Back to visits</span>' : ""}
-      ${inspectIdx != null ? "" : `      <div class="rpt-hd">
+      ${inspectIdx != null || tab === "report" ? "" : `      <div class="rpt-hd">
         <div><div class="rpt-kicker">Service report</div><h1>${esc(v.clients?.name)}</h1>
           <div class="sub">${esc(v.reference)} · ${esc(v.sublocation) || "—"} · ${fmtDate(v.visit_date)}</div></div>
         <span class="spill ${v.state === "review" ? "s-warn" : v.state === "approved" || v.state === "invoiced" ? "s-ok" : "s-off"}">${esc(label)}</span>
       </div>
 `}
-      ${inspectIdx != null ? "" : `<div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}</div>`}
+      ${inspectIdx != null || tab === "report" ? "" : `<div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}</div>`}
       ${body}`;
 
     const back = host.querySelector("[data-back-visits]");
