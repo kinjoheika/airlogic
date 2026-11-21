@@ -424,9 +424,10 @@
   .insp-input { min-height: 38px; width: 180px; }
   @media (max-width: 640px) { .insp-grid { grid-template-columns: 1fr; } .insp-input { width: 100%; } }
   /* Equipment Data: only this list scrolls, with a visible scrollbar */
-  .u-list-wrap { max-height: calc(100vh - 250px); min-height: 240px; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
-  .u-list-wrap::-webkit-scrollbar { display: block; width: 8px; }
-  .u-list-wrap::-webkit-scrollbar-thumb { background: #c3ccd9; border-radius: 4px; }
+  .u-list-wrap { max-height: calc(100vh - 250px); min-height: 240px; overflow-y: scroll; padding-right: 4px; scrollbar-width: auto; scrollbar-color: #9aa6b8 #eef2f7; }
+  .u-list-wrap::-webkit-scrollbar { display: block; width: 12px; }
+  .u-list-wrap::-webkit-scrollbar-track { background: #eef2f7; border-radius: 6px; }
+  .u-list-wrap::-webkit-scrollbar-thumb { background: #9aa6b8; border-radius: 6px; }
 </style>
 </head>
 <body>
