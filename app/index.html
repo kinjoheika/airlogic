@@ -352,6 +352,7 @@
     .pg-list { overflow: visible; }
   }
   /* ---- Owner report (Option A layout) ---- */
+  .back-row { margin: 4px 0 10px; }
   .owner-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
   .owner-doc { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 26px 30px; color: #1d2433; max-width: 900px; margin: 0 auto; }
   .od-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-bottom: 2px solid #1d2433; padding-bottom: 14px; }
@@ -787,7 +788,7 @@
     let body;
     try {
       if (tab === "equip") body = equipTab(list);
-      else if (tab === "owner") body = ownerReport(v, list);
+      else if (tab === "report") body = `<div class="back-row"><button class="link big" data-back-list>← Back to equipment checks</button></div>${ownerReport(v, list)}`;
       else if (inspectIdx != null && list[inspectIdx]) body = inspectionForm(list, inspectIdx);
       else body = checksView(v, list);
     } catch (err) {
@@ -801,7 +802,7 @@
           <div class="sub">${esc(v.reference)} · ${esc(v.sublocation) || "—"} · ${fmtDate(v.visit_date)}</div></div>
         <span class="spill ${v.state === "review" ? "s-warn" : v.state === "approved" || v.state === "invoiced" ? "s-ok" : "s-off"}">${esc(label)}</span>
       </div>
-      <div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}${rtab("owner", "Owner report")}</div>
+      <div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}</div>
       ${body}`;
 
     const back = host.querySelector("[data-back-visits]");
@@ -811,7 +812,9 @@
     host.querySelectorAll("[data-back-list]").forEach((b) => b.onclick = () => openReport(id, "info", target));
     if (tab === "equip") bindEquip(host);
 
-    const pv = host.querySelector("[data-preview]");
+    const gen = host.querySelector("[data-generate]");
+    if (gen) gen.onclick = () => openReport(id, "report", target);
+    const pv = null;
     if (pv) pv.onclick = () => {
       const pending = list.filter((j) => !jobDone(j));
       openDialog(`<h1>Report preview</h1>
@@ -938,7 +941,7 @@
         <p>${pending.length ? `${pending.length} unit${pending.length > 1 ? "s" : ""} still pending.` : "All units are checked."}</p>
         <p class="muted">The PDF is created after the visit is approved.</p>
         <div class="actions-row">
-          <button class="btn ghost big" data-preview>Preview report</button>
+          <button class="btn ghost big" data-generate>Generate report</button>
           <button class="btn primary big" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button>
         </div>
       </section>`;
