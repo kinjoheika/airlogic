@@ -326,7 +326,7 @@
   .jobinfo .fld label { margin-bottom: 2px; font-size: 10.5px; }
   .jobinfo .fld div { padding: 6px 10px; min-height: 32px; font-size: 13.5px; }
   .rpt-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 14px; align-items: start; }
-  .rpt-row .pg { max-height: calc(100vh - 290px); min-height: 360px; display: flex; flex-direction: column; overflow: hidden; }
+  .rpt-row .pg { max-height: none; min-height: 0; display: flex; flex-direction: column; overflow: visible; }
   .pg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid #eef1f6; }
   .pg-counts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 13px; }
   .pg-counts b:first-child { color: #0f2a47; margin-right: 4px; }
@@ -338,6 +338,34 @@
   .pg .unit-row { padding: 6px 14px; gap: 10px; }
   .pg .unit-title { font-size: 13.5px; }
   .pg .unit-row .muted { font-size: 11.5px; }
+  /* one-screen report: 25 units shown in columns, no scrolling */
+  /* whole report fits the window; only the device list scrolls, and only if it must */
+  main#page:has(.rpt-row) { display: flex; flex-direction: column; height: auto; overflow: visible; box-sizing: border-box; padding: 12px 20px; }
+  main#page:has(.rpt-row) > .rpt-row { flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column; }
+  main#page:has(.rpt-row) > .rpt-row > .pg { flex: 0 0 auto; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: visible; }
+  .pg-list { overflow: visible; flex: 0 0 auto; min-height: 0; max-height: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 8px; align-content: start; }
+  .pg .room-block { break-inside: avoid; border: 1px solid #eef1f6; border-radius: 10px; margin: 0 0 8px; overflow: hidden; }
+  .pg .room-block h3 { padding: 3px 8px; font-size: 11px; }
+  .pg .unit-row { padding: 2px 8px; gap: 6px; flex-wrap: nowrap; border-bottom: 1px solid #f3f5f9; min-height: 30px; }
+  .pg .unit-row .muted { display: none; }
+  .rpt-row { gap: 10px; }
+  .jobinfo { margin: 4px 0 6px; padding: 6px 10px; gap: 4px 12px; }
+  .jobinfo .fld div { min-height: 24px; padding: 2px 8px; font-size: 12.5px; }
+  .jobinfo .fld label { margin-bottom: 0; }
+  @media (max-width: 1499px) { .pg-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .pg .unit-info { min-width: 0; flex: 1; }
+  .pg .unit-title { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pg .unit-row .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pg .spill { font-size: 10.5px; padding: 2px 6px; }
+  .pg .btn.small { min-height: 24px; padding: 1px 8px; font-size: 11px; }
+  @media (max-width: 1100px) { .pg-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) {
+    .pg-list { grid-template-columns: 1fr; }
+    .pg .unit-row { flex-wrap: wrap; }
+    main#page:has(.rpt-row) { height: auto; overflow: visible; }
+    main#page:has(.rpt-row) > .rpt-row > .pg { overflow: visible; }
+    .pg-list { overflow: visible; max-height: none; }
+  }
   .btn.small { min-height: 36px; padding: 6px 12px; font-size: 13px; }
   .rpt-right .pdf { margin: 0; }
   .rpt-right .paper { padding: 14px 16px 16px; }
@@ -964,7 +992,7 @@
               <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.equipment_brands?.name)} ${esc(j.equipment?.model)}</div></div>
             <span class="spill ${d ? "s-ok" : "s-warn"}">${d ? "Completed" : "Pending"}</span>
             <button class="btn small ${d ? "ghost" : "primary"}" data-log="${i}">${d ? "View inspection" : "Log inspection"}</button>
-            <button class="btn small ghost" data-gen-unit="${i}">Generate report</button>
+            <button class="btn small ghost" data-gen-unit="${i}">Report</button>
           </div>`;
         }).join("")}
       </section>`).join("");
@@ -987,15 +1015,7 @@
           <div class="bar"><span style="width:${pct}%"></span></div>
           <div class="pg-list">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
         </section>
-      </div>
-      <section class="review-card"><h2>Review</h2>
-        <p>${pending.length ? `${pending.length} unit${pending.length > 1 ? "s" : ""} still pending.` : "All units are checked."}</p>
-        <p class="muted">The PDF is created after the visit is approved.</p>
-        <div class="actions-row">
-          <button class="btn ghost big" data-generate>Generate report</button>
-          <button class="btn primary big" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button>
-        </div>
-      </section>`;
+      </div>`;
   }
 
   let inspState = { unit: null, page: 0 };
@@ -1165,7 +1185,7 @@
           <td class="std">${esc(c.standard) || "—"}</td>
           <td class="act ${st}">${v != null ? `<span class="dot"></span>${esc(v)}` : "—"}</td></tr>`;
       }).join("");
-      return `<details class="u-card" open data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}">
+      return `<details class="u-card" data-u="${u.i}" data-sub="${esc(u.sub)}" data-brand="${esc(u.brand)}">
         <summary class="u-head">
           <div><div class="u-name">${esc(u.name)}</div>
             <div class="u-meta">${esc(u.brand)} ${esc(u.model)} · ${esc(u.serial)} · ${esc(u.sub)}</div></div>
