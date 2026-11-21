@@ -264,6 +264,9 @@
   /* hide the list's own scrollbar (still scrolls with mouse wheel / touch) */
   .reg-card, .reg-card * { scrollbar-width: none; }
   .reg-card::-webkit-scrollbar, .reg-card *::-webkit-scrollbar { display: none; }
+  /* hide page scrollbars; content still scrolls with mouse wheel / touch */
+  html, body { scrollbar-width: none; }
+  ::-webkit-scrollbar { display: none; }
 </style>
 </head>
 <body>
