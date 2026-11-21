@@ -387,6 +387,9 @@
     .owner-doc { position: absolute; left: 0; top: 0; width: 100%; border: 0; box-shadow: none; padding: 0; }
     .owner-bar { display: none; }
   }
+  /* no width caps: use the full window */
+  main, #app-view > main#page, #report-area, .owner-doc { max-width: none !important; width: 100%; }
+  #app-view > main#page { margin: 0; }
 </style>
 </head>
 <body>
