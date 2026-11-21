@@ -832,7 +832,7 @@
         <span class="spill ${v.state === "review" ? "s-warn" : v.state === "approved" || v.state === "invoiced" ? "s-ok" : "s-off"}">${esc(label)}</span>
       </div>
 `}
-      ${inspectIdx != null || tab === "report" ? "" : `<div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}</div>`}
+      ${inspectIdx != null || tab === "report" ? "" : `<div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>`}
       ${body}`;
 
     const back = host.querySelector("[data-back-visits]");
