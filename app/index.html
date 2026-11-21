@@ -428,6 +428,13 @@
   .u-list-wrap::-webkit-scrollbar { display: block; width: 12px; }
   .u-list-wrap::-webkit-scrollbar-track { background: #eef2f7; border-radius: 6px; }
   .u-list-wrap::-webkit-scrollbar-thumb { background: #9aa6b8; border-radius: 6px; }
+  /* scroll per unit: each unit's table has its own scrollbar */
+  .u-list-wrap { max-height: none; min-height: 0; overflow: visible; padding-right: 0; }
+  .u-body { max-height: 300px; overflow-y: scroll; scrollbar-width: auto; scrollbar-color: #9aa6b8 #eef2f7; }
+  .u-body::-webkit-scrollbar { display: block; width: 10px; }
+  .u-body::-webkit-scrollbar-track { background: #eef2f7; border-radius: 6px; }
+  .u-body::-webkit-scrollbar-thumb { background: #9aa6b8; border-radius: 6px; }
+  .u-body thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
 </style>
 </head>
 <body>
