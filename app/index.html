@@ -289,6 +289,37 @@
   .paper-kv td { padding: 8px 0; color: #1d2433; font-weight: 600; border-bottom: 1px solid #eef1f6; }
   .paper-note { margin-top: 16px; font-size: 12.5px; color: #6b7587; background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
   @media (max-width: 900px) { .rpt-cols { grid-template-columns: 1fr; } }
+  /* ---- Service report: checks-first layout ---- */
+  .check-top { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 16px 18px; margin: 14px 0; }
+  .progress-big { font-size: 15px; color: #374151; }
+  .progress-big b { font-size: 22px; color: #0f2a47; }
+  .bar { height: 8px; background: #e8edf4; border-radius: 99px; overflow: hidden; width: 260px; max-width: 100%; margin-top: 8px; }
+  .bar span { display: block; height: 100%; background: #0f8a86; }
+  .btn.big { min-height: 44px; padding: 10px 18px; font-size: 15px; }
+  .link.big { min-height: 44px; display: inline-flex; align-items: center; }
+  .room-block { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+  .room-block h3 { margin: 0; padding: 12px 18px; background: #f8fafc; font-size: 14px; color: #0f2a47; border-bottom: 1px solid #eef1f6; }
+  .unit-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #f3f5f9; flex-wrap: wrap; }
+  .unit-row:last-child { border-bottom: 0; }
+  .unit-info { flex: 1; min-width: 200px; }
+  .unit-title { font-weight: 700; color: #0f2a47; }
+  .review-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 18px; margin-top: 14px; }
+  .review-card h2 { margin: 0 0 8px; font-size: 17px; }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .flash { background: #e8f6ee; color: #1a7f4b; border-radius: 10px; padding: 10px 14px; font-weight: 600; margin: 12px 0; }
+  .job-more { background: #fff; border: 1px solid #e3e8ef; border-radius: 12px; padding: 10px 16px; margin: 12px 0; }
+  .job-more summary { cursor: pointer; font-weight: 600; color: #0f8a86; padding: 4px 0; min-height: 36px; }
+  .insp-head h2 { margin: 6px 0 2px; }
+  .insp-form { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; overflow: hidden; margin-top: 12px; }
+  .insp-sec { background: #f1f5fa; padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #0f2a47; }
+  .insp-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f3f5f9; flex-wrap: wrap; }
+  .insp-label { font-weight: 600; color: #1b4f8a; }
+  .insp-label small { display: block; color: #8a94a6; font-weight: 500; font-size: 12px; }
+  .insp-input { min-height: 44px; width: 220px; max-width: 100%; font: inherit; padding: 8px 12px; border: 1px solid #dfe4ec; border-radius: 10px; }
+  .insp-msg { color: #b42323; font-weight: 600; margin: 10px 0; min-height: 18px; }
+  .sticky-bottom { position: sticky; bottom: 0; background: var(--bg, #f5f7fa); padding: 12px 0; }
+  .rtabs .rtab { min-height: 44px; }
+  @media (max-width: 640px) { .bar { width: 100%; } .insp-input { width: 100%; } .unit-row .btn { width: 100%; } }
 </style>
 </head>
 <body>
@@ -641,113 +672,158 @@
   // ---------- forms ----------
   function openDialog(html) { $("#dialog").innerHTML = html; $("#dialog-back").classList.remove("hidden"); }
   // ---------- service report (opened from a visit) ----------
-  async function openReport(id, tab = "info", target = "#page") {
+  let reportFlash = "";
+  const jobDone = (j) => (j.checklist_lines || []).length > 0 && (j.checklist_lines || []).every((c) => c.value != null);
+
+  async function openReport(id, tab = "info", target = "#page", inspectIdx = null) {
     const { data: v, error } = await db.from("service_visits")
       .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
     if (error) { $(target).innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
     const { data: jobs } = await db.from("service_jobs")
-      .select("id, equipment(name, model, serial_number, sublocations(name), equipment_brands(name)), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence)), checklist_lines(phase, key, label, value, section, standard)")
+      .select("id, equipment(name, model, serial_number, sublocations(name), equipment_brands(name)), reading_lines(value, is_out_of_range, measurement_fields(name, unit, standard, section, sequence)), checklist_lines(id, phase, key, label, value, section, standard)")
       .eq("visit_id", id);
-    const list = jobs || [];
+    const list = (jobs || []).slice().sort((x, y) =>
+      (x.equipment?.sublocations?.name || "").localeCompare(y.equipment?.sublocations?.name || "") ||
+      (x.equipment?.name || "").localeCompare(y.equipment?.name || ""));
+    const host = $(target);
+    const fromVisits = target === "#page";
     const label = String(v.state || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
     const rtab = (key, text) => `<button class="rtab ${tab === key ? "on" : ""}" data-rtab="${key}">${text}</button>`;
     let body;
     try {
-      body = tab === "equip" ? equipTab(list) : `<div class="rpt-cols"><div class="rpt-left">${infoTab(v, list)}</div><div class="rpt-right">${section3(v, list)}</div></div>`;
+      if (tab === "equip") body = equipTab(list);
+      else if (inspectIdx != null && list[inspectIdx]) body = inspectionForm(list, inspectIdx);
+      else body = checksView(v, list);
     } catch (err) {
-      console.error("Report tab error:", err);
-      body = `<div class="notice"><b>Could not show this tab.</b><div class="muted">${esc(err.message)}</div></div>`;
+      console.error("Report error:", err);
+      body = `<div class="notice"><b>Could not show this part of the report.</b><div class="muted">${esc(err.message)}</div></div>`;
     }
-    const fromVisits = target === "#page";
-    const host = $(target);
     host.innerHTML = `
       ${fromVisits ? '<span class="back" data-back-visits>← Back to visits</span>' : ""}
       <div class="rpt-hd">
-        <div><div class="rpt-kicker">Service report</div><h1>Draft review</h1>
-          <div class="sub">${esc(v.reference)} · ${esc(v.clients?.name)} · ${fmtDate(v.visit_date)}</div></div>
+        <div><div class="rpt-kicker">Service report</div><h1>${esc(v.clients?.name)}</h1>
+          <div class="sub">${esc(v.reference)} · ${esc(v.sublocation) || "—"} · ${fmtDate(v.visit_date)}</div></div>
         <span class="spill ${v.state === "review" ? "s-warn" : v.state === "approved" || v.state === "invoiced" ? "s-ok" : "s-off"}">${esc(label)}</span>
       </div>
-      <div class="rtabs">${rtab("info", "Report &amp; Info")}${rtab("equip", "Equipment Data")}</div>
-      ${body}
-      <div class="actions" style="margin-top:16px;text-align:right"><button class="btn primary" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button></div>`;
+      <div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}</div>
+      ${body}`;
+
+    const back = host.querySelector("[data-back-visits]");
+    if (back) back.onclick = () => render("visits");
+    host.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
+    host.querySelectorAll("[data-log]").forEach((b) => b.onclick = () => openReport(id, "info", target, Number(b.dataset.log)));
+    host.querySelectorAll("[data-back-list]").forEach((b) => b.onclick = () => openReport(id, "info", target));
     if (tab === "equip") bindEquip(host);
-    const refresh = host.querySelector("[data-refresh]");
-    if (refresh) refresh.onclick = () => openReport(id, tab, target);
+
+    const pv = host.querySelector("[data-preview]");
+    if (pv) pv.onclick = () => {
+      const pending = list.filter((j) => !jobDone(j));
+      openDialog(`<h1>Report preview</h1>
+        <div class="muted" style="margin-bottom:10px">${esc(v.reference)} · ${esc(v.clients?.name)} · ${fmtDate(v.visit_date)}</div>
+        <p><b>${list.length - pending.length} of ${list.length}</b> units checked.</p>
+        ${pending.length ? `<p>Still pending:</p><ul>${pending.map((j) => `<li>${esc(j.equipment?.name)} · ${esc(j.equipment?.sublocations?.name)}</li>`).join("")}</ul>`
+          : `<p>All units are checked.</p>`}
+        <p class="muted">The PDF is created after the visit is approved. Approve the visit to generate it.</p>
+        <div class="row"><button class="btn ghost" id="pv-close">Close</button></div>`);
+      $("#pv-close").onclick = closeDialog;
+    };
+
     const approve = host.querySelector("[data-approve]");
     if (approve) approve.onclick = async () => {
       if (!confirm("Approve this visit?")) return;
-      const { error } = await db.from("service_visits").update({ state: "approved" }).eq("id", id);
-      if (error) { alert(error.message); return; }
-      openReport(id, tab, target);
+      const { error: e } = await db.from("service_visits").update({ state: "approved" }).eq("id", id);
+      if (e) { alert(e.message); return; }
+      openReport(id, "info", target);
     };
-    const back = document.querySelector("[data-back-visits]");
-    if (back) back.onclick = () => render("visits");
-    document.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
+
+    const save = host.querySelector("#insp-save");
+    if (save) save.onclick = async () => {
+      const msg = host.querySelector("#insp-msg");
+      save.disabled = true;
+      msg.textContent = "Saving…";
+      const changes = [...host.querySelectorAll("[data-item]")]
+        .map((el) => ({ id: el.dataset.item, val: el.value.trim() || null, orig: el.dataset.orig || null }))
+        .filter((c) => c.val !== c.orig);
+      const results = await Promise.all(changes.map((c) => db.from("checklist_lines").update({ value: c.val }).eq("id", c.id)));
+      const failed = results.find((r) => r.error);
+      if (failed) {
+        msg.textContent = "Saving failed: " + failed.error.message + ". Your entries are kept, so you can try again.";
+        save.disabled = false;
+        return;
+      }
+      reportFlash = "Inspection saved";
+      openReport(id, "info", target);
+    };
   }
 
-  function infoTab(v, list) {
-    const total = list.length;
-    const isLogged = (j) => (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null);
-    const logged = list.filter(isLogged).length;
-    const f = (l, val) => `<div class="fld"><label>${l}</label><div>${esc(val) || "—"}</div></div>`;
-    const groups = new Map();
-    list.forEach((j) => {
-      const sub = j.equipment?.sublocations?.name || "Unassigned";
-      if (!groups.has(sub)) groups.set(sub, []);
-      groups.get(sub).push(j);
+  function checksView(v, list) {
+    const done = list.filter(jobDone).length;
+    const next = list.findIndex((j) => !jobDone(j));
+    const rooms = new Map();
+    list.forEach((j, i) => {
+      const r = j.equipment?.sublocations?.name || "Unassigned";
+      if (!rooms.has(r)) rooms.set(r, []);
+      rooms.get(r).push(i);
     });
-    const cards = [...groups.entries()].map(([sub, jobs]) => `
-      <div class="room">
-        <div class="room-hd">${esc(sub)}</div>
-        ${jobs.map((j) => `<div class="room-row">
-          <div class="room-unit"><div>${esc(j.equipment?.name)}</div>
-            <div class="muted">${esc(j.equipment?.equipment_brands?.name)} ${esc(j.equipment?.model)} · ${esc(j.equipment?.serial_number)}</div></div>
-          <span class="spill ${isLogged(j) ? "s-ok" : "s-warn"}">${isLogged(j) ? "Logged" : "Pending"}</span>
-        </div>`).join("")}
-      </div>`).join("");
-    return `<div class="panel"><div class="panel-hd">Job information</div><div class="fields">
-        ${f("Job reference", v.reference)}${f("Client name", v.clients?.name)}${f("Sublocation", v.sublocation)}
-        ${f("Technician", v.technician_name)}${f("Visit date", fmtDate(v.visit_date))}${f("Job started", "")}${f("Job finished", "")}
-      </div></div>
-      <div class="panel sec2"><div class="panel-hd">Section 2 — Field entry progress
-          <span class="count-badge">${logged}/${total} logged</span></div>
-        <div class="progress">
-          <span>Client: <b>${esc(v.clients?.name)}</b></span>
-          <span class="ok">✓ Logged: <b>${logged}</b></span>
-          <span class="wait">⏳ Pending: <b>${total - logged}</b></span>
-          <span>Total: <b>${total}</b></span>
+    const flash = reportFlash ? `<div class="flash">${esc(reportFlash)}</div>` : "";
+    reportFlash = "";
+    const pct = list.length ? Math.round((done / list.length) * 100) : 0;
+    const roomsHtml = [...rooms.entries()].map(([name, idxs]) => `
+      <section class="room-block"><h3>${esc(name)}</h3>
+        ${idxs.map((i) => {
+          const j = list[i];
+          const d = jobDone(j);
+          return `<div class="unit-row">
+            <div class="unit-info"><div class="unit-title">${esc(j.equipment?.name)}</div>
+              <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.equipment_brands?.name)} ${esc(j.equipment?.model)}</div></div>
+            <span class="spill ${d ? "s-ok" : "s-warn"}">${d ? "Completed" : "Pending"}</span>
+            <button class="btn big ${d ? "ghost" : "primary"}" data-log="${i}">${d ? "View inspection" : "Log inspection"}</button>
+          </div>`;
+        }).join("")}
+      </section>`).join("");
+    const pending = list.filter((j) => !jobDone(j));
+    return `${flash}
+      <div class="check-top">
+        <div><div class="progress-big"><b>${done} of ${list.length}</b> units checked</div>
+          <div class="bar"><span style="width:${pct}%"></span></div></div>
+        ${next >= 0 ? `<button class="btn primary big" data-log="${next}">Continue inspection</button>` : `<span class="spill s-ok">All units checked</span>`}
+      </div>
+      <details class="job-more"><summary>View job details</summary>
+        <div class="muted" style="padding:8px 0">Technician: <b>${esc(v.technician_name) || "—"}</b></div></details>
+      <div class="checks">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
+      <section class="review-card"><h2>Review</h2>
+        <p>${pending.length ? `${pending.length} unit${pending.length > 1 ? "s" : ""} still pending.` : "All units are checked."}</p>
+        <p class="muted">The PDF is created after the visit is approved.</p>
+        <div class="actions-row">
+          <button class="btn ghost big" data-preview>Preview report</button>
+          <button class="btn primary big" data-approve ${v.state === "review" ? "" : "disabled"}>Approve visit</button>
         </div>
-        <div class="rooms">${cards}</div>
-        <div class="sec2-foot"><button class="btn ghost" data-refresh>↻ Refresh from Field Entry</button></div>
-      </div>`;
+      </section>`;
   }
 
-  function section3(v, list) {
-    const isLogged = (j) => (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null);
-    const logged = list.filter(isLogged).length;
-    const outRange = list.reduce((n, j) =>
-      n + (j.reading_lines || []).filter((r) => r.is_out_of_range).length
-        + (j.checklist_lines || []).filter((c) => c.value && c.value !== "—" && !/^normal$/i.test(c.value)).length, 0);
-    const rooms = new Set(list.map((j) => j.equipment?.sublocations?.name).filter(Boolean)).size;
-    const badge = v.state === "approved" || v.state === "invoiced" ? "Approved" : "Draft";
-    return `<div class="panel sec3">
-      <div class="panel-hd">Section 3 — PDF service report draft <span class="count-badge">${badge}</span></div>
-      <div class="paper">
-        <div class="paper-top">
-          <div><div class="paper-brand">Standard Airlogic</div><div class="muted">Aircon service report</div></div>
-          <div class="paper-ref">${esc(v.reference)}</div>
-        </div>
-        <table class="paper-kv">
-          <tr><th>Client</th><td>${esc(v.clients?.name)}</td></tr>
-          <tr><th>Visit date</th><td>${fmtDate(v.visit_date)}</td></tr>
-          <tr><th>Technician</th><td>${esc(v.technician_name) || "—"}</td></tr>
-          <tr><th>Rooms</th><td>${rooms}</td></tr>
-          <tr><th>Units checked</th><td>${logged} of ${list.length}</td></tr>
-          <tr><th>Items outside standard</th><td>${outRange}</td></tr>
-        </table>
-        <div class="paper-note">The PDF is created after the visit is approved. The client copy and the internal copy will both come from this draft.</div>
+  function inspectionForm(list, idx) {
+    const j = list[idx];
+    const items = (j.checklist_lines || []).slice().sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0) || String(a.key).localeCompare(String(b.key)));
+    let last = null;
+    const rows = items.map((c) => {
+      const head = c.section !== last ? `<div class="insp-sec">${esc(c.section)}</div>` : "";
+      last = c.section;
+      return `${head}<label class="insp-row">
+        <span class="insp-label">${esc(c.label)}<small>Standard: ${esc(c.standard) || "—"}</small></span>
+        <input class="insp-input" data-item="${esc(c.id)}" data-orig="${esc(c.value ?? "")}" value="${esc(c.value ?? "")}" placeholder="${esc(c.standard) || "Enter value"}">
+      </label>`;
+    }).join("");
+    return `<div class="insp-head">
+        <button class="link big" data-back-list>← Back to units</button>
+        <h2>${esc(j.equipment?.name)}</h2>
+        <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.sublocations?.name)}</div>
       </div>
-    </div>`;
+      <div class="insp-form">${rows || `<div class="empty">No inspection items for this unit.</div>`}</div>
+      <div id="insp-msg" class="insp-msg"></div>
+      <div class="actions-row sticky-bottom">
+        <button class="btn ghost big" data-back-list>Cancel</button>
+        <button class="btn primary big" id="insp-save">Save inspection</button>
+      </div>`;
   }
 
   function equipTab(list) {
