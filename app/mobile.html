@@ -19,8 +19,13 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; background: var(--bg); }
-  body { font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; color: var(--text); overflow: hidden; }
-  .app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+  body { font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; color: var(--text); overflow: hidden; background: #c9d2df; display: flex; align-items: center; justify-content: center; }
+  /* phone-sized on desktop; full screen on a real phone */
+  .app { position: relative; width: 390px; height: min(844px, calc(100vh - 24px)); display: flex; flex-direction: column; background: var(--bg); border-radius: 36px; overflow: hidden; box-shadow: 0 18px 50px rgba(15,23,42,.32); border: 10px solid #111827; }
+  @media (max-width: 500px) {
+    body { background: var(--bg); }
+    .app { width: 100%; height: 100%; border-radius: 0; border: 0; box-shadow: none; position: fixed; inset: 0; }
+  }
 
   /* top app bar */
   header.top { flex: none; background: var(--brand); color: #fff; padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -88,13 +93,13 @@
   .login input { width: 100%; min-height: 50px; font: inherit; font-size: 17px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 12px; }
 
   /* bottom tab bar */
-  nav.bottom { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.96); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-top: 1px solid var(--sep); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  nav.bottom { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.96); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-top: 1px solid var(--sep); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
   nav.bottom button { border: 0; background: none; font: inherit; font-size: 11px; font-weight: 600; color: #8e8e93; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 0; min-height: 52px; }
   nav.bottom button svg { width: 24px; height: 24px; }
   nav.bottom button.on { color: var(--accent); }
 
   /* sheet-style save bar */
-  .save-bar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.97); border-top: 1px solid var(--sep); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+  .save-bar { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.97); border-top: 1px solid var(--sep); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
   [hidden] { display: none !important; }
 </style>
 </head>
