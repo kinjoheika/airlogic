@@ -423,6 +423,10 @@
   .insp-row { padding: 8px 14px; }
   .insp-input { min-height: 38px; width: 180px; }
   @media (max-width: 640px) { .insp-grid { grid-template-columns: 1fr; } .insp-input { width: 100%; } }
+  /* Equipment Data: only this list scrolls, with a visible scrollbar */
+  .u-list-wrap { max-height: calc(100vh - 250px); min-height: 240px; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
+  .u-list-wrap::-webkit-scrollbar { display: block; width: 8px; }
+  .u-list-wrap::-webkit-scrollbar-thumb { background: #c3ccd9; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -1172,7 +1176,7 @@
         <button class="link" id="eq-clear" type="button">Clear</button>
         <span class="eq-count">${units.length} units</span>
       </div>
-      <div class="u-list">${units.map(card).join("")}</div>
+      <div class="u-list-wrap"><div class="u-list">${units.map(card).join("")}</div></div>
       <p class="legend"><span class="lg ok"></span>Within standard <span class="lg bad"></span>Outside standard <span class="lg"></span>Not recorded</p>`;
   }
 
