@@ -411,6 +411,7 @@
   .inv { padding: 16px 20px; }
   .inv .head, .head { margin-bottom: 10px; }
   .rpt-row { grid-template-columns: minmax(0, 1fr) !important; }
+  .pg-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -926,7 +927,10 @@
               <span class="wait">⏳ Pending: <b>${list.length - done}</b></span>
               <span>Total: <b>${list.length}</b></span>
             </div>
-            ${next < 0 ? `<span class="spill s-ok">All units checked</span>` : ""}
+            <div class="pg-actions">
+              ${next < 0 ? `<span class="spill s-ok">All units checked</span>` : ""}
+              <button class="btn primary small" data-generate>Generate report</button>
+            </div>
           </div>
           <div class="bar"><span style="width:${pct}%"></span></div>
           <div class="pg-list">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
