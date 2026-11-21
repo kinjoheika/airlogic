@@ -1,6 +1,6 @@
 // Service worker: lets the field app open with no internet after the first visit.
-const CACHE = "airlogic-field-v1";
-const SHELL = ["./field.html", "./field.js", "./manifest.webmanifest", "./icon.svg", "./config.js"];
+const CACHE = "airlogic-field-v2";
+const SHELL = ["./mobile.html", "./field.html", "./field.js", "./manifest.webmanifest", "./icon.svg", "./config.js"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
 
 self.addEventListener("install", (event) => {
@@ -36,7 +36,7 @@ self.addEventListener("fetch", (event) => {
       if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone()).catch(() => {});
       return res;
     } catch (e) {
-      if (req.mode === "navigate") return (await cache.match("./field.html")) || Response.error();
+      if (req.mode === "navigate") return (await cache.match("./mobile.html")) || (await cache.match("./field.html")) || Response.error();
       return Response.error();
     }
   })());

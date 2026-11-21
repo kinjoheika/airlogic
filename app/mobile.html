@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0f2a47">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>AirLogic</title>
+<style>
+  :root {
+    --brand: #0f2a47; --accent: #0f8a86; --accent-soft: #e6f4f3;
+    --bg: #f2f2f7; --card: #ffffff; --sep: #e5e5ea;
+    --text: #111827; --sub: #6b7280; --hint: #9ca3af;
+    --ok: #15803d; --ok-soft: #dcfce7; --warn: #a16207; --warn-soft: #fef3c7; --bad: #b91c1c;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body { font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; color: var(--text); overflow: hidden; }
+  .app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+
+  /* top app bar */
+  header.top { flex: none; background: var(--brand); color: #fff; padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .brand { font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+  .brand span { color: #f5c04a; }
+  .brand small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .12em; color: #a9bbd6; margin-top: 1px; }
+  .top-right { display: flex; align-items: center; gap: 8px; }
+  .sync { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.14); color: #e6eef9; white-space: nowrap; }
+  .sync.wait { background: #f5c04a; color: #3a2a00; } .sync.ok { background: #22c55e; color: #06320f; }
+  .dl { border: 0; background: rgba(255,255,255,.14); color: #fff; font: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; min-height: 34px; }
+
+  /* content */
+  main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px calc(96px + env(safe-area-inset-bottom)); overscroll-behavior: contain; }
+  .title { font-size: 28px; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 14px; color: var(--text); }
+
+  /* list card (iOS-style grouped list) */
+  .card { background: var(--card); border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; box-shadow: 0 1px 0 rgba(0,0,0,.03); }
+  .vrow, .dev { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 62px; padding: 12px 16px; border: 0; background: var(--card); text-align: left; font: inherit; color: var(--text); border-bottom: 1px solid var(--sep); cursor: pointer; }
+  .vrow:last-child, .dev:last-child { border-bottom: 0; }
+  .vrow:active, .dev:active { background: #e9e9ee; }
+  .vrow::after, .dev::after { content: "›"; color: #c7c7cc; font-size: 22px; margin-left: 2px; }
+  .vrow > div, .dev > div { flex: 1; min-width: 0; }
+  .t { font-weight: 600; font-size: 16px; color: var(--text); }
+  .s { font-size: 13px; color: var(--sub); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; flex: none; margin-right: 6px; }
+  .p-pending { background: var(--warn-soft); color: var(--warn); }
+  .p-done { background: var(--ok-soft); color: var(--ok); }
+  .room { font-size: 13px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .02em; margin: 6px 4px 8px; }
+
+  /* visit header */
+  .hd { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .hd h1 { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+  .hd .sub { color: var(--sub); font-size: 14px; margin-top: 4px; }
+  .prog { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--sub); }
+  .prog .bar { flex: 1; height: 6px; background: #e5e5ea; border-radius: 99px; overflow: hidden; }
+  .prog .bar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+
+  /* action buttons */
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .btn { min-height: 50px; border-radius: 14px; border: 0; font: inherit; font-weight: 600; font-size: 16px; padding: 0 14px; background: #e5e5ea; color: var(--text); }
+  .btn:active { opacity: .8; }
+  .btn.teal { background: var(--accent); color: #fff; }
+  .btn.dark { background: var(--brand); color: #fff; }
+  .btn.good { background: var(--ok-soft); color: var(--ok); }
+  .btn:disabled { opacity: .45; }
+
+  /* NFC banner */
+  .nfc { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; background: var(--card); border: 0; border-radius: var(--radius); padding: 12px 16px; margin-bottom: 18px; font: inherit; text-align: left; color: var(--text); cursor: pointer; }
+  .nfc .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 18px; flex: none; }
+  .nfc b { display: block; font-size: 15px; font-weight: 600; } .nfc small { color: var(--sub); font-size: 13px; }
+  .nfc .chev { margin-left: auto; color: #c7c7cc; font-size: 22px; }
+
+  /* navigation */
+  .back { border: 0; background: none; color: var(--accent); font: inherit; font-size: 16px; font-weight: 600; padding: 8px 0; min-height: 40px; display: inline-flex; align-items: center; gap: 4px; }
+  .notice { background: var(--card); border-radius: var(--radius); padding: 16px; color: var(--sub); }
+  .sec { font-size: 13px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .02em; padding: 14px 16px 6px; }
+  .item { padding: 12px 16px; border-bottom: 1px solid var(--sep); background: var(--card); }
+  .item label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 1px; }
+  .item small { color: var(--sub); font-size: 13px; display: block; margin-bottom: 6px; }
+  .item input { width: 100%; min-height: 46px; font: inherit; font-size: 17px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 12px; background: #fff; color: var(--text); }
+  .item input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .msg { font-size: 14px; font-weight: 600; padding: 10px 4px; min-height: 22px; color: var(--bad); }
+  .login .card { padding: 16px; }
+  .login label { display: block; font-size: 13px; font-weight: 600; color: var(--sub); margin: 12px 0 6px; }
+  .login input { width: 100%; min-height: 50px; font: inherit; font-size: 17px; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 12px; }
+
+  /* bottom tab bar */
+  nav.bottom { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.96); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-top: 1px solid var(--sep); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  nav.bottom button { border: 0; background: none; font: inherit; font-size: 11px; font-weight: 600; color: #8e8e93; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 0; min-height: 52px; }
+  nav.bottom button svg { width: 24px; height: 24px; }
+  nav.bottom button.on { color: var(--accent); }
+
+  /* sheet-style save bar */
+  .save-bar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.97); border-top: 1px solid var(--sep); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">Standard <span>Airlogic</span><small>FIELD ENTRY</small></div>
+    <div class="top-right"><span class="sync" id="sync">…</span><button class="dl" id="dl">Download</button></div>
+  </header>
+  <main id="page"><div class="notice">Loading…</div></main>
+  <nav class="bottom" id="nav">
+    <button data-tab="visit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h6"/></svg>Visit</button>
+    <button data-tab="units">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Units</button>
+    <button data-tab="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History</button>
+    <button data-tab="more">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>More</button>
+  </nav>
+  <div class="save-bar" id="savebar" hidden></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="field.js"></script>
+<script>
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

@@ -1,13 +1,18 @@
 {
   "name": "AirLogic Field Entry",
   "short_name": "AirLogic",
-  "start_url": "./field.html",
+  "start_url": "./mobile.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f2a47",
   "theme_color": "#0f2a47",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ]
 }
