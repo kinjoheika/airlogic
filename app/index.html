@@ -351,6 +351,42 @@
     .rpt-row .pg { max-height: none; min-height: 0; }
     .pg-list { overflow: visible; }
   }
+  /* ---- Owner report (Option A layout) ---- */
+  .owner-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+  .owner-doc { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; padding: 26px 30px; color: #1d2433; max-width: 900px; margin: 0 auto; }
+  .od-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-bottom: 2px solid #1d2433; padding-bottom: 14px; }
+  .od-brand { font-size: 22px; font-weight: 800; color: #7a1f1f; }
+  .od-brand span { font-size: 13px; color: #1d2433; font-weight: 600; }
+  .od-sub { color: #6b7587; font-size: 13px; margin-top: 2px; }
+  .od-meta { font-size: 12.5px; color: #6b7587; text-align: right; line-height: 1.6; }
+  .od-info { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #e3e8ef; border-radius: 10px; margin: 14px 0; overflow: hidden; }
+  .od-info > div { padding: 10px 12px; border-right: 1px solid #e3e8ef; }
+  .od-info > div:last-child { border-right: 0; }
+  .od-info label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: #6b7587; font-weight: 700; margin-bottom: 3px; }
+  .od-sec { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; background: #1d2433; color: #fff; padding: 6px 10px; margin: 18px 0 10px; border-radius: 4px; }
+  .od-status { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .od-box { text-align: center; border-radius: 10px; padding: 12px 8px; border: 1px solid #e3e8ef; }
+  .od-box b { font-size: 28px; } .od-box span { color: #6b7587; font-size: 14px; } .od-box small { display: block; font-size: 11.5px; color: #374151; margin-top: 4px; }
+  .od-box.good { background: #e8f6ee; } .od-box.watch { background: #fdf3d8; } .od-box.urgent { background: #fbe9e9; } .od-box.pending { background: #f5f7fb; }
+  .od-parts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+  .od-part { display: flex; gap: 10px; font-size: 12.5px; }
+  .od-part > span { flex: none; width: 24px; height: 24px; border-radius: 50%; background: #1d2433; color: #fff; text-align: center; line-height: 24px; font-weight: 700; }
+  .od-muted { color: #6b7587; font-size: 12.5px; }
+  .od-unit { border: 1px solid #e3e8ef; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .od-unit-hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .od-pill { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .od-pill.good { background: #e8f6ee; color: #1a7f4b; } .od-pill.watch { background: #fdf3d8; color: #8a5d00; }
+  .od-pill.urgent { background: #fbe9e9; color: #b42323; } .od-pill.pending { background: #eef2f7; color: #6b7587; }
+  .od-issues { margin: 4px 0 0 18px; padding: 0; font-size: 13px; }
+  .od-foot { margin-top: 16px; font-size: 12px; color: #6b7587; border-top: 1px solid #e3e8ef; padding-top: 10px; }
+  @media (max-width: 640px) { .od-info, .od-status, .od-parts { grid-template-columns: 1fr 1fr; } .owner-doc { padding: 18px; } }
+  @media print {
+    html, body, #app-view, #app-view > main#page { height: auto !important; overflow: visible !important; }
+    body * { visibility: hidden; }
+    .owner-doc, .owner-doc * { visibility: visible; }
+    .owner-doc { position: absolute; left: 0; top: 0; width: 100%; border: 0; box-shadow: none; padding: 0; }
+    .owner-bar { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -723,6 +759,7 @@
     let body;
     try {
       if (tab === "equip") body = equipTab(list);
+      else if (tab === "owner") body = ownerReport(v, list);
       else if (inspectIdx != null && list[inspectIdx]) body = inspectionForm(list, inspectIdx);
       else body = checksView(v, list);
     } catch (err) {
@@ -736,7 +773,7 @@
           <div class="sub">${esc(v.reference)} · ${esc(v.sublocation) || "—"} · ${fmtDate(v.visit_date)}</div></div>
         <span class="spill ${v.state === "review" ? "s-warn" : v.state === "approved" || v.state === "invoiced" ? "s-ok" : "s-off"}">${esc(label)}</span>
       </div>
-      <div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}</div>
+      <div class="rtabs">${rtab("info", "Equipment checks")}${rtab("equip", "Equipment Data")}${rtab("owner", "Owner report")}</div>
       ${body}`;
 
     const back = host.querySelector("[data-back-visits]");
@@ -766,6 +803,9 @@
       if (e) { alert(e.message); return; }
       openReport(id, "info", target);
     };
+
+    const printBtn = host.querySelector("[data-print]");
+    if (printBtn) printBtn.onclick = () => window.print();
 
     const save = host.querySelector("#insp-save");
     if (save) save.onclick = async () => {
@@ -900,6 +940,86 @@
         <button class="btn ghost big" data-back-list>Cancel</button>
         <button class="btn primary big" id="insp-save">Save inspection</button>
       </div>`;
+  }
+
+  function unitIssues(j) {
+    const out = [];
+    (j.reading_lines || []).forEach((r) => {
+      if (r.is_out_of_range) out.push({ label: r.measurement_fields?.name || "Reading", value: r.value, std: r.measurement_fields?.standard });
+    });
+    (j.checklist_lines || []).forEach((c) => {
+      if (c.value != null && c.value !== "—" && !/^(normal|no leak)$/i.test(c.value)) out.push({ label: c.label, value: c.value, std: c.standard });
+    });
+    return out;
+  }
+
+  function ownerReport(v, list) {
+    const recorded = list.filter((j) => (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null));
+    const status = (j) => {
+      const isRec = (j.reading_lines || []).some((r) => r.value != null) || (j.checklist_lines || []).some((c) => c.value != null);
+      if (!isRec) return { key: "pending", text: "Not inspected", cls: "s-off" };
+      const n = unitIssues(j).length;
+      if (n === 0) return { key: "good", text: "Good condition", cls: "s-ok" };
+      if (n === 1) return { key: "watch", text: "Requires watch", cls: "s-warn" };
+      return { key: "urgent", text: "Urgent action", cls: "s-bad" };
+    };
+    const st = list.map(status);
+    const count = (k) => st.filter((x) => x.key === k).length;
+    const approved = v.state === "approved" || v.state === "invoiced";
+    const rooms = new Set(list.map((j) => j.equipment?.sublocations?.name).filter(Boolean)).size;
+    const parts = [
+      ["A", "Indoor PCB", "Control board inside the air handler. Manages fan speed and cooling logic. Failure stops the unit entirely."],
+      ["B", "Fan, motor and capacitor", "The blower that pushes air through the duct. A worn belt or weak capacitor causes slow airflow or failure."],
+      ["C", "Evaporator coil", "Indoor cooling coil. Removes heat from return air. Grease and dust buildup is the top issue in kitchens."],
+      ["D", "Air filter", "Captures dust before it reaches the coil. A clogged filter cuts airflow and raises energy cost."],
+      ["E", "Filter / drier", "On the liquid refrigerant line. Removes moisture and particles that would damage the compressor."],
+      ["F", "Compressor, outdoor PCB and capacitor", "Heart of the refrigerant circuit. Failure means full shutdown, with the highest repair cost."],
+      ["G", "Condenser coil and outdoor fan motor", "Releases heat outdoors. Dirty coils raise discharge pressure and electricity use significantly."],
+    ];
+    const units = list.map((j, i) => {
+      const s2 = st[i];
+      const issues = unitIssues(j);
+      const body = s2.key === "pending"
+        ? `<div class="od-muted">Not inspected yet.</div>`
+        : issues.length
+          ? `<ul class="od-issues">${issues.map((x) => `<li><b>${esc(x.label)}</b> — ${esc(x.value)}${x.std ? ` <span class="od-muted">(standard ${esc(x.std)})</span>` : ""}</li>`).join("")}</ul>`
+          : `<div class="od-muted">All checks normal.</div>`;
+      return `<div class="od-unit">
+        <div class="od-unit-hd"><div><b>${esc(j.equipment?.name)}</b> <span class="od-muted">${esc(j.equipment?.sublocations?.name)} · ${esc(j.equipment?.serial_number)}</span></div>
+          <span class="od-pill ${s2.key}">${esc(s2.text)}</span></div>
+        ${body}
+      </div>`;
+    }).join("");
+    return `
+      <div class="owner-bar">
+        <span class="muted">${approved ? "Approved — ready to save as PDF." : "The PDF is available after the visit is approved. This is the preview."}</span>
+        <button class="btn primary big" data-print ${approved ? "" : "disabled"}>Save as PDF</button>
+      </div>
+      <article class="owner-doc">
+        <header class="od-top">
+          <div><div class="od-brand">Standard Airlogic <span>Service Co.</span></div>
+            <div class="od-sub">Air Handling Unit — Owner Service Report</div></div>
+          <div class="od-meta">Report No. ${esc(v.reference)}<br>Date: ${fmtDate(v.visit_date)}<br>Technician: ${esc(v.technician_name) || "—"}</div>
+        </header>
+        <div class="od-info">
+          <div><label>Client</label><b>${esc(v.clients?.name)}</b></div>
+          <div><label>Location</label><b>${esc(v.sublocation) || "—"}</b></div>
+          <div><label>Units inspected</label><b>${recorded.length} of ${list.length} units</b></div>
+          <div><label>Next service</label><b>—</b></div>
+        </div>
+        <h3 class="od-sec">Assets status — this visit</h3>
+        <div class="od-status">
+          <div class="od-box good"><b>${count("good")}</b><span>/ ${list.length}</span><small>Good condition</small></div>
+          <div class="od-box watch"><b>${count("watch")}</b><span>/ ${list.length}</span><small>Requires watch</small></div>
+          <div class="od-box urgent"><b>${count("urgent")}</b><span>/ ${list.length}</span><small>Urgent action</small></div>
+          <div class="od-box pending"><b>${count("pending")}</b><span>/ ${list.length}</span><small>Not inspected</small></div>
+        </div>
+        <h3 class="od-sec">Parts A–G — fixed reference</h3>
+        <div class="od-parts">${parts.map(([k, t, d]) => `<div class="od-part"><span>${k}</span><div><b>${esc(t)}</b><div class="od-muted">${esc(d)}</div></div></div>`).join("")}</div>
+        <h3 class="od-sec">Unit-by-unit detail (${rooms} room${rooms === 1 ? "" : "s"})</h3>
+        ${units || `<div class="od-muted">No units on this visit yet.</div>`}
+        <div class="od-foot">Estimated repair costs and site photos are added by the technician before approval.</div>
+      </article>`;
   }
 
   function equipTab(list) {
