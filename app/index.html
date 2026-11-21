@@ -767,7 +767,7 @@
   let reportFlash = "";
   const jobDone = (j) => (j.checklist_lines || []).length > 0 && (j.checklist_lines || []).every((c) => c.value != null);
 
-  async function openReport(id, tab = "info", target = "#page", inspectIdx = null) {
+  async function openReport(id, tab = "info", target = "#page", inspectIdx = null, unitIdx = null) {
     const { data: v, error } = await db.from("service_visits")
       .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
     if (error) { $(target).innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
@@ -784,7 +784,10 @@
     let body;
     try {
       if (tab === "equip") body = equipTab(list);
-      else if (tab === "report") body = `<div class="back-row"><button class="link big" data-back-list>← Back to equipment checks</button></div>${ownerReport(v, list)}`;
+      else if (tab === "report") {
+        const scope = unitIdx != null && list[unitIdx] ? [list[unitIdx]] : list;
+        body = `<div class="back-row"><button class="link big" data-back-list>← Back to equipment checks</button></div>${ownerReport(v, scope)}`;
+      }
       else if (inspectIdx != null && list[inspectIdx]) body = inspectionForm(list, inspectIdx);
       else body = checksView(v, list);
     } catch (err) {
@@ -805,6 +808,7 @@
     if (back) back.onclick = () => render("visits");
     host.querySelectorAll("[data-rtab]").forEach((b) => b.onclick = () => openReport(id, b.dataset.rtab, target));
     host.querySelectorAll("[data-log]").forEach((b) => b.onclick = () => openReport(id, "info", target, Number(b.dataset.log)));
+    host.querySelectorAll("[data-gen-unit]").forEach((b) => b.onclick = () => openReport(id, "report", target, null, Number(b.dataset.genUnit)));
     host.querySelectorAll("[data-back-list]").forEach((b) => b.onclick = () => openReport(id, "info", target));
     if (tab === "equip") bindEquip(host);
 
@@ -912,6 +916,7 @@
               <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.equipment_brands?.name)} ${esc(j.equipment?.model)}</div></div>
             <span class="spill ${d ? "s-ok" : "s-warn"}">${d ? "Completed" : "Pending"}</span>
             <button class="btn small ${d ? "ghost" : "primary"}" data-log="${i}">${d ? "View inspection" : "Log inspection"}</button>
+            <button class="btn small ghost" data-gen-unit="${i}">Generate report</button>
           </div>`;
         }).join("")}
       </section>`).join("");
@@ -960,6 +965,7 @@
     }).join("");
     return `<div class="insp-head">
         <button class="link big" data-back-list>← Back to units</button>
+        <button class="btn small ghost" data-gen-unit="${idx}" style="float:right">Generate report</button>
         <h2>${esc(j.equipment?.name)}</h2>
         <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.sublocations?.name)}</div>
       </div>
