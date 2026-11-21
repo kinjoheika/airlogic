@@ -261,6 +261,9 @@
   .lg:not(.ok):not(.bad) { background: #e3e8ef; }
   /* list scrolls inside its own box, not the whole page */
   .reg-card { max-height: 62vh; overflow: auto; }
+  /* hide the list's own scrollbar (still scrolls with mouse wheel / touch) */
+  .reg-card, .reg-card * { scrollbar-width: none; }
+  .reg-card::-webkit-scrollbar, .reg-card *::-webkit-scrollbar { display: none; }
 </style>
 </head>
 <body>
