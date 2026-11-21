@@ -416,6 +416,13 @@
   .inv .head, .head { margin-bottom: 10px; }
   .rpt-row { grid-template-columns: minmax(0, 1fr) !important; }
   .pg-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .insp-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 10px 0; }
+  .insp-ind { font-weight: 700; color: #0f2a47; text-align: center; font-size: 14px; }
+  .insp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .insp-grid .insp-row { border-right: 1px solid #f3f5f9; }
+  .insp-row { padding: 8px 14px; }
+  .insp-input { min-height: 38px; width: 180px; }
+  @media (max-width: 640px) { .insp-grid { grid-template-columns: 1fr; } .insp-input { width: 100%; } }
 </style>
 </head>
 <body>
@@ -772,6 +779,7 @@
   const jobDone = (j) => (j.checklist_lines || []).length > 0 && (j.checklist_lines || []).every((c) => c.value != null);
 
   async function openReport(id, tab = "info", target = "#page", inspectIdx = null, unitIdx = null) {
+    if (inspectIdx == null) inspState = { unit: null, page: 0 };
     const { data: v, error } = await db.from("service_visits")
       .select("id,reference,visit_date,state,sublocation,technician_name,clients(name)").eq("id", id).single();
     if (error) { $(target).innerHTML = `<div class="notice"><b>Could not open visit.</b><div class="muted">${esc(error.message)}</div></div>`; return; }
@@ -838,6 +846,21 @@
       if (e) { alert(e.message); return; }
       openReport(id, "info", target);
     };
+
+    const ipages = host.querySelectorAll(".insp-page");
+    if (ipages.length && inspectIdx != null) {
+      if (inspState.unit !== inspectIdx) inspState = { unit: inspectIdx, page: 0 };
+      const show = (k) => {
+        inspState.page = k;
+        ipages.forEach((el, i) => { el.hidden = i !== k; });
+        host.querySelector("#insp-ind").textContent = `${ipages[k].dataset.title} · ${k + 1} of ${ipages.length}`;
+        host.querySelector("#insp-prev").disabled = k === 0;
+        host.querySelector("#insp-next").disabled = k === ipages.length - 1;
+      };
+      host.querySelector("#insp-prev").onclick = () => show(Math.max(0, inspState.page - 1));
+      host.querySelector("#insp-next").onclick = () => show(Math.min(ipages.length - 1, inspState.page + 1));
+      show(Math.min(inspState.page, ipages.length - 1));
+    }
 
     const printBtn = host.querySelector("[data-print]");
     if (printBtn) printBtn.onclick = () => window.print();
@@ -955,25 +978,35 @@
       </section>`;
   }
 
+  let inspState = { unit: null, page: 0 };
   function inspectionForm(list, idx) {
     const j = list[idx];
-    const items = (j.checklist_lines || []).slice().sort((a, b) => (a.phase ?? 0) - (b.phase ?? 0) || String(a.key).localeCompare(String(b.key)));
-    let last = null;
-    const rows = items.map((c) => {
-      const head = c.section !== last ? `<div class="insp-sec">${esc(c.section)}</div>` : "";
-      last = c.section;
-      return `${head}<label class="insp-row">
-        <span class="insp-label">${esc(c.label)}<small>Standard: ${esc(c.standard) || "—"}</small></span>
-        <input class="insp-input" data-item="${esc(c.id)}" data-orig="${esc(c.value ?? "")}" value="${esc(c.value ?? "")}" placeholder="${esc(c.standard) || "Enter value"}">
-      </label>`;
-    }).join("");
+    const items = (j.checklist_lines || []).slice().sort((x, y) => (x.phase ?? 0) - (y.phase ?? 0) || String(x.key).localeCompare(String(y.key)));
+    const groups = [];
+    items.forEach((c) => {
+      let g = groups.find((x) => x.name === c.section);
+      if (!g) { g = { name: c.section, rows: [] }; groups.push(g); }
+      g.rows.push(c);
+    });
+    const pagesHtml = groups.map((g, k) => `<div class="insp-page" data-title="${esc(g.name)}" ${k ? "hidden" : ""}>
+        <div class="insp-sec">${esc(g.name)}</div>
+        <div class="insp-grid">${g.rows.map((c) => `<label class="insp-row">
+          <span class="insp-label">${esc(c.label)}<small>Standard: ${esc(c.standard) || "—"}</small></span>
+          <input class="insp-input" data-item="${esc(c.id)}" data-orig="${esc(c.value ?? "")}" value="${esc(c.value ?? "")}" placeholder="${esc(c.standard) || "Enter value"}">
+        </label>`).join("")}</div>
+      </div>`).join("");
     return `<div class="insp-head">
         <button class="link big" data-back-list>← Back to units</button>
         <button class="btn small ghost" data-gen-unit="${idx}" style="float:right">Generate report</button>
         <h2>${esc(j.equipment?.name)}</h2>
         <div class="muted">${esc(j.equipment?.serial_number)} · ${esc(j.equipment?.sublocations?.name)}</div>
       </div>
-      <div class="insp-form">${rows || `<div class="empty">No inspection items for this unit.</div>`}</div>
+      <div class="insp-nav">
+        <button class="btn ghost big" id="insp-prev">← Previous</button>
+        <div class="insp-ind" id="insp-ind"></div>
+        <button class="btn ghost big" id="insp-next">Next →</button>
+      </div>
+      <div class="insp-form">${pagesHtml || `<div class="empty">No inspection items for this unit.</div>`}</div>
       <div id="insp-msg" class="insp-msg"></div>
       <div class="actions-row sticky-bottom">
         <button class="btn ghost big" data-back-list>Cancel</button>
