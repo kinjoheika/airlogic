@@ -862,6 +862,8 @@
       show(Math.min(inspState.page, ipages.length - 1));
     }
 
+    const sendBtn = host.querySelector("[data-send-client]");
+    if (sendBtn) sendBtn.onclick = () => alert("Email sending is not set up yet. Save the PDF and send it to the client manually for now.");
     const printBtn = host.querySelector("[data-print]");
     if (printBtn) printBtn.onclick = () => window.print();
 
@@ -1065,7 +1067,10 @@
     return `
       <div class="owner-bar">
         <span class="muted">${approved ? "Approved — ready to save as PDF." : "The PDF is available after the visit is approved. This is the preview."}</span>
-        <button class="btn primary big" data-print ${approved ? "" : "disabled"}>Save as PDF</button>
+        <div class="pg-actions">
+          <button class="btn ghost big" data-send-client ${approved ? "" : "disabled"}>Send to client</button>
+          <button class="btn primary big" data-print ${approved ? "" : "disabled"}>Save as PDF</button>
+        </div>
       </div>
       <article class="owner-doc">
         <header class="od-top">
