@@ -414,6 +414,7 @@
   .panel, .card { border-radius: 12px; }
   .inv { padding: 16px 20px; }
   .inv .head, .head { margin-bottom: 10px; }
+  .rpt-row { grid-template-columns: minmax(0, 1fr) !important; }
 </style>
 </head>
 <body>
@@ -932,7 +933,6 @@
           <div class="bar"><span style="width:${pct}%"></span></div>
           <div class="pg-list">${roomsHtml || `<div class="empty">No units on this visit yet.</div>`}</div>
         </section>
-        <div class="rpt-right">${pdfDraft(v, list)}</div>
       </div>
       <section class="review-card"><h2>Review</h2>
         <p>${pending.length ? `${pending.length} unit${pending.length > 1 ? "s" : ""} still pending.` : "All units are checked."}</p>
